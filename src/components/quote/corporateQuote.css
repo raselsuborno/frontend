@@ -1,0 +1,254 @@
+/* =========================================================
+   QUOTE FLOW — FULLY SCOPED (SAFE)
+========================================================= */
+
+.quote-flow {
+  max-width: 1180px;
+  margin: 32px auto 64px;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* =========================================================
+   ROW LAYOUT
+========================================================= */
+.quote-row {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  animation: booking-step-in 0.35s ease;
+}
+
+/* LEFT */
+.quote-main {
+  flex: 1 1 100%;
+  min-width: 0;
+  transition: flex-basis 0.35s ease;
+}
+
+/* SHRINK AFTER SERVICE SELECT */
+.quote-main.shrink {
+  flex: 0 0 65%;
+}
+
+/* RIGHT SUMMARY */
+.quote-summary {
+  flex: 0 0 35%;
+  max-width: 420px;
+  position: sticky;
+  top: 24px;
+}
+
+/* REVIEW MODE (BOOKING BEHAVIOR) */
+.quote-row.review-mode {
+  flex-direction: column;
+}
+
+.quote-summary.expanded {
+  width: 100%;
+  max-width: 100%;
+  position: static;
+}
+
+/* =========================================================
+   CARD BASE
+========================================================= */
+.quote-card,
+.quote-summary-card,
+.review-card {
+  background: var(--primary-soft);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  border: 1px solid rgba(11, 92, 40, 0.1);
+  box-shadow: 0 2px 12px rgba(11, 92, 40, 0.08);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.quote-card:hover,
+.quote-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+/* =========================================================
+   SERVICE GRID + TILE LOGIC (IDENTICAL TO BOOKING)
+========================================================= */
+.quote-service-grid {
+  display: grid;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.quote-main:not(.shrink) .quote-service-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.quote-main.shrink .quote-service-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.quote-service-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 26px 18px;
+  min-height: 120px;
+
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-soft);
+  cursor: pointer;
+
+  transition:
+    padding 0.25s ease,
+    min-height 0.25s ease,
+    gap 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.quote-main.shrink .quote-service-tile {
+  padding: 18px 14px;
+  min-height: 96px;
+  gap: 8px;
+}
+
+.quote-service-tile.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.quote-service-tile:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ICON */
+.service-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f2f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quote-service-tile.active .service-icon {
+  background: var(--primary);
+}
+
+.quote-service-tile.active svg {
+  color: #fff;
+}
+
+/* =========================================================
+   REVIEW CARD (BOOKING STYLE)
+========================================================= */
+.review-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 14px;
+}
+
+.review-section {
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  background: #fff;
+}
+
+.review-section + .review-section {
+  margin-top: 14px;
+}
+
+.review-label {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.review-main-text {
+  font-size: 14px;
+  font-weight: 450;
+  color: #111827;
+  margin-top: 6px;
+}
+
+.review-subtext {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+.review-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.btn-primary {
+  flex: 1;
+  background: #0b5c28;
+  color: #fff;
+  border: none;
+  height: 52px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+}
+
+.btn-secondary {
+  flex: 1;
+  background: #f1f1f1;
+  border: none;
+  height: 52px;
+  border-radius: var(--radius-md);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+@media (max-width: 768px) {
+  .quote-row {
+    flex-direction: column;
+  }
+
+  .quote-main,
+  .quote-main.shrink,
+  .quote-summary {
+    width: 100%;
+    flex: none;
+    position: static;
+  }
+
+  .quote-service-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .quote-service-tile {
+    min-height: 92px;
+    padding: 14px 10px;
+    gap: 8px;
+  }
+
+  .review-actions {
+    flex-direction: column;
+  }
+}

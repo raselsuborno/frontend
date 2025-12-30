@@ -1,0 +1,128 @@
+/* ============================================================
+   🐰 CHORESCAPE MASCOT — MODERN + CUTE ANIMATION UPGRADE
+=============================================================== */
+
+/* ===============================
+   🧩 POSITION
+================================== */
+.mascot-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 9999;
+}
+
+@media (max-width: 600px) {
+  .mascot-container {
+    display: none;
+  }
+}
+
+/* ===============================
+   💬 SPEECH BUBBLE
+================================== */
+.mascot-bubble {
+  background: var(--bg-soft);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-soft);
+  max-width: 220px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  animation: bubbleFade 0.3s ease;
+}
+
+@keyframes bubbleFade {
+  from { opacity: 0; transform: translateY(6px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ===============================
+   🐰 MASCOT IMAGE — FLOAT + ROTATE
+================================== */
+.mascot-img {
+  width: 92px; /* 30% smaller */
+  height: auto;
+  cursor: pointer;
+  animation: mascotFloat 3.5s ease-in-out infinite;
+  transition: transform 0.25s ease;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.15));
+}
+
+@keyframes mascotFloat {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  50%  { transform: translateY(-10px) rotate(1.8deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* Hover pop */
+.mascot-img:hover {
+  transform: scale(1.08);
+}
+
+/* Jump animation — squash & stretch */
+.mascot-img.jump {
+  animation: hop 0.45s ease;
+}
+
+@keyframes hop {
+  0%   { transform: translateY(0) scale(1,1); }
+  30%  { transform: translateY(-20px) scale(0.95,1.05); }
+  70%  { transform: translateY(0) scale(1.05,0.95); }
+  100% { transform: translateY(0) scale(1,1); }
+}
+
+/* ===============================
+   🔗 QUICK MENU PANEL
+================================== */
+.mascot-links {
+  background: var(--bg-soft);
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  width: 150px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+  animation: menuPop 0.25s ease;
+}
+
+@keyframes menuPop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.mascot-links h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* Rounded cute buttons */
+.mascot-links button {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-md);
+  background: var(--primary-soft);
+  color: var(--primary);
+  border: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.mascot-links button:hover {
+  background: var(--primary);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Extra subtle pressed effect */
+.mascot-links button:active {
+  transform: scale(0.96);
+}
