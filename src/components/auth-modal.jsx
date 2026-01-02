@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_BASE } from "../config.js";
+import { supabase } from "../lib/supabase.js";
 import { toast } from "react-hot-toast";
 import { Mail, Lock, User, LockKeyhole, Eye, EyeOff, X } from "lucide-react";
 import logo from "../assets/chorebunny.png";
@@ -65,13 +64,18 @@ export function AuthModal({ isOpen, onClose }) {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/login`, {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (error) throw error;
+
+      // Store session token and user data
+      if (data.session) {
+        localStorage.setItem("token", data.session.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
 
       toast.success("Welcome back!");
       onClose();
@@ -79,8 +83,8 @@ export function AuthModal({ isOpen, onClose }) {
       window.dispatchEvent(new Event("authStateChanged"));
       navigate("/dashboard");
     } catch (err) {
-      console.log(err?.response?.data || err);
-      toast.error("Invalid email or password");
+      console.error("Login error:", err);
+      toast.error(err.message || "Invalid email or password");
     }
 
     setLoading(false);
@@ -100,23 +104,32 @@ export function AuthModal({ isOpen, onClose }) {
     }
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/register`, {
-        name: form.name,
+      const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
+        options: {
+          data: {
+            name: form.name,
+          },
+        },
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (error) throw error;
 
-      toast.success("Account created successfully!");
-      onClose();
-      // Trigger a custom event to update navbar
-      window.dispatchEvent(new Event("authStateChanged"));
-      navigate("/dashboard");
+      // Session is automatically handled by Supabase and AuthContext
+      // No need to manually store tokens - Supabase handles persistence
+      if (data.session) {
+        toast.success("Account created successfully!");
+        onClose();
+        navigate("/dashboard");
+      } else {
+        // Email confirmation required
+        toast.success("Account created! Please check your email to confirm your account.");
+        onClose();
+      }
     } catch (err) {
-      console.log("Signup error:", err?.response?.data || err);
-      toast.error(err?.response?.data?.message || "Signup failed");
+      console.error("Signup error:", err);
+      toast.error(err.message || "Signup failed");
     }
 
     setLoading(false);

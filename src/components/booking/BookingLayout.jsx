@@ -135,6 +135,7 @@ const mapServiceKey = (id) => {
                   setDetails={setDetails}
                   onBack={back}
                   onNext={next}
+                  isAuthenticated={!!localStorage.getItem("token")}
                 />
               </motion.div>
             )}

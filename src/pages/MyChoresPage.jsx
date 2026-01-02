@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "../lib/api.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
-import { API_BASE } from "../config.js";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, Plus, Calendar, DollarSign, Tag, CheckCircle2, Clock, XCircle } from "lucide-react";
 
@@ -19,9 +18,7 @@ export function MyChoresPage() {
     }
 
     try {
-      const { data } = await axios.get(`${API_BASE}/api/chores/mine`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const { data } = await apiClient.get("/api/chores");
       setChores(data);
     } catch (err) {
       console.error("My chores error:", err);
@@ -123,7 +120,7 @@ export function MyChoresPage() {
                     {chore.budget != null && (
                       <div className="my-chore-detail-item">
                         <DollarSign size={16} />
-                        <span>${chore.budget}</span>
+                        <span>Budget: ${chore.budget}</span>
                       </div>
                     )}
                     <div className="my-chore-detail-item">
@@ -131,6 +128,7 @@ export function MyChoresPage() {
                       <span>{formatDate(chore.createdAt)}</span>
                     </div>
                   </div>
+
                 </div>
               ))}
             </div>

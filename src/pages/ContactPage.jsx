@@ -1,6 +1,7 @@
 // src/pages/ContactPage.jsx
 import React, { useState } from "react";
 import { PageWrapper } from "../components/page-wrapper.jsx";
+import apiClient from "../lib/api.js";
 import { 
   Send, 
   Mail, 
@@ -21,6 +22,7 @@ export function ContactPage() {
     subject: "",
     message: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
 
   const faqs = [
@@ -42,10 +44,34 @@ export function ContactPage() {
     }
   ];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.success("Thanks for reaching out! We'll reply soon.");
-    setFormData({ name: "", email: "", subject: "", message: "" });
+    
+    // Validation
+    if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const response = await apiClient.post("/api/contact", {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+      });
+
+      toast.success(response.data.message || "Thanks for reaching out! We'll reply soon.");
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      console.error("Contact form error:", error);
+      const errorMessage = error.response?.data?.message || "Failed to send message. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -130,9 +156,13 @@ export function ContactPage() {
                   />
                 </div>
 
-                <button type="submit" className="btn contact-submit-btn">
+                <button 
+                  type="submit" 
+                  className="btn contact-submit-btn"
+                  disabled={isSubmitting}
+                >
                   <Send size={18} />
-              Send Message
+                  {isSubmitting ? "Sending..." : "Send Message"}
             </button>
           </form>
         </div>

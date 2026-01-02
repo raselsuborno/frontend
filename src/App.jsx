@@ -1,10 +1,12 @@
 import React from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider } from "./contexts/AuthContext.jsx";
 
 // Components
 import { Navbar } from "./components/navbar.jsx";
 import { Footer } from "./components/footer.jsx";
+import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
 
 
 // Pages
@@ -18,21 +20,18 @@ import { ShopPage } from "./pages/ShopPage.jsx";
 import { PostChorePage } from "./pages/PostChorePage.jsx";
 import { MyChoresPage } from "./pages/MyChoresPage.jsx";
 import { AdminDashboardPage } from "./pages/AdminDashboardPage.jsx";
+import { WorkerDashboardPage } from "./pages/WorkerDashboardPage.jsx";
 import { CartPage } from "./pages/CartPage.jsx";
 import { CareersPage } from "./pages/CareersPage.jsx";
 
 import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { ProfileEditPage } from "./pages/ProfileEditPage.jsx";
+import { WorkerApplicationPage } from "./pages/WorkerApplicationPage.jsx";
 
 // Auth
 import { AuthPage } from "./pages/AuthPage.jsx";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage.jsx";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage.jsx";
-
-// API Base
-export const API_BASE = "http://localhost:5001";
-
-
 
 // ---------------------------
 // App Content Component
@@ -44,10 +43,14 @@ function AppContent() {
   const hideNavbar =
     location.pathname === "/auth" ||
     location.pathname.startsWith("/reset-password");
+  
+  // Show navbar on admin/worker pages but with limited nav items
+  const isAdminOrWorkerPage = location.pathname.startsWith("/admin") || location.pathname.startsWith("/worker");
 
   return (
-    <div className="page-wrapper">
-      <Toaster position="top-right" />
+    <AuthProvider>
+      <div className="page-wrapper">
+        <Toaster position="top-right" />
 
       {/* Main layout content pushed above footer */}
       <div className="layout">
@@ -63,9 +66,29 @@ function AppContent() {
           <Route path="/shop" element={<ShopPage />} />
         <Route path="/post-chore" element={<PostChorePage />} />
         <Route path="/my-chores" element={<MyChoresPage />} />
-        <Route path="/admin" element={<AdminDashboardPage />} />
+        
+          {/* Admin & Worker Portals */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          {/* Worker Dashboard */}
+          <Route 
+            path="/worker" 
+            element={
+              <ProtectedRoute allowedRoles={["worker", "admin"]}>
+                <WorkerDashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+        
           <Route path="/cart" element={<CartPage />} />
           <Route path="/careers" element={<CareersPage />} />
+          <Route path="/apply/worker" element={<WorkerApplicationPage />} />
 
           {/* Auth System */}
           <Route path="/auth" element={<AuthPage />} />
@@ -73,15 +96,22 @@ function AppContent() {
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
 
           {/* User Dashboard */}
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute requireAuth={true}>
+                <DashboardPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/profile/edit" element={<ProfileEditPage />} />
         </Routes>
       </div>
 
-
       {/* ======= MODERN FOOTER ======= */}
       {!hideNavbar && <Footer />}
-    </div>
+      </div>
+    </AuthProvider>
   );
 }
 

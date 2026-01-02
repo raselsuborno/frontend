@@ -1,0 +1,631 @@
+/* ============================================================
+   🌍 GLOBE/MAP CONTAINER STYLES
+=============================================================== */
+
+.globe-container {
+  width: 100%;
+  height: 350px;
+  position: relative;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s ease;
+}
+
+.globe-container:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(11, 92, 40, 0.2);
+}
+
+/* Loading State */
+.globe-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-soft);
+}
+
+.globe-loading-text {
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+}
+
+/* Fallback State (when packages not installed) */
+.globe-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--primary-soft);
+}
+
+.globe-fallback-content {
+  max-width: 400px;
+}
+
+.globe-fallback-text {
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+.globe-fallback-code {
+  display: inline-block;
+  padding: 12px 20px;
+  background: rgba(11, 92, 40, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--primary);
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  border: 1px solid rgba(11, 92, 40, 0.2);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.globe-fallback-hint {
+  color: var(--text-soft);
+  font-size: 12px;
+  margin-top: 16px;
+  font-family: var(--font-sans);
+}
+
+/* Ready State - Rectangle Card */
+.globe-ready {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  width: 100%;
+  height: 350px;
+  overflow: hidden;
+  margin: 0 auto;
+  padding: 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.globe-ready:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(11, 92, 40, 0.2);
+}
+
+/* ============================================================
+   2D WORLD MAP STYLES
+=============================================================== */
+
+.world-map-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.world-map-container svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ============================================================
+   🌍 GLOBAL PRESENCE CARDS — INNOVATIVE DESIGN
+=============================================================== */
+
+.global-presence-container {
+  width: 100%;
+  padding: 0;
+}
+
+.global-presence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.global-presence-card {
+  position: relative;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-soft);
+  animation: fadeInUp 0.6s ease-out backwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 280px;
+}
+
+.global-presence-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(11, 92, 40, 0.2);
+}
+
+.global-presence-flag-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease;
+}
+
+.global-presence-card:hover .global-presence-flag-wrapper {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.global-presence-flag {
+  font-size: 48px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.global-presence-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.global-presence-country {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.global-presence-location {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-soft);
+  font-size: 14px;
+  font-weight: 500;
+  margin: 4px 0;
+}
+
+.global-presence-location svg {
+  color: var(--primary);
+}
+
+.global-presence-description {
+  font-size: 13px;
+  color: var(--text-soft);
+  line-height: 1.5;
+  margin: 8px 0 0;
+  max-width: 240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.global-presence-decoration {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  opacity: 0.4;
+}
+
+.global-presence-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dot-color, var(--primary));
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .global-presence-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .global-presence-card {
+    min-height: 260px;
+    padding: 28px 20px;
+  }
+
+  .global-presence-flag-wrapper {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 18px;
+  }
+
+  .global-presence-flag {
+    font-size: 42px;
+  }
+
+  .global-presence-country {
+    font-size: 20px;
+  }
+}
+
+/* Dark theme support */
+:root.dark-theme .global-presence-card {
+  background: var(--bg-soft);
+  border-color: var(--border-subtle);
+}
+
+:root.dark-theme .global-presence-country {
+  color: var(--text-main);
+}
+
+:root.dark-theme .global-presence-location,
+:root.dark-theme .global-presence-description {
+  color: var(--text-soft);
+}
+
+/* ============================================================
+   ⭐ GOOGLE REVIEWS — CAROUSEL DESIGN (Trustindex Style)
+=============================================================== */
+
+.google-reviews-widget-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.google-reviews-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* Left Side - Rating Summary */
+.google-reviews-summary-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px 24px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: 100px;
+}
+
+.google-reviews-excellent {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.google-reviews-stars-large {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.google-reviews-count-text {
+  font-size: 15px;
+  color: var(--text-soft);
+  margin-top: 4px;
+}
+
+.google-reviews-count-text strong {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.google-reviews-logo {
+  margin-top: 8px;
+}
+
+.google-reviews-logo img {
+  display: block;
+  opacity: 0.9;
+}
+
+/* Right Side - Carousel */
+.google-reviews-carousel-wrapper {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.google-reviews-carousel {
+  display: flex;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 24px;
+}
+
+.google-review-card {
+  flex: 0 0 calc(33.333% - 16px);
+  min-width: 0;
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.google-review-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+}
+
+.google-review-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+}
+
+.google-review-platform-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+}
+
+.google-review-profile {
+  flex-shrink: 0;
+}
+
+.google-review-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-subtle);
+}
+
+.google-review-author {
+  flex: 1;
+  min-width: 0;
+}
+
+.google-review-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.google-review-date {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.google-review-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.google-review-verified {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.google-review-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+  margin-top: 8px;
+  flex: 1;
+}
+
+.google-review-read-more {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+  text-align: left;
+  transition: color 0.2s ease;
+  margin-top: 4px;
+}
+
+.google-review-read-more:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Navigation Arrows */
+.google-review-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+}
+
+.google-review-nav:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.google-review-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.google-review-nav-prev {
+  left: -20px;
+}
+
+.google-review-nav-next {
+  right: -20px;
+}
+
+/* Footer */
+.google-reviews-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+.google-reviews-read-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+.google-reviews-read-all-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .google-reviews-layout {
+    grid-template-columns: 240px 1fr;
+    gap: 32px;
+  }
+
+  .google-reviews-carousel {
+    gap: 20px;
+  }
+
+  .google-review-card {
+    flex: 0 0 calc(50% - 10px);
+  }
+
+  .google-review-nav-prev {
+    left: -15px;
+  }
+
+  .google-review-nav-next {
+    right: -15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .google-reviews-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .google-reviews-summary-panel {
+    position: static;
+    padding: 24px 20px;
+    text-align: center;
+    align-items: center;
+  }
+
+  .google-reviews-excellent {
+    font-size: 24px;
+  }
+
+  .google-reviews-stars-large {
+    justify-content: center;
+  }
+
+  .google-review-card {
+    flex: 0 0 100%;
+  }
+
+  .google-review-nav {
+    width: 36px;
+    height: 36px;
+  }
+
+  .google-review-nav-prev {
+    left: 10px;
+  }
+
+  .google-review-nav-next {
+    right: 10px;
+  }
+}
+
+/* Dark theme support */
+:root.dark-theme .google-reviews-summary-panel,
+:root.dark-theme .google-review-card {
+  background: var(--bg-soft);
+  border-color: var(--border-subtle);
+}
+
+:root.dark-theme .google-review-nav {
+  background: var(--bg-soft);
+  border-color: var(--border-subtle);
+  color: var(--text-main);
+}
+

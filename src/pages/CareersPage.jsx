@@ -3,8 +3,8 @@
 
 
 import React, { useState } from "react";
-import axios from "axios";
-import { API_BASE } from "../config.js";
+import { useNavigate } from "react-router-dom";
+import apiClient from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import toast from "react-hot-toast";
 import { 
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 export function CareersPage() {
+  const navigate = useNavigate();
   const [selectedJob, setSelectedJob] = useState(null);
   const [form, setForm] = useState({
     name: "",
@@ -65,7 +66,7 @@ export function CareersPage() {
     setLoading(true);
 
     try {
-      await axios.post(`${API_BASE}/api/careers`, { 
+      await apiClient.post("/api/careers", { 
         ...form, 
         jobTitle: selectedJob,
         resumeUrl: form.resume 
@@ -93,6 +94,41 @@ export function CareersPage() {
           <p className="careers-subtitle">
             Be part of ChorEscape — where teamwork meets excellence. Browse our openings and apply online below.
           </p>
+          
+          {/* Worker Application CTA */}
+          <div style={{ marginTop: "32px" }}>
+            <div style={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              padding: "32px",
+              borderRadius: "16px",
+              color: "white",
+              textAlign: "center",
+              maxWidth: "600px",
+              margin: "0 auto"
+            }}>
+              <Briefcase size={48} style={{ marginBottom: "16px" }} />
+              <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "12px" }}>
+                Join ChorEscape as a Worker
+              </h2>
+              <p style={{ fontSize: "16px", opacity: 0.9, marginBottom: "24px" }}>
+                Provide services to customers and earn money on your schedule. Flexible hours, competitive pay, and a supportive team.
+              </p>
+              <button
+                onClick={() => navigate("/apply/worker")}
+                className="btn"
+                style={{
+                  background: "white",
+                  color: "#667eea",
+                  fontWeight: 600,
+                  padding: "12px 32px",
+                  fontSize: "16px"
+                }}
+              >
+                Apply as Worker
+                <ArrowRight size={18} style={{ marginLeft: "8px" }} />
+              </button>
+            </div>
+          </div>
         </section>
 
         {/* Job Listings */}

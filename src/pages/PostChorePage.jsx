@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
+import apiClient from "../lib/api.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
-import { API_BASE } from "../config.js";
 import { Plus, Sparkles, FileText, DollarSign, Tag, ArrowRight } from "lucide-react";
 
 export function PostChorePage() {
@@ -21,28 +20,39 @@ export function PostChorePage() {
       return;
     }
 
+    if (!title.trim()) {
+      toast.error("Please enter a title for your chore.");
+      return;
+    }
+
     setLoading(true);
     try {
-      await axios.post(
-        `${API_BASE}/api/chores`,
+      const response = await apiClient.post(
+        "/api/chores",
         {
-          title,
+          title: title.trim(),
           category,
-          description,
+          description: description.trim() || null,
           budget: budget ? Number(budget) : null,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
 
-      toast.success("Chore posted successfully!");
+      toast.success("Chore posted successfully! We'll review it and send you a quote soon.");
+      
+      // Reset form
       setTitle("");
       setCategory("Cleaning");
       setDescription("");
       setBudget("");
+      
+      // Redirect to My Chores page after a short delay
+      setTimeout(() => {
+        window.location.href = "/my-chores";
+      }, 1500);
     } catch (err) {
       console.error("Post chore error:", err);
       toast.error(
-        err.response?.data?.message || "Failed to post chore. Try again."
+        err.response?.data?.message || "Failed to post chore. Please try again."
       );
     } finally {
       setLoading(false);

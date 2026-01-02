@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { API_BASE } from "../config.js";
+import apiClient from "../lib/api.js";
 
 export function ProfileEditPage() {
   const [user, setUser] = useState(null);
@@ -9,10 +8,9 @@ export function ProfileEditPage() {
 
   useEffect(() => {
     if (!token) return;
-    const headers = { Authorization: `Bearer ${token}` };
 
-    axios
-      .get(`${API_BASE}/api/profile`, { headers })
+    apiClient
+      .get("/api/profile")
       .then((res) => setUser(res.data.user))
       .catch(() => setMsg("⚠️ Could not load profile"));
   }, [token]);
@@ -27,8 +25,7 @@ export function ProfileEditPage() {
     setMsg("");
 
     try {
-      const headers = { Authorization: `Bearer ${token}` };
-      await axios.put(`${API_BASE}/api/profile`, user, { headers });
+      await apiClient.put("/api/profile", user);
       setMsg("✅ Profile updated successfully!");
     } catch {
       setMsg("❌ Failed to update profile. Please try again later.");

@@ -1,0 +1,788 @@
+/* ============================================================
+   🎨 UNIFIED DASHBOARD DESIGN SYSTEM
+   Perfect Alignment, Consistent Spacing, Professional UI
+=============================================================== */
+
+/* ============================================================
+   📐 UNIFIED SPACING SYSTEM
+=============================================================== */
+:root {
+  --space-unit: 8px;
+  --space-xs: calc(var(--space-unit) * 0.5);   /* 4px */
+  --space-sm: var(--space-unit);                /* 8px */
+  --space-md: calc(var(--space-unit) * 2);      /* 16px */
+  --space-lg: calc(var(--space-unit) * 3);      /* 24px */
+  --space-xl: calc(var(--space-unit) * 4);      /* 32px */
+  --space-2xl: calc(var(--space-unit) * 6);     /* 48px */
+  --space-3xl: calc(var(--space-unit) * 8);     /* 64px */
+}
+
+/* ============================================================
+   🎴 UNIFIED CARD SYSTEM
+   All cards use the same base styles
+=============================================================== */
+
+.card,
+.dash-card,
+.dash-stat-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: var(--space-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card:hover,
+.dash-card:hover,
+.dash-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: rgba(11, 92, 40, 0.2);
+}
+
+/* Card Header - Consistent across all cards */
+.card-header,
+.dash-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-title,
+.dash-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.card-icon,
+.dash-card-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+/* ============================================================
+   📊 STAT CARD - Unified Design
+=============================================================== */
+
+.dash-stat-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 140px;
+  padding: var(--space-lg);
+  gap: var(--space-md);
+}
+
+.dash-stat-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-soft), rgba(11, 92, 40, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.dash-stat-card:hover .dash-stat-icon-wrap {
+  background: linear-gradient(135deg, var(--primary), var(--hunter-green));
+  color: white;
+  transform: scale(1.05);
+}
+
+.dash-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.stat-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin: 0;
+  transition: color 0.3s ease;
+}
+
+.dash-stat-card:hover .stat-val {
+  color: var(--hunter-green);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Clickable stat cards */
+.dash-stat-card-clickable {
+  cursor: pointer;
+}
+
+.dash-stat-card-clickable:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* ============================================================
+   📐 DASHBOARD LAYOUT - Perfect Alignment
+=============================================================== */
+
+.dash-shell {
+  padding: var(--space-lg) 0;
+  background: var(--bg);
+  min-height: 100vh;
+}
+
+.dash-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-xl);
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+  align-items: start;
+}
+
+/* ============================================================
+   📋 DASHBOARD MAIN CONTENT
+=============================================================== */
+
+.dash-main {
+  min-width: 0;
+  width: 100%;
+}
+
+.dash-main-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  width: 100%;
+}
+
+/* Page Header - Consistent across all pages */
+.dash-hero-row,
+.dash-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-lg);
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.dash-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0 0 var(--space-sm) 0;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.dash-subtitle {
+  font-size: 15px;
+  color: var(--text-soft);
+  line-height: 1.6;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ============================================================
+   📊 STAT GRID - Perfect Alignment
+=============================================================== */
+
+.dash-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-lg);
+  width: 100%;
+}
+
+/* Ensure all stat cards have same height */
+.dash-stat-grid .dash-stat-card {
+  height: 100%;
+}
+
+/* ============================================================
+   📑 TWO COLUMN LAYOUT
+=============================================================== */
+
+.dash-two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: var(--space-lg);
+  width: 100%;
+}
+
+/* Ensure equal height cards in two-column layout */
+.dash-two-col > .dash-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+/* Full width card in grid */
+.dash-card[style*="gridColumn"] {
+  grid-column: 1 / -1;
+}
+
+/* ============================================================
+   🎴 CONTENT CARDS (Quotes, Chores, etc.)
+=============================================================== */
+
+/* Grid container for content cards */
+.dash-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-lg);
+  padding: 0;
+  width: 100%;
+}
+
+/* Individual content item card */
+.dash-content-card {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  transition: all 0.25s ease;
+  min-height: 200px;
+}
+
+.dash-content-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+}
+
+.dash-content-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.dash-content-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.dash-content-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.dash-content-card-description {
+  font-size: 14px;
+  color: var(--text-soft);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.dash-content-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.dash-content-card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.dash-content-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: auto;
+}
+
+/* ============================================================
+   🔘 BUTTON SYSTEM - Unified
+=============================================================== */
+
+/* Base button styles - override any inline styles */
+.btn,
+button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  background: var(--primary);
+  color: white;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(11, 92, 40, 0.15);
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(11, 92, 40, 0.25);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Button variants */
+.btn-outline,
+button.btn-outline {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  box-shadow: none;
+  padding: 10px 20px;
+}
+
+.btn-outline:hover:not(:disabled),
+button.btn-outline:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-outline.active,
+button.btn-outline.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  gap: 6px;
+}
+
+/* ============================================================
+   📋 FILTER BUTTONS - Consistent Style
+=============================================================== */
+
+.dash-filters {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.dash-filter-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 2px solid var(--border-subtle);
+  background: var(--bg-soft);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dash-filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.dash-filter-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* ============================================================
+   📑 TABLE/DATA DISPLAY
+=============================================================== */
+
+.dash-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dash-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.dash-table-row {
+  transition: background 0.2s ease;
+}
+
+.dash-table-row:hover {
+  background: var(--primary-soft);
+}
+
+.dash-table-cell {
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.dash-table-header {
+  padding: var(--space-md);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-soft);
+  border-bottom: 2px solid var(--border-subtle);
+  background: var(--bg);
+}
+
+/* ============================================================
+   📝 LIST STYLES
+=============================================================== */
+
+.dash-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.dash-list li {
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: padding-left 0.2s ease, background 0.2s ease;
+}
+
+.dash-list li:last-child {
+  border-bottom: none;
+}
+
+.dash-list li:hover {
+  padding-left: var(--space-sm);
+  background: var(--primary-soft);
+}
+
+.dash-list-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xs);
+}
+
+.dash-list-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.dash-list-sub {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin-top: var(--space-xs);
+  line-height: 1.5;
+}
+
+.dash-list-meta {
+  font-size: 12px;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   📭 EMPTY STATE
+=============================================================== */
+
+.dash-empty-state {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.dash-empty-icon {
+  width: 64px;
+  height: 64px;
+  color: var(--text-soft);
+  opacity: 0.5;
+}
+
+.dash-empty-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.dash-empty-subtext {
+  font-size: 14px;
+  color: var(--text-soft);
+  margin: 0;
+  max-width: 400px;
+}
+
+/* ============================================================
+   🎨 NEXT BOOKING CARD
+=============================================================== */
+
+.next-block {
+  padding: var(--space-lg);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-soft), rgba(11, 92, 40, 0.08));
+  border: 1px solid rgba(11, 92, 40, 0.15);
+  box-shadow: 0 2px 8px rgba(11, 92, 40, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.next-date {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.next-service {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.next-address {
+  font-size: 14px;
+  color: var(--text-soft);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.next-status-chip {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 50px;
+  background: #ecfdf5;
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  margin-top: var(--space-xs);
+}
+
+/* ============================================================
+   🏷️ BADGES - Consistent
+=============================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+/* ============================================================
+   💰 BILLING CARD CONTENT
+=============================================================== */
+
+.dash-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.dash-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dash-info-row:last-child {
+  border-bottom: none;
+}
+
+.dash-info-label {
+  font-size: 14px;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+.dash-info-value {
+  font-size: 15px;
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.dash-card-text {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================================
+   📱 RESPONSIVE
+=============================================================== */
+
+@media (max-width: 1024px) {
+  .dash-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--space-lg);
+    padding: 0 var(--space-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  .dash-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    padding: 0 var(--space-md);
+  }
+
+  .dash-stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-title {
+    font-size: 1.5rem;
+  }
+
+  .dash-hero-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ============================================================
+   🔧 UTILITY CLASSES
+=============================================================== */
+
+/* Alignment */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* Flex utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+
+/* Spacing */
+.m-0 { margin: 0; }
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+.p-0 { padding: 0; }
+
+/* Width */
+.w-full { width: 100%; }
+
+/* ============================================================
+   ✨ ANIMATIONS
+=============================================================== */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease both;
+}
+
+.fade-in-delay-sm {
+  animation-delay: 0.1s;
+}
+
+.fade-in-delay-md {
+  animation-delay: 0.2s;
+}
+
+.fade-in-delay-lg {
+  animation-delay: 0.3s;
+}
+

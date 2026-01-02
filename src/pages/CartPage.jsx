@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
+import apiClient from "../lib/api.js";
 import toast from "react-hot-toast";
 import { Trash2, ShoppingBag, Plus, Minus, ArrowLeft } from "lucide-react";
 
@@ -79,10 +80,9 @@ export function CartPage() {
         quantity: item.quantity
       }));
 
-      await axios.post(
-        `${API_BASE}/api/shop/orders`,
-        { items: orderItems },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await apiClient.post(
+        "/api/shop/orders",
+        { items: orderItems }
       );
 
       // Clear cart after successful order

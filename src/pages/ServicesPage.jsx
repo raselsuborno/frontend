@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
+import { PostChoreModal } from "../components/PostChoreModal.jsx";
 import "../styles/services.page.css";
 import { IMAGES } from "../components/serviceImages";
 import toast from "react-hot-toast";
@@ -31,64 +32,9 @@ import {
 export function ServicesPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("residential");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalStep, setModalStep] = useState(1);
-  const modalRef = useRef(null);
-
-  // Custom chore state
-  const [customChore, setCustomChore] = useState({
-    title: "",
-    category: "",
-    budget: "",
-    details: "",
-  });
-
-  // Guest info for modal
-  const [guestInfo, setGuestInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    street: "",
-    city: "",
-    postal: "",
-  });
+  const [postChoreModalOpen, setPostChoreModalOpen] = useState(false);
 
   const isResidential = mode === "residential";
-
-  // Click outside handler
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (modalOpen && modalRef.current && !modalRef.current.contains(e.target)) {
-        setModalOpen(false);
-        setModalStep(1);
-      }
-    }
-
-    function handleEsc(e) {
-      if (e.key === "Escape" && modalOpen) {
-        setModalOpen(false);
-        setModalStep(1);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEsc);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEsc);
-    };
-  }, [modalOpen]);
-
-  const submitChore = () => {
-    if (!customChore.title.trim()) {
-      toast.error("Enter a title");
-      return;
-    }
-    navigate("/pricing-booking", { state: { custom: customChore } });
-    setModalOpen(false);
-    setModalStep(1);
-  };
 
 const handleResidentialBook = (serviceId, title) => {
   navigate("/pricing-booking", {
@@ -448,7 +394,7 @@ const handleCorporateQuote = (serviceId, title) => {
         {/* Post a Chore Section - Only for Residential */}
         {isResidential && (
           <section className="svc-custom-chore-section">
-            <div className="svc-custom-chore-card" onClick={() => setModalOpen(true)}>
+            <div className="svc-custom-chore-card" onClick={() => setPostChoreModalOpen(true)}>
               <div className="svc-custom-chore-left">
                 <div className="svc-custom-chore-icon">
                   <Sparkles size={24} />
@@ -461,7 +407,7 @@ const handleCorporateQuote = (serviceId, title) => {
                   </p>
                 </div>
               </div>
-              <button className="svc-custom-cta" onClick={(e) => { e.stopPropagation(); setModalOpen(true); }}>
+              <button className="svc-custom-cta" onClick={(e) => { e.stopPropagation(); setPostChoreModalOpen(true); }}>
                 Post Your Chore <ArrowRight size={18} />
               </button>
             </div>
@@ -470,198 +416,10 @@ const handleCorporateQuote = (serviceId, title) => {
       </div>
 
       {/* ========== POST CHORE MODAL ========== */}
-      {modalOpen && (
-        <div className="home-modal-overlay">
-          <div className="home-modal-card" ref={modalRef}>
-            <button
-              className="home-modal-close"
-              onClick={() => {
-                setModalOpen(false);
-                setModalStep(1);
-              }}
-            >
-              <X size={20} />
-            </button>
-
-            {/* Step 1: Chore Details */}
-            {modalStep === 1 && (
-              <>
-                <div className="home-modal-header">
-                  <div className="home-modal-icon">
-                    <Plus size={24} />
-                  </div>
-                  <h3 className="home-modal-title">Create a Custom Chore</h3>
-                  <p className="home-modal-subtitle">Tell us what you need and we'll match you with the right professional</p>
-                </div>
-
-                <div className="home-modal-form">
-                  <div className="home-modal-form-group">
-                    <label className="home-modal-label">Chore Title *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Deep clean entire house"
-                      className="home-modal-input"
-                      value={customChore.title}
-                      onChange={(e) =>
-                        setCustomChore({ ...customChore, title: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="home-modal-form-group">
-                    <label className="home-modal-label">Category (optional)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Cleaning, Handyman, Laundry"
-                      className="home-modal-input"
-                      value={customChore.category}
-                      onChange={(e) =>
-                        setCustomChore({ ...customChore, category: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="home-modal-form-group">
-                    <label className="home-modal-label">Budget (optional)</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., $100-200"
-                      className="home-modal-input"
-                      value={customChore.budget}
-                      onChange={(e) =>
-                        setCustomChore({ ...customChore, budget: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="home-modal-form-group">
-                    <label className="home-modal-label">Details</label>
-                    <textarea
-                      placeholder="Describe the chore in detail..."
-                      className="home-modal-textarea"
-                      rows="4"
-                      value={customChore.details}
-                      onChange={(e) =>
-                        setCustomChore({ ...customChore, details: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <button className="home-modal-btn" onClick={() => setModalStep(2)}>
-                    Continue <ArrowRight size={18} />
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* Step 2: Guest Info */}
-            {modalStep === 2 && (
-              <>
-                <div className="home-modal-header">
-                  <h3 className="home-modal-title">Your Contact Information</h3>
-                  <p className="home-modal-subtitle">We'll use this to match you with the right professional</p>
-                </div>
-
-                <div className="home-modal-form">
-                  <div className="home-modal-form-row">
-                    <div className="home-modal-form-group">
-                      <label className="home-modal-label">Full Name *</label>
-                      <input
-                        type="text"
-                        placeholder="John Doe"
-                        className="home-modal-input"
-                        value={guestInfo.name}
-                        onChange={(e) =>
-                          setGuestInfo({ ...guestInfo, name: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="home-modal-form-group">
-                      <label className="home-modal-label">Email *</label>
-                      <input
-                        type="email"
-                        placeholder="john@example.com"
-                        className="home-modal-input"
-                        value={guestInfo.email}
-                        onChange={(e) =>
-                          setGuestInfo({ ...guestInfo, email: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="home-modal-form-group">
-                    <label className="home-modal-label">Phone *</label>
-                    <input
-                      type="tel"
-                      placeholder="(306) 555-0123"
-                      className="home-modal-input"
-                      value={guestInfo.phone}
-                      onChange={(e) =>
-                        setGuestInfo({ ...guestInfo, phone: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="home-modal-form-group">
-                    <label className="home-modal-label">Street Address *</label>
-                    <input
-                      type="text"
-                      placeholder="123 Main St"
-                      className="home-modal-input"
-                      value={guestInfo.street}
-                      onChange={(e) =>
-                        setGuestInfo({ ...guestInfo, street: e.target.value })
-                      }
-                    />
-                  </div>
-
-                  <div className="home-modal-form-row">
-                    <div className="home-modal-form-group">
-                      <label className="home-modal-label">City *</label>
-                      <input
-                        type="text"
-                        placeholder="Regina"
-                        className="home-modal-input"
-                        value={guestInfo.city}
-                        onChange={(e) =>
-                          setGuestInfo({ ...guestInfo, city: e.target.value })
-                        }
-                      />
-                    </div>
-
-                    <div className="home-modal-form-group">
-                      <label className="home-modal-label">Postal Code *</label>
-                      <input
-                        type="text"
-                        placeholder="S4P 0A1"
-                        className="home-modal-input"
-                        value={guestInfo.postal}
-                        onChange={(e) =>
-                          setGuestInfo({ ...guestInfo, postal: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="home-modal-form-row">
-                    <button
-                      className="home-modal-btn outline"
-                      onClick={() => setModalStep(1)}
-                    >
-                      Back
-                    </button>
-                    <button className="home-modal-btn" onClick={submitChore}>
-                      Submit Chore <ArrowRight size={18} />
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <PostChoreModal 
+        isOpen={postChoreModalOpen} 
+        onClose={() => setPostChoreModalOpen(false)} 
+      />
     </PageWrapper>
   );
 }

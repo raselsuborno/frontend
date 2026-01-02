@@ -3,6 +3,9 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.jsx";
 import "./theme.css";
+import "./styles/unified-design-system.css";
+import "./styles/dashboard-enhanced.css";
+import "./styles/dashboard-unified.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

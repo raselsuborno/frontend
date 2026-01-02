@@ -1,6 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
-import { API_BASE } from "../../config.js";
+import apiClient from "../../lib/api.js";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -26,7 +25,7 @@ export default function CorporateReviewCard({ service, details, onBack }) {
         ].filter(Boolean).join("\n") || null,
       };
 
-      await axios.post(`${API_BASE}/api/quotes`, quoteData);
+      await apiClient.post("/api/quotes", quoteData);
       
       toast.success("Quote request submitted successfully! 🎉");
       navigate("/");

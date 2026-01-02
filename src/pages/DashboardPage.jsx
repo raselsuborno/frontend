@@ -1,8 +1,8 @@
 // src/pages/DashboardPage.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { API_BASE } from "../config.js";
+import apiClient from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import toast from "react-hot-toast";
 import {
   LayoutDashboard,
@@ -23,12 +23,40 @@ import {
   Eye,
   EyeOff,
   Plus,
+  X,
+  RefreshCw,
+  Star,
+  Filter,
+  FileText,
+  Download,
+  DollarSign,
+  CheckCircle,
+  AlertCircle,
+  ClipboardList,
+  Tag,
+  Edit,
+  Save,
+  Trash2,
+  Quote,
 } from "lucide-react";
+import { BookingDetailModal } from "../components/BookingDetailModal.jsx";
+import { AddressManagement } from "../components/AddressManagement.jsx";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner.jsx";
+import { EmptyState } from "../components/ui/EmptyState.jsx";
+import { Badge } from "../components/ui/Badge.jsx";
+import { Breadcrumbs } from "../components/ui/Breadcrumbs.jsx";
+import { StatCard } from "../components/ui/StatCard.jsx";
+import { Tooltip } from "../components/ui/Tooltip.jsx";
 
 export function DashboardPage() {
+  const { user: authUser, profile, session, loading: authLoading } = useAuth();
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [chores, setChores] = useState([]);
+  const [quotes, setQuotes] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -46,29 +74,55 @@ export function DashboardPage() {
     confirmPassword: "",
   });
 
-  const token = localStorage.getItem("token");
-
   // ========== LOAD PROFILE + BOOKINGS ==========
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) {
+      return;
+    }
+
+    // Check if user has valid session
+    if (!session || !session.access_token) {
+      setLoading(false);
+      setError("Please log in to view your dashboard.");
+      return;
+    }
+
     const fetchData = async () => {
-      if (!token) return;
+      setLoading(true);
+      setError(null);
 
       try {
-        const [userRes, bookingRes] = await Promise.all([
-          axios.get(`${API_BASE}/api/profile/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get(`${API_BASE}/api/bookings/mine`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+        console.log("[Dashboard] Fetching profile and bookings...");
+        
+        // Add timeout to prevent hanging forever
+        const profilePromise = apiClient.get("/api/profile/me");
+        const bookingsPromise = apiClient.get("/api/bookings/mine");
+        const choresPromise = apiClient.get("/api/chores").catch(err => {
+          console.warn("[Dashboard] Failed to load chores:", err);
+          return { data: [] }; // Return empty array on error
+        });
+        const quotesPromise = apiClient.get("/api/quotes/mine").catch(err => {
+          console.warn("[Dashboard] Failed to load quotes:", err);
+          return { data: [] }; // Return empty array on error
+        });
+        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Request timeout after 15 seconds")), 15000)
+        );
+
+        const [userRes, bookingRes, choresRes, quotesRes] = await Promise.race([
+          Promise.all([profilePromise, bookingsPromise, choresPromise, quotesPromise]),
+          timeoutPromise
         ]);
 
         const u = userRes.data;
+        console.log("[Dashboard] ✅ Profile loaded:", u);
         setUser(u);
 
         setForm((prev) => ({
           ...prev,
-          name: u.name || "",
+          name: u.name || u.fullName || "",
           email: u.email || "",
           phone: u.phone || "",
           address: u.address || "",
@@ -84,13 +138,21 @@ export function DashboardPage() {
         }));
 
         setBookings(bookingRes.data || []);
+        setChores(choresRes.data || []);
+        const quotesData = quotesRes.data || [];
+        setQuotes(quotesData);
+        setError(null);
       } catch (err) {
-        console.error("Dashboard load error:", err);
+        console.error("[Dashboard] ❌ Load error:", err);
+        setError(err.response?.data?.message || err.message || "Failed to load dashboard. Please refresh the page.");
+        // Don't set user to null - show error but keep UI functional if user was previously loaded
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchData();
-  }, [token]);
+  }, [authLoading, session]);
 
   // ========== STATS ==========
   const totalBookings = bookings.length;
@@ -142,13 +204,37 @@ export function DashboardPage() {
 
   const handleAvatarChange = (file) => {
     if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be less than 5MB");
+      return;
+    }
+
     const reader = new FileReader();
+    
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
+    };
+
     reader.onloadend = () => {
+      const base64String = reader.result;
+      console.log("[Profile] Image loaded, size:", base64String.length);
+      
       setForm((prev) => ({
         ...prev,
-        profilePicUrl: reader.result,
+        profilePicUrl: base64String,
       }));
+      
+      toast.success("Image selected! Click 'Save changes' to update your profile picture.");
     };
+
     reader.readAsDataURL(file);
   };
 
@@ -162,55 +248,105 @@ export function DashboardPage() {
 
     try {
       const payload = {
-        name: form.name,
-        phone: form.phone,
-        profilePicUrl: form.profilePicUrl,
-        street: form.street,
-        unit: form.unit,
-        city: form.city,
-        province: form.province,
-        postal: form.postal,
-        country: form.country,
+        fullName: form.name || form.fullName,
+        phone: form.phone || null,
+        profilePicUrl: form.profilePicUrl || null,
+        street: form.street || null,
+        unit: form.unit || null,
+        city: form.city || null,
+        province: form.province || null,
+        postal: form.postal || null,
+        country: form.country || null,
       };
 
-      if (form.newPassword) payload.newPassword = form.newPassword;
+      console.log("[Profile] Saving profile with picture:", {
+        hasProfilePicUrl: !!payload.profilePicUrl,
+        profilePicUrlLength: payload.profilePicUrl?.length || 0,
+      });
 
-      const { data: updated } = await axios.put(
-        `${API_BASE}/api/profile`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+      // Note: Password update would need a separate endpoint in Supabase
+      // if (form.newPassword) payload.newPassword = form.newPassword;
+
+      const { data: updated } = await apiClient.put(
+        "/api/profile",
+        payload
       );
 
-      setUser((prev) => ({ ...(prev || {}), ...updated }));
+      console.log("[Profile] Profile updated successfully:", {
+        hasProfilePicUrl: !!updated.profilePicUrl,
+      });
 
-      toast.success("Profile updated successfully!");
+      // Update both user state and form state with the response
+      setUser((prev) => ({ ...(prev || {}), ...updated }));
 
       setForm((prev) => ({
         ...prev,
+        name: updated.fullName || updated.name || prev.name,
+        profilePicUrl: updated.profilePicUrl || prev.profilePicUrl,
         newPassword: "",
         confirmPassword: "",
       }));
+
+      toast.success("Profile updated successfully!");
     } catch (err) {
       console.error("Profile update error:", err);
-      toast.error("Could not update profile. Please try again.");
+      const errorMessage = err.response?.data?.message || err.message || "Could not update profile";
+      toast.error(errorMessage);
     }
   };
 
+  // Logout is handled by AuthContext - just redirect
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    window.location.href = "/auth";
+    window.location.href = "/";
   };
 
   // ========== LOADING ==========
+  if (loading) {
+    return (
+      <PageWrapper>
+        <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <h2>Loading Dashboard...</h2>
+          <p className="muted">
+            Please wait while we load your profile.
+          </p>
+        </section>
+      </PageWrapper>
+    );
+  }
+
+  // ========== ERROR ==========
+  if (error && !user) {
+    return (
+      <PageWrapper>
+        <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <h2>Error Loading Dashboard</h2>
+          <p style={{ color: "var(--error)", margin: "20px 0" }}>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn"
+            style={{ marginTop: "20px" }}
+          >
+            Refresh Page
+          </button>
+        </section>
+      </PageWrapper>
+    );
+  }
+
+  // ========== NO USER (should redirect to login) ==========
   if (!user) {
     return (
       <PageWrapper>
-        <section className="section" style={{ textAlign: "center" }}>
-          <h2>Loading Dashboard...</h2>
-          <p className="muted">
-            If this never loads, check that backend is running.
-          </p>
+        <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <h2>Not Logged In</h2>
+          <p className="muted">Please log in to view your dashboard.</p>
+          <button 
+            onClick={() => window.location.href = "/auth"} 
+            className="btn"
+            style={{ marginTop: "20px" }}
+          >
+            Go to Login
+          </button>
         </section>
       </PageWrapper>
     );
@@ -294,6 +430,26 @@ export function DashboardPage() {
 
               <button
                 className={`dash-nav-item ${
+                  activeTab === "chores" ? "is-active" : ""
+                }`}
+                onClick={() => setActiveTab("chores")}
+              >
+                <ClipboardList size={20} />
+                <span>My Chores</span>
+              </button>
+
+              <button
+                className={`dash-nav-item ${
+                  activeTab === "quotes" ? "is-active" : ""
+                }`}
+                onClick={() => setActiveTab("quotes")}
+              >
+                <Quote size={20} />
+                <span>Quote Requests</span>
+              </button>
+
+              <button
+                className={`dash-nav-item ${
                   activeTab === "profile" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("profile")}
@@ -321,6 +477,11 @@ export function DashboardPage() {
                 stats={{ totalBookings, completed, upcoming, totalHours }}
                 nextBooking={nextBooking}
                 recent={recentBookings}
+                allBookings={bookings}
+                onStatClick={(filterType) => {
+                  setActiveTab("orders");
+                  setFilter(filterType === "completed" ? "past" : filterType === "upcoming" ? "upcoming" : "all");
+                }}
               />
             )}
 
@@ -329,17 +490,53 @@ export function DashboardPage() {
             )}
 
             {activeTab === "orders" && (
-              <DashboardOrders bookings={bookings} />
+                  <DashboardOrders 
+                    bookings={bookings}
+                    onRefresh={() => {
+                      // Refresh bookings
+                      const token = localStorage.getItem("token");
+                      if (token) {
+                        apiClient.get("/api/bookings/mine")
+                          .then((res) => setBookings(res.data || []))
+                          .catch((err) => console.error("Failed to refresh bookings:", err));
+                      }
+                    }}
+                  />
             )}
 
             {activeTab === "billing" && (
-              <DashboardBilling bookings={bookings} />
+              <DashboardBilling bookings={bookings} user={user} />
             )}
 
             {activeTab === "addresses" && (
-              <DashboardAddresses
-                addresses={uniqueAddresses}
-                primaryAddress={primaryAddress}
+              <AddressManagement />
+            )}
+
+            {activeTab === "chores" && (
+              <DashboardChores 
+                chores={chores} 
+                onRefresh={async () => {
+                  try {
+                    const res = await apiClient.get("/api/chores");
+                    setChores(res.data || []);
+                  } catch (err) {
+                    console.error("Failed to refresh chores:", err);
+                  }
+                }}
+              />
+            )}
+
+            {activeTab === "quotes" && (
+              <DashboardQuotes 
+                quotes={quotes} 
+                onRefresh={async () => {
+                  try {
+                    const res = await apiClient.get("/api/quotes/mine");
+                    setQuotes(res.data || []);
+                  } catch (err) {
+                    console.error("Failed to refresh quotes:", err);
+                  }
+                }}
               />
             )}
 
@@ -359,7 +556,7 @@ export function DashboardPage() {
 }
 
 /* ================== OVERVIEW ================== */
-function DashboardOverview({ firstName, stats, nextBooking, recent }) {
+function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings, onFilterChange, onStatClick }) {
   return (
     <div className="dash-main-inner">
       <header className="dash-hero-row fade-in-up">
@@ -377,25 +574,33 @@ function DashboardOverview({ firstName, stats, nextBooking, recent }) {
       </header>
 
       <div className="dash-stat-grid fade-in-up fade-in-delay-sm">
-        <StatCard
+        <StatCardLegacy
           label="Total bookings"
           value={stats.totalBookings}
           icon={Calendar}
+          onClick={() => onStatClick && onStatClick("all")}
+          clickable
         />
-        <StatCard
+        <StatCardLegacy
           label="Completed"
           value={stats.completed}
           icon={CheckCircle2}
+          onClick={() => onStatClick && onStatClick("completed")}
+          clickable
         />
-        <StatCard
+        <StatCardLegacy
           label="Upcoming"
           value={stats.upcoming}
           icon={Clock}
+          onClick={() => onStatClick && onStatClick("upcoming")}
+          clickable
         />
-        <StatCard
+        <StatCardLegacy
           label="Hours booked"
           value={stats.totalHours}
           icon={Timer}
+          onClick={() => onStatClick && onStatClick("all")}
+          clickable
         />
       </div>
 
@@ -403,7 +608,19 @@ function DashboardOverview({ firstName, stats, nextBooking, recent }) {
         <div className="dash-card">
           <h3 className="dash-card-title">Next booking</h3>
           {!nextBooking && (
-            <p className="muted">No upcoming bookings yet.</p>
+            <EmptyState
+              icon={Calendar}
+              title="No upcoming bookings"
+              description="Book a service to see your next appointment here."
+              action={
+                <button
+                  className="btn btn-primary"
+                  onClick={() => window.location.href = "/pricing-booking"}
+                >
+                  Book Now
+                </button>
+              }
+            />
           )}
           {nextBooking && (
             <div className="next-block">
@@ -428,7 +645,11 @@ function DashboardOverview({ firstName, stats, nextBooking, recent }) {
         <div className="dash-card">
           <h3 className="dash-card-title">Recent activity</h3>
           {recent.length === 0 ? (
-            <p className="muted">No recent bookings yet.</p>
+            <EmptyState
+              icon={Clock}
+              title="No recent activity"
+              description="Your booking history will appear here."
+            />
           ) : (
             <ul className="dash-list">
               {recent.map((b) => (
@@ -481,13 +702,11 @@ function DashboardInbox({ recent }) {
 
       <div className="dash-card fade-in-up fade-in-delay-sm">
         {messages.length === 0 ? (
-          <div className="dash-empty-state">
-            <Inbox size={48} className="dash-empty-icon" />
-            <p className="dash-empty-text">No messages yet</p>
-            <p className="dash-empty-subtext muted">
-              You'll see booking updates and notifications here.
-            </p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title="No messages yet"
+            description="You'll see booking updates and notifications here."
+          />
         ) : (
           <ul className="dash-list">
             {messages.map((m, idx) => (
@@ -509,7 +728,80 @@ function DashboardInbox({ recent }) {
 }
 
 /* ================== ORDERS ================== */
-function DashboardOrders({ bookings }) {
+function DashboardOrders({ bookings, onRefresh }) {
+  const [cancellingId, setCancellingId] = useState(null);
+  const [rebookingId, setRebookingId] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [filter, setFilter] = useState("all"); // "all", "upcoming", "past", "favorites"
+
+  const handleCancel = async (bookingId) => {
+    if (!confirm("Are you sure you want to cancel this booking?")) {
+      return;
+    }
+
+    setCancellingId(bookingId);
+    try {
+      await apiClient.delete(`/api/bookings/${bookingId}`);
+      toast.success("Booking cancelled successfully");
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error("Cancel booking error:", err);
+      toast.error(err.response?.data?.message || "Failed to cancel booking");
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const handleRebook = async (booking) => {
+    if (!confirm("Create a new booking with the same details?")) {
+      return;
+    }
+
+    setRebookingId(booking.id);
+    try {
+      await apiClient.post(`/api/bookings/${booking.id}/rebook`, {
+        date: booking.date, // Use same date by default, user can edit
+        timeSlot: booking.timeSlot,
+      });
+      toast.success("Booking rebooked successfully!");
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error("Rebook error:", err);
+      toast.error(err.response?.data?.message || "Failed to rebook");
+    } finally {
+      setRebookingId(null);
+    }
+  };
+
+  const handleBookingClick = (booking) => {
+    setSelectedBooking(booking);
+    setModalOpen(true);
+  };
+
+  const handleModalUpdate = () => {
+    if (onRefresh) onRefresh();
+  };
+
+  // Filter bookings
+  const filteredBookings = bookings.filter((b) => {
+    const bookingDate = b.date ? new Date(b.date) : null;
+    const now = new Date();
+    const isPast = bookingDate && bookingDate < now;
+    const isUpcoming = bookingDate && bookingDate >= now;
+
+    switch (filter) {
+      case "upcoming":
+        return isUpcoming && b.status !== "CANCELLED";
+      case "past":
+        return isPast || b.status === "COMPLETED";
+      case "favorites":
+        return b.isFavorite;
+      default:
+        return true;
+    }
+  });
+
   return (
     <div className="dash-main-inner fade-in-up">
       <header className="dash-page-header">
@@ -521,81 +813,305 @@ function DashboardOrders({ bookings }) {
         </div>
       </header>
 
+      {/* Filters */}
+      {bookings.length > 0 && (
+        <div className="dash-filters">
+          <button
+            className={`dash-filter-btn ${filter === "all" ? "active" : ""}`}
+            onClick={() => setFilter("all")}
+          >
+            All ({bookings.length})
+          </button>
+          <button
+            className={`dash-filter-btn ${filter === "upcoming" ? "active" : ""}`}
+            onClick={() => setFilter("upcoming")}
+          >
+            Upcoming ({bookings.filter(b => {
+              const bookingDate = b.date ? new Date(b.date) : null;
+              return bookingDate && bookingDate >= new Date() && b.status !== "CANCELLED";
+            }).length})
+          </button>
+          <button
+            className={`dash-filter-btn ${filter === "past" ? "active" : ""}`}
+            onClick={() => setFilter("past")}
+          >
+            Past ({bookings.filter(b => {
+              const bookingDate = b.date ? new Date(b.date) : null;
+              return (bookingDate && bookingDate < new Date()) || b.status === "COMPLETED";
+            }).length})
+          </button>
+          <button
+            className={`dash-filter-btn ${filter === "favorites" ? "active" : ""}`}
+            onClick={() => setFilter("favorites")}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <Star size={14} fill={filter === "favorites" ? "white" : "none"} />
+            Favorites ({bookings.filter(b => b.isFavorite).length})
+          </button>
+        </div>
+      )}
+
       <div className="dash-card fade-in-up fade-in-delay-sm">
-        {bookings.length === 0 ? (
+        {filteredBookings.length === 0 ? (
           <div className="dash-empty-state">
             <ShoppingBag size={48} className="dash-empty-icon" />
-            <p className="dash-empty-text">No bookings yet</p>
+            <p className="dash-empty-text">
+              {bookings.length === 0 ? "No bookings yet" : `No ${filter === "all" ? "" : filter} bookings`}
+            </p>
             <p className="dash-empty-subtext muted">
-              Start booking services to see them here.
+              {bookings.length === 0
+                ? "Start booking services to see them here."
+                : `Try changing the filter to see more bookings.`}
             </p>
           </div>
         ) : (
+          <>
           <div className="dash-table-wrapper">
             <div className="dash-table">
               <div className="dash-table-head">
                 <span>Service</span>
                 <span>Date</span>
                 <span>Status</span>
-                <span>Payment</span>
+                  <span>Actions</span>
               </div>
-              {bookings.map((b, idx) => (
+                {filteredBookings.map((b, idx) => {
+                const isCancelled = b.status === "CANCELLED";
+                const canCancel = !isCancelled && b.status !== "COMPLETED";
+                const canRebook = isCancelled;
+
+                return (
                 <div 
                   className="dash-table-row fade-in-up" 
                   key={b.id}
-                  style={{ animationDelay: `${0.15 + idx * 0.05}s` }}
+                    style={{ 
+                      animationDelay: `${0.15 + idx * 0.05}s`,
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleBookingClick(b)}
                 >
                   <span className="dash-table-cell-main">
-                    {b.service?.name || b.serviceType || "Service"}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        {b.isFavorite && (
+                          <Star size={14} fill="var(--primary)" color="var(--primary)" />
+                        )}
+                        <div>
+                          {b.service?.name || b.serviceName || "Service"}
+                          {b.subService && (
+                            <span className="muted" style={{ display: "block", fontSize: "12px" }}>
+                              {b.subService}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                   </span>
                   <span className="dash-table-cell">
                     {b.date ? new Date(b.date).toLocaleDateString() : "—"}
+                      {b.timeSlot && (
+                        <span className="muted" style={{ display: "block", fontSize: "12px" }}>
+                          {b.timeSlot}
                   </span>
-                  <span className={`dash-status-pill dash-status-pill-${(b.status || "NEW").toLowerCase()}`}>
-                    {b.status || "NEW"}
+                      )}
                   </span>
-                  <span className="dash-table-cell muted">
-                    {b.paymentMethod === "card" ? (
-                      <span className="dash-payment-badge">
-                        <CreditCard size={14} />
-                        Card
+                    <Badge
+                      variant={
+                        b.status === "COMPLETED" ? "success" :
+                        b.status === "CANCELLED" ? "error" :
+                        b.status === "PENDING" ? "warning" :
+                        "info"
+                      }
+                    >
+                      {b.status || "PENDING"}
+                    </Badge>
+                    <span className="dash-table-cell">
+                      <div 
+                        style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                        onClick={(e) => e.stopPropagation()} // Prevent modal from opening when clicking buttons
+                      >
+                        {canCancel && (
+                          <button
+                            className="btn-outline"
+                            style={{ padding: "4px 12px", fontSize: "12px" }}
+                            onClick={() => handleCancel(b.id)}
+                            disabled={cancellingId === b.id}
+                          >
+                            {cancellingId === b.id ? "Cancelling..." : "Cancel"}
+                          </button>
+                        )}
+                        {canRebook && (
+                          <button
+                            className="btn"
+                            style={{ padding: "4px 12px", fontSize: "12px" }}
+                            onClick={() => handleRebook(b)}
+                            disabled={rebookingId === b.id}
+                          >
+                            {rebookingId === b.id ? "Rebooking..." : "Rebook"}
+                          </button>
+                        )}
+                        {!canCancel && !canRebook && (
+                          <span className="muted" style={{ fontSize: "12px" }}>
+                            {b.status === "COMPLETED" ? "Completed" : "—"}
                       </span>
-                    ) : (
-                      "Pay later"
                     )}
+                      </div>
                   </span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
+          </>
         )}
       </div>
+
+      {/* Booking Detail Modal */}
+      <BookingDetailModal
+        booking={selectedBooking}
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedBooking(null);
+        }}
+        onUpdate={handleModalUpdate}
+      />
     </div>
   );
 }
 
 /* ================== BILLING ================== */
-function DashboardBilling({ bookings }) {
-  const cardCount = bookings.filter(
-    (b) => b.paymentMethod === "card"
-  ).length;
+function DashboardBilling({ bookings, user }) {
+  const [activeView, setActiveView] = useState("summary"); // "summary" or "invoices"
+  const [filterStatus, setFilterStatus] = useState("all"); // "all", "paid", "pending", "refunded"
+
+  // Calculate stats
+  const totalBookings = bookings.length;
+  const paidBookings = bookings.filter(
+    (b) => b.paymentStatus === "paid" || b.status === "COMPLETED"
+  );
+  const pendingPayments = bookings.filter(
+    (b) => (b.paymentStatus === "pending" || !b.paymentStatus) && b.status !== "CANCELLED"
+  );
+  const totalPaid = paidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const totalPending = pendingPayments.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const cardCount = bookings.filter((b) => b.paymentMethod === "card").length;
+
+  // Filter invoices
+  const filteredInvoices = bookings.filter((b) => {
+    if (filterStatus === "all") return true;
+    if (filterStatus === "paid") return b.paymentStatus === "paid" || b.status === "COMPLETED";
+    if (filterStatus === "pending") return (b.paymentStatus === "pending" || !b.paymentStatus) && b.status !== "CANCELLED";
+    if (filterStatus === "refunded") return b.paymentStatus === "refunded";
+    return true;
+  }).sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+
+  const generateInvoiceNumber = (booking) => {
+    const date = new Date(booking.createdAt || booking.date);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const id = booking.id.substring(0, 8).toUpperCase();
+    return `INV-${year}${month}-${id}`;
+  };
+
+  const handleDownloadInvoice = (booking) => {
+    // Generate invoice content
+    const invoiceContent = `
+INVOICE
+Invoice #: ${generateInvoiceNumber(booking)}
+Date: ${new Date(booking.createdAt || booking.date).toLocaleDateString()}
+Due Date: ${new Date(booking.date).toLocaleDateString()}
+
+BILL TO:
+${user?.fullName || user?.name || ""}
+${user?.email || ""}
+
+SERVICE DETAILS:
+Service: ${booking.service?.name || booking.serviceName || "Service"}
+${booking.subService ? `Sub-service: ${booking.subService}` : ""}
+Date: ${new Date(booking.date).toLocaleDateString()}
+${booking.timeSlot ? `Time: ${booking.timeSlot}` : ""}
+
+LOCATION:
+${booking.addressLine}
+${booking.city}, ${booking.province} ${booking.postal}
+
+STATUS: ${booking.status}
+Payment Status: ${booking.paymentStatus || "Pending"}
+Payment Method: ${booking.paymentMethod || "Pay Later"}
+
+AMOUNT: $${(booking.totalAmount || 0).toFixed(2)}
+
+${booking.notes ? `Notes: ${booking.notes}` : ""}
+    `.trim();
+
+    // Create and download file
+    const blob = new Blob([invoiceContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Invoice-${generateInvoiceNumber(booking)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="dash-main-inner fade-in-up">
       <header className="dash-page-header">
         <div>
-          <h2 className="dash-title">Billing</h2>
+          <h2 className="dash-title">Billing & Invoices</h2>
           <p className="muted dash-subtitle">
-            Recent payments and card usage.
+            View all your purchases, payments, and invoices.
           </p>
         </div>
       </header>
 
+      {/* View Toggle */}
+      <div className="dash-filters">
+          <button
+            className={`dash-filter-btn ${activeView === "summary" ? "active" : ""}`}
+            onClick={() => setActiveView("summary")}
+          >
+            Summary
+          </button>
+          <button
+            className={`dash-filter-btn ${activeView === "invoices" ? "active" : ""}`}
+            onClick={() => setActiveView("invoices")}
+          >
+            All Invoices & Purchases
+          </button>
+      </div>
+
+      {activeView === "summary" ? (
       <div className="dash-card-grid fade-in-up fade-in-delay-sm">
+          <div className="dash-card">
+            <div className="dash-card-header">
+              <DollarSign size={20} className="dash-card-icon" />
+              <h3 className="dash-card-title">Payment Summary</h3>
+            </div>
+            <div className="dash-card-content">
+              <div className="dash-info-row">
+                <span className="dash-info-label">Total Paid</span>
+                <span className="dash-info-value" style={{ color: "var(--success)", fontWeight: 600 }}>
+                  ${totalPaid.toFixed(2)}
+                </span>
+              </div>
+              <div className="dash-info-row">
+                <span className="dash-info-label">Pending Payment</span>
+                <span className="dash-info-value" style={{ color: "var(--warning)" }}>
+                  ${totalPending.toFixed(2)}
+                </span>
+              </div>
+              <div className="dash-info-row">
+                <span className="dash-info-label">Total Bookings</span>
+                <span className="dash-info-value">{totalBookings}</span>
+              </div>
+            </div>
+          </div>
+
         <div className="dash-card">
           <div className="dash-card-header">
             <CreditCard size={20} className="dash-card-icon" />
-            <h3 className="dash-card-title">Payment methods</h3>
+              <h3 className="dash-card-title">Payment Methods</h3>
           </div>
           <div className="dash-card-content">
             <div className="dash-info-row">
@@ -606,21 +1122,170 @@ function DashboardBilling({ bookings }) {
               <span className="dash-info-label">Card bookings</span>
               <span className="dash-info-value">{cardCount}</span>
             </div>
+              <div className="dash-info-row">
+                <span className="dash-info-label">Paid bookings</span>
+                <span className="dash-info-value">{paidBookings.length}</span>
+              </div>
           </div>
         </div>
 
         <div className="dash-card">
           <div className="dash-card-header">
-            <div className="dash-card-icon-placeholder" />
-            <h3 className="dash-card-title">Billing notes</h3>
+              <FileText size={20} className="dash-card-icon" />
+              <h3 className="dash-card-title">Quick Actions</h3>
           </div>
           <div className="dash-card-content">
-            <p className="muted dash-card-text">
+              <p className="muted dash-card-text" style={{ marginBottom: "12px" }}>
               You'll only be charged after your booking is confirmed.
             </p>
+              <button
+                className="btn-outline"
+                onClick={() => setActiveView("invoices")}
+                style={{ width: "100%" }}
+              >
+                View All Invoices
+              </button>
           </div>
         </div>
       </div>
+      ) : (
+        <div className="fade-in-up">
+          {/* Filters */}
+          <div className="dash-filters">
+            <button
+              className={`dash-filter-btn ${filterStatus === "all" ? "active" : ""}`}
+              onClick={() => setFilterStatus("all")}
+            >
+              All ({bookings.length})
+            </button>
+            <button
+              className={`dash-filter-btn ${filterStatus === "paid" ? "active" : ""}`}
+              onClick={() => setFilterStatus("paid")}
+            >
+              Paid ({paidBookings.length})
+            </button>
+            <button
+              className={`dash-filter-btn ${filterStatus === "pending" ? "active" : ""}`}
+              onClick={() => setFilterStatus("pending")}
+            >
+              Pending ({pendingPayments.length})
+            </button>
+            {bookings.some((b) => b.paymentStatus === "refunded") && (
+              <button
+                className={`dash-filter-btn ${filterStatus === "refunded" ? "active" : ""}`}
+                onClick={() => setFilterStatus("refunded")}
+              >
+                Refunded ({bookings.filter((b) => b.paymentStatus === "refunded").length})
+              </button>
+            )}
+          </div>
+
+          {/* Invoices List */}
+          {filteredInvoices.length === 0 ? (
+            <div className="dash-card">
+              <div className="dash-empty-state">
+                <FileText size={48} className="dash-empty-icon" />
+                <p className="dash-empty-text">No invoices found</p>
+                <p className="dash-empty-subtext muted">
+                  {filterStatus === "all"
+                    ? "You don't have any bookings yet."
+                    : `No ${filterStatus} invoices found.`}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="dash-table-wrapper">
+              <div className="dash-table">
+                <div className="dash-table-head">
+                  <span>Invoice #</span>
+                  <span>Service</span>
+                  <span>Date</span>
+                  <span>Amount</span>
+                  <span>Payment Status</span>
+                  <span>Actions</span>
+                </div>
+                {filteredInvoices.map((booking, idx) => {
+                  const isPaid = booking.paymentStatus === "paid" || booking.status === "COMPLETED";
+                  const isPending = (booking.paymentStatus === "pending" || !booking.paymentStatus) && booking.status !== "CANCELLED";
+                  const isCancelled = booking.status === "CANCELLED";
+                  const amount = booking.totalAmount || 0;
+
+                  return (
+                    <div
+                      className="dash-table-row fade-in-up"
+                      key={booking.id}
+                      style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
+                    >
+                      <span className="dash-table-cell-main">
+                        <div style={{ fontFamily: "monospace", fontSize: "12px", color: "var(--text-muted)" }}>
+                          {generateInvoiceNumber(booking)}
+                        </div>
+                      </span>
+                      <span className="dash-table-cell">
+                        <div style={{ fontWeight: 500 }}>
+                          {booking.service?.name || booking.serviceName || "Service"}
+                        </div>
+                        {booking.subService && (
+                          <div className="muted" style={{ fontSize: "12px" }}>
+                            {booking.subService}
+                          </div>
+                        )}
+                      </span>
+                      <span className="dash-table-cell">
+                        <div>{new Date(booking.date).toLocaleDateString()}</div>
+                        <div className="muted" style={{ fontSize: "12px" }}>
+                          {new Date(booking.createdAt || booking.date).toLocaleDateString()}
+                        </div>
+                      </span>
+                      <span className="dash-table-cell">
+                        <div style={{ fontWeight: 600, fontSize: "15px" }}>
+                          ${amount.toFixed(2)}
+                        </div>
+                        {booking.paymentMethod && (
+                          <div className="muted" style={{ fontSize: "12px" }}>
+                            {booking.paymentMethod === "card" ? "Card" : "Pay Later"}
+                          </div>
+                        )}
+                      </span>
+                      <span className="dash-table-cell">
+                        {isPaid ? (
+                          <Badge variant="success" icon={CheckCircle}>
+                            Paid
+                          </Badge>
+                        ) : isCancelled ? (
+                          <Badge variant="error">
+                            Cancelled
+                          </Badge>
+                        ) : (
+                          <Badge variant="warning" icon={AlertCircle}>
+                            Pending
+                          </Badge>
+                        )}
+                      </span>
+                      <span className="dash-table-cell">
+                        <button
+                          className="btn-outline"
+                          onClick={() => handleDownloadInvoice(booking)}
+                          style={{
+                            padding: "4px 12px",
+                            fontSize: "12px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <Download size={14} />
+                          Invoice
+                        </button>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -658,10 +1323,9 @@ function DashboardAddresses({ addresses, primaryAddress }) {
         country: newAddress.country || "Canada",
       };
 
-      await axios.put(
-        `${API_BASE}/api/profile`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+      await apiClient.put(
+        "/api/profile",
+        payload
       );
 
       toast.success("Address added successfully!");
@@ -865,7 +1529,15 @@ function DashboardProfile({ form, onChange, onSave, onAvatarChange }) {
       <div className="dash-card fade-in-up fade-in-delay-sm">
         {/* Avatar */}
         <div className="dash-profile-section">
-          <div className="dash-avatar-wrapper">
+          <div 
+            className="dash-avatar-wrapper"
+            onClick={() => {
+              // Trigger file input when clicking on avatar
+              const input = document.getElementById('profile-avatar-input');
+              if (input) input.click();
+            }}
+            style={{ cursor: "pointer" }}
+          >
             <img
               src={avatarSrc}
               alt="Profile avatar"
@@ -881,19 +1553,34 @@ function DashboardProfile({ form, onChange, onSave, onAvatarChange }) {
             <p className="muted dash-profile-desc">
               This is how you appear across the platform.
             </p>
-            <label className="dash-upload-label">
+            <label className="dash-upload-label" style={{ cursor: "pointer" }}>
               <Upload size={16} />
               <span>Upload new photo</span>
               <input
                 type="file"
                 accept="image/*"
                 style={{ display: "none" }}
+                id="profile-avatar-input"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) onAvatarChange(file);
+                  if (file) {
+                    console.log("[Profile] File selected:", {
+                      name: file.name,
+                      type: file.type,
+                      size: file.size,
+                    });
+                    onAvatarChange(file);
+                  }
+                  // Reset input so same file can be selected again
+                  e.target.value = '';
                 }}
               />
             </label>
+            {form.profilePicUrl && form.profilePicUrl.startsWith('data:image') && (
+              <p className="muted" style={{ fontSize: "12px", marginTop: "8px", color: "var(--success)" }}>
+                ✓ Image ready to save. Click "Save changes" below.
+              </p>
+            )}
           </div>
         </div>
 
@@ -1084,9 +1771,25 @@ function DashboardProfile({ form, onChange, onSave, onAvatarChange }) {
 }
 
 /* ================== STAT CARD ================== */
-function StatCard({ label, value, icon: Icon }) {
+function StatCardLegacy({ label, value, icon: Icon, onClick, clickable = false }) {
+  const CardComponent = clickable ? 'button' : 'div';
+  const cardProps = clickable ? {
+    onClick,
+    style: {
+      background: 'none',
+      border: 'none',
+      padding: 0,
+      width: '100%',
+      cursor: 'pointer',
+      textAlign: 'left',
+    }
+  } : {};
+
   return (
-    <div className="dash-stat-card">
+    <CardComponent 
+      className={`dash-stat-card ${clickable ? 'dash-stat-card-clickable' : ''}`}
+      {...cardProps}
+    >
       <div className="dash-stat-icon-wrap">
         <Icon size={22} strokeWidth={2} />
       </div>
@@ -1094,6 +1797,398 @@ function StatCard({ label, value, icon: Icon }) {
         <p className="stat-val">{value ?? 0}</p>
         <p className="stat-label">{label}</p>
       </div>
+    </CardComponent>
+  );
+}
+
+/* ================== QUOTES TAB ================== */
+function DashboardQuotes({ quotes, onRefresh }) {
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      month: "short", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    const statusLower = status?.toLowerCase();
+    if (statusLower === "contacted") {
+      return <Badge variant="info">Contacted</Badge>;
+    } else if (statusLower === "closed") {
+      return <Badge variant="success">Closed</Badge>;
+    }
+    return <Badge variant="warning">Pending</Badge>;
+  };
+
+  return (
+    <div className="dash-main-inner">
+      <header className="dash-hero-row fade-in-up">
+        <div>
+          <h1 className="dash-title">Quote Requests</h1>
+          <p className="muted dash-subtitle">
+            View and track all your corporate quote requests
+          </p>
+        </div>
+        <button
+          className="btn"
+          onClick={onRefresh}
+          style={{ display: "flex", alignItems: "center", gap: "8px" }}
+        >
+          <RefreshCw size={18} />
+          Refresh
+        </button>
+      </header>
+
+      {quotes.length === 0 ? (
+        <EmptyState
+          icon={Quote}
+          title="No quote requests yet"
+          description="You haven't submitted any quote requests. Submit a corporate quote request to see it here!"
+          action={
+            <button 
+              className="btn"
+              onClick={() => window.location.href = "/request-quote"}
+            >
+              <Plus size={18} />
+              Request a Quote
+            </button>
+          }
+        />
+      ) : (
+        <div className="dash-two-col fade-in-up fade-in-delay-sm">
+          <div className="dash-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="dash-card-header">
+              <Quote size={20} className="dash-card-icon" />
+              <h3 className="dash-card-title">Your Quote Requests</h3>
+            </div>
+            <div className="dash-content-grid">
+              {quotes.map((quote, idx) => (
+                <div 
+                  key={quote.id} 
+                  className="dash-content-card fade-in-up"
+                  style={{ animationDelay: `${idx * 0.05}s` }}
+                >
+                  <div className="dash-content-card-header">
+                    <h4 className="dash-content-card-title">
+                      {quote.serviceType}
+                    </h4>
+                    {getStatusBadge(quote.status)}
+                  </div>
+
+                  <div className="dash-content-card-body">
+                    {quote.companyName && (
+                      <div>
+                        <span style={{ fontSize: "13px", color: "var(--text-soft)", fontWeight: 600 }}>Company: </span>
+                        <span style={{ fontSize: "13px", color: "var(--text-main)" }}>{quote.companyName}</span>
+                      </div>
+                    )}
+
+                    {quote.details && (
+                      <p className="dash-content-card-description">
+                        {quote.details}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="dash-content-card-meta">
+                    <div className="dash-content-card-meta-item">
+                      <Mail size={14} />
+                      <span>{quote.email}</span>
+                    </div>
+                    {quote.phone && (
+                      <div className="dash-content-card-meta-item">
+                        <Phone size={14} />
+                        <span>{quote.phone}</span>
+                      </div>
+                    )}
+                    <div className="dash-content-card-meta-item">
+                      <Calendar size={14} />
+                      <span>{formatDate(quote.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================== CHORES TAB ================== */
+function DashboardChores({ chores, onRefresh }) {
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [deletingId, setDeletingId] = useState(null);
+
+  const getStatusIcon = (status) => {
+    const statusLower = status?.toLowerCase();
+    if (statusLower === "completed" || statusLower === "done") {
+      return <CheckCircle2 size={16} />;
+    } else if (statusLower === "in_progress") {
+      return <Clock size={16} />;
+    } else if (statusLower === "pending") {
+      return <Clock size={16} />;
+    }
+    return <X size={16} />;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      month: "short", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+  };
+
+  return (
+    <div className="dash-main-inner">
+      <header className="dash-hero-row fade-in-up">
+        <div>
+          <h1 className="dash-title">My Chores</h1>
+          <p className="muted dash-subtitle">
+            View and manage all the chores you've posted
+          </p>
+        </div>
+        <button
+          className="btn"
+          onClick={onRefresh}
+          style={{ display: "flex", alignItems: "center", gap: "8px" }}
+        >
+          <RefreshCw size={18} />
+          Refresh
+        </button>
+      </header>
+
+      {chores.length === 0 ? (
+        <EmptyState
+          icon={ClipboardList}
+          title="No chores posted yet"
+          description="You haven't posted any chores yet. Post your first chore to get started!"
+          action={
+            <button 
+              className="btn"
+              onClick={() => window.location.href = "/post-chore"}
+            >
+              <Plus size={18} />
+              Post a Chore
+            </button>
+          }
+        />
+      ) : (
+        <div className="dash-two-col fade-in-up fade-in-delay-sm">
+          <div className="dash-card" style={{ gridColumn: "1 / -1" }}>
+            <div className="dash-card-header">
+              <ClipboardList size={20} className="dash-card-icon" />
+              <h3 className="dash-card-title">Your Posted Chores</h3>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "20px", padding: "20px" }}>
+              {chores.map((chore, idx) => (
+                <div 
+                  key={chore.id} 
+                  className="dash-stat-card fade-in-up"
+                  style={{ animationDelay: `${idx * 0.05}s`, cursor: "pointer" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                    <h4 style={{ fontSize: "16px", fontWeight: 600, color: "var(--text-main)", margin: 0 }}>
+                      {chore.title}
+                    </h4>
+                    <Badge 
+                      variant={
+                        chore.status === "COMPLETED" ? "success" :
+                        chore.status === "IN_PROGRESS" ? "info" :
+                        chore.status === "CANCELLED" ? "error" :
+                        "warning"
+                      }
+                    >
+                      {getStatusIcon(chore.status)}
+                      {chore.status?.replace("_", " ") || "PENDING"}
+                    </Badge>
+                  </div>
+
+                  {editingId === chore.id ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "12px" }}>
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={editForm.title || ""}
+                        onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                        style={{
+                          padding: "8px 12px",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          background: "var(--bg)",
+                          color: "var(--text-main)"
+                        }}
+                      />
+                      <select
+                        value={editForm.category || ""}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                        style={{
+                          padding: "8px 12px",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          background: "var(--bg)",
+                          color: "var(--text-main)"
+                        }}
+                      >
+                        <option>Cleaning</option>
+                        <option>Handyman</option>
+                        <option>Furniture Assembly</option>
+                        <option>Moving Help</option>
+                        <option>Car Cleaning</option>
+                        <option>Yard Work</option>
+                        <option>Laundry</option>
+                        <option>Snow Removal</option>
+                        <option>Other</option>
+                      </select>
+                      <textarea
+                        placeholder="Description"
+                        value={editForm.description || ""}
+                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        rows={3}
+                        style={{
+                          padding: "8px 12px",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          background: "var(--bg)",
+                          color: "var(--text-main)",
+                          resize: "vertical"
+                        }}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Budget"
+                        value={editForm.budget || ""}
+                        onChange={(e) => setEditForm({ ...editForm, budget: e.target.value })}
+                        style={{
+                          padding: "8px 12px",
+                          border: "1px solid var(--border-subtle)",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          background: "var(--bg)",
+                          color: "var(--text-main)"
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          className="btn"
+                          style={{ padding: "6px 12px", fontSize: "13px", flex: 1 }}
+                          onClick={async () => {
+                            try {
+                              await apiClient.put(`/api/chores/${chore.id}`, editForm);
+                              toast.success("Chore updated successfully!");
+                              setEditingId(null);
+                              setEditForm({});
+                              onRefresh();
+                            } catch (err) {
+                              toast.error(err.response?.data?.message || "Failed to update chore");
+                            }
+                          }}
+                        >
+                          <Save size={14} />
+                          Save
+                        </button>
+                        <button
+                          className="btn outline"
+                          style={{ padding: "6px 12px", fontSize: "13px" }}
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditForm({});
+                          }}
+                        >
+                          <X size={14} />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {chore.description && (
+                        <p style={{ fontSize: "14px", color: "var(--text-soft)", marginBottom: "12px", lineHeight: "1.5" }}>
+                          {chore.description}
+                        </p>
+                      )}
+                    </>
+                  )}
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--text-soft)" }}>
+                      <Tag size={14} />
+                      <span>{chore.category || "Other"}</span>
+                    </div>
+                    {chore.budget != null && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--text-soft)" }}>
+                        <DollarSign size={14} />
+                        <span>${chore.budget}</span>
+                      </div>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "var(--text-soft)" }}>
+                      <Calendar size={14} />
+                      <span>{formatDate(chore.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  {!editingId && (
+                    <div style={{ display: "flex", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid var(--border-subtle)" }}>
+                      <button
+                        className="btn outline"
+                        style={{ padding: "6px 12px", fontSize: "13px", flex: 1 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingId(chore.id);
+                          setEditForm({
+                            title: chore.title,
+                            category: chore.category,
+                            description: chore.description,
+                            budget: chore.budget,
+                          });
+                        }}
+                      >
+                        <Edit size={14} />
+                        Edit
+                      </button>
+                      <button
+                        className="btn outline"
+                        style={{ padding: "6px 12px", fontSize: "13px", color: "var(--error)", borderColor: "var(--error)" }}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (window.confirm("Are you sure you want to delete this chore?")) {
+                            setDeletingId(chore.id);
+                            try {
+                              await apiClient.delete(`/api/chores/${chore.id}`);
+                              toast.success("Chore deleted successfully!");
+                              onRefresh();
+                            } catch (err) {
+                              toast.error(err.response?.data?.message || "Failed to delete chore");
+                            } finally {
+                              setDeletingId(null);
+                            }
+                          }
+                        }}
+                        disabled={deletingId === chore.id}
+                      >
+                        {deletingId === chore.id ? (
+                          <RefreshCw size={14} className="spinning" />
+                        ) : (
+                          <Trash2 size={14} />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

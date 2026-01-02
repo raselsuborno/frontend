@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper";
-import { API_BASE } from "../config.js";
+import { supabase } from "../lib/supabase.js";
 import { toast } from "react-hot-toast";
 import { Mail, Lock, User, LockKeyhole, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import logo from "../assets/chorebunny.png";
 
 export function AuthPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState("login");
+  
+  const message = location.state?.message;
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,19 +36,20 @@ export function AuthPage() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/login`, {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (error) throw error;
 
+      // Session is automatically handled by Supabase and AuthContext
+      // No need to manually store tokens - Supabase handles persistence
       toast.success("Logged in!");
       navigate("/dashboard");
     } catch (err) {
-      console.log(err?.response?.data || err);
-      setMsg("Invalid email or password.");
+      console.error("Login error:", err);
+      setMsg(err.message || "Invalid email or password.");
       toast.error("Login failed");
     }
 
@@ -69,20 +72,31 @@ export function AuthPage() {
     }
 
     try {
-      const res = await axios.post(`${API_BASE}/api/auth/register`, {
-        name: form.name,
+      const { data, error } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
+        options: {
+          data: {
+            name: form.name,
+          },
+        },
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      if (error) throw error;
 
-      toast.success("Account created!");
-      navigate("/dashboard");
+      // Session is automatically handled by Supabase and AuthContext
+      // No need to manually store tokens - Supabase handles persistence
+      if (data.session) {
+        toast.success("Account created!");
+        navigate("/dashboard");
+      } else {
+        // Email confirmation required
+        setMsg("Account created! Please check your email to confirm your account.");
+        toast.success("Account created! Please check your email.");
+      }
     } catch (err) {
-      console.log("Signup error:", err?.response?.data || err);
-      setMsg(err?.response?.data?.message || "Signup failed.");
+      console.error("Signup error:", err);
+      setMsg(err.message || "Signup failed.");
       toast.error("Signup failed");
     }
 
@@ -100,7 +114,9 @@ export function AuthPage() {
               <div className="auth-card fade-in-up">
                 <div className="auth-header">
                   <h2 className="auth-title">Welcome Back</h2>
-                  <p className="auth-subtitle">Log in to your account</p>
+                  <p className="auth-subtitle">
+                    {message || "Log in to your account"}
+                  </p>
                 </div>
 
                 <form onSubmit={login} className="auth-form">
