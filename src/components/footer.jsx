@@ -50,6 +50,9 @@ export function Footer() {
             <li>
               <Link to="/careers">Careers</Link>
             </li>
+            <li>
+              <Link to="/apply/worker">Become a Worker</Link>
+            </li>
           </ul>
         </div>
 
@@ -77,13 +80,19 @@ export function Footer() {
           <h3 className="footer-column-title">Legal</h3>
           <ul className="footer-links">
             <li>
-              <Link to="/">Privacy Policy</Link>
+              <Link to="/legal/disclaimer">Legal Disclaimer</Link>
             </li>
             <li>
-              <Link to="/">Terms of Service</Link>
+              <Link to="/legal/privacy">Privacy Policy</Link>
             </li>
             <li>
-              <Link to="/">Cookie Policy</Link>
+              <Link to="/legal/terms">Terms of Service</Link>
+            </li>
+            <li>
+              <Link to="/legal/booking-terms">Booking Terms</Link>
+            </li>
+            <li>
+              <Link to="/legal/cookies">Cookie Policy</Link>
             </li>
           </ul>
         </div>

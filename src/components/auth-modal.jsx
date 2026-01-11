@@ -33,7 +33,7 @@ export function AuthModal({ isOpen, onClose }) {
     return () => document.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
 
-  // Close on outside click
+  // Close on outside click and scroll to top when modal opens
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target) && isOpen) {
@@ -41,6 +41,8 @@ export function AuthModal({ isOpen, onClose }) {
       }
     };
     if (isOpen) {
+      // Scroll to top when modal opens
+      window.scrollTo({ top: 0, behavior: 'instant' });
       document.addEventListener("mousedown", handleClickOutside);
       // Prevent body scroll when modal is open
       document.body.style.overflow = "hidden";
@@ -182,7 +184,7 @@ export function AuthModal({ isOpen, onClose }) {
                   <input
                     className="auth-modal-input"
                     type="email"
-                    placeholder="Email address"
+                    placeholder="Mail address"
                     value={form.email}
                     onChange={(e) => setField("email", e.target.value)}
                     required

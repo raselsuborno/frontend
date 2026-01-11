@@ -1,0 +1,112 @@
+/* ============================================================
+   🎴 CARD COMPONENT — Single Source of Truth
+   All card styles consolidated here
+   =========================================================== */
+
+/* ============================================================
+   BASE CARD
+   =========================================================== */
+.card,
+.unified-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg-legacy);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.card:hover,
+.unified-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-secondary);
+  transform: translateY(-2px);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-md);
+}
+
+/* ============================================================
+   CARD SECTIONS
+   =========================================================== */
+.card-header,
+.unified-card-header {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.card-title,
+.unified-card-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.card-title svg,
+.unified-card-title svg {
+  color: var(--primary);
+}
+
+.card-subtitle,
+.unified-card-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.card-body,
+.unified-card-content {
+  flex: 1;
+  color: var(--text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.card-footer {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border-secondary);
+}
+
+/* ============================================================
+   CARD SIZES
+   =========================================================== */
+.card-compact {
+  padding: var(--space-lg);
+}
+
+.card-padded {
+  padding: var(--space-2xl);
+}
+
+/* ============================================================
+   CARD VARIANTS
+   =========================================================== */
+.card-primary {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.card-success {
+  border-color: var(--status-success);
+  background: var(--status-success-light);
+}
+
+.card-error {
+  border-color: var(--status-error);
+  background: var(--status-error-light);
+}
+

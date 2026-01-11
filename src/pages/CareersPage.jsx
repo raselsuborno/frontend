@@ -3,10 +3,12 @@
 
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import toast from "react-hot-toast";
+import "../styles/unified-page-layout.css";
 import { 
   Briefcase, 
   MapPin, 
@@ -20,6 +22,7 @@ import {
   X,
   CheckCircle
 } from "lucide-react";
+import { WorkerCTACard } from "../components/WorkerCTACard.jsx";
 
 export function CareersPage() {
   const navigate = useNavigate();
@@ -83,55 +86,57 @@ export function CareersPage() {
 
   return (
     <PageWrapper>
-      <div className="careers-page">
+      <div className="unified-page">
         {/* Hero Section */}
-        <section className="careers-hero fade-in-up">
-          <div className="careers-hero-badge">
-            <Briefcase size={14} />
-            <span>Join our growing team</span>
-          </div>
-          <h1 className="careers-title">Join Our Team</h1>
-          <p className="careers-subtitle">
-            Be part of ChorEscape — where teamwork meets excellence. Browse our openings and apply online below.
-          </p>
+        <motion.header 
+          className="unified-hero"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <div className="unified-hero-content">
+            <motion.div 
+              className="unified-hero-badge"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <Briefcase size={14} />
+              <span>Join our growing team</span>
+            </motion.div>
+            <motion.h1 
+              className="unified-hero-title"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              Join Our Team
+            </motion.h1>
+            <motion.p 
+              className="unified-hero-subtitle"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              Be part of ChorEscape — where teamwork meets excellence. Browse our openings and apply online below.
+            </motion.p>
           
-          {/* Worker Application CTA */}
-          <div style={{ marginTop: "32px" }}>
-            <div style={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              padding: "32px",
-              borderRadius: "16px",
-              color: "white",
-              textAlign: "center",
-              maxWidth: "600px",
-              margin: "0 auto"
-            }}>
-              <Briefcase size={48} style={{ marginBottom: "16px" }} />
-              <h2 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "12px" }}>
-                Join ChorEscape as a Worker
-              </h2>
-              <p style={{ fontSize: "16px", opacity: 0.9, marginBottom: "24px" }}>
-                Provide services to customers and earn money on your schedule. Flexible hours, competitive pay, and a supportive team.
-              </p>
-              <button
-                onClick={() => navigate("/apply/worker")}
-                className="btn"
-                style={{
-                  background: "white",
-                  color: "#667eea",
-                  fontWeight: 600,
-                  padding: "12px 32px",
-                  fontSize: "16px"
-                }}
-              >
-                Apply as Worker
-                <ArrowRight size={18} style={{ marginLeft: "8px" }} />
-              </button>
-            </div>
+            {/* Worker Application CTA */}
+            <motion.div 
+              style={{ marginTop: "24px" }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+                <WorkerCTACard variant="prominent" />
+              </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.header>
 
         {/* Job Listings */}
+        <div className="unified-section">
         <section className="careers-jobs-section fade-in-up fade-in-delay-sm">
           <div className="careers-jobs-grid">
             {jobs.map((job, idx) => (
@@ -256,6 +261,7 @@ export function CareersPage() {
             </div>
           </section>
         )}
+        </div>
       </div>
     </PageWrapper>
   );

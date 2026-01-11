@@ -1,9 +1,12 @@
 // src/pages/DashboardPage.jsx
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import apiClient from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import toast from "react-hot-toast";
+import "../styles/dashboard-modern.css";
 import {
   LayoutDashboard,
   Calendar,
@@ -49,8 +52,9 @@ import { StatCard } from "../components/ui/StatCard.jsx";
 import { Tooltip } from "../components/ui/Tooltip.jsx";
 
 export function DashboardPage() {
+  const navigate = useNavigate();
   const { user: authUser, profile, session, loading: authLoading } = useAuth();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // Profile data from API
   const [bookings, setBookings] = useState([]);
   const [chores, setChores] = useState([]);
   const [quotes, setQuotes] = useState([]);
@@ -211,9 +215,10 @@ export function DashboardPage() {
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size must be less than 5MB");
+    // Validate file size (max 10MB = 10000 KB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Image size must be less than 10MB (${(file.size / (1024 * 1024)).toFixed(2)}MB selected). Please compress your image and try again.`);
       return;
     }
 
@@ -301,7 +306,22 @@ export function DashboardPage() {
   };
 
   // ========== LOADING ==========
-  if (loading) {
+  // Wait for auth to finish loading - ProtectedRoute handles redirects, so just show loading
+  if (authLoading) {
+    return (
+      <PageWrapper>
+        <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <h2>Loading Dashboard...</h2>
+          <p className="muted">
+            Please wait while we load your profile.
+          </p>
+        </section>
+      </PageWrapper>
+    );
+  }
+
+  // Show loading while fetching user data from API
+  if (loading && !user) {
     return (
       <PageWrapper>
         <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -315,7 +335,8 @@ export function DashboardPage() {
   }
 
   // ========== ERROR ==========
-  if (error && !user) {
+  // Show error only if user is loaded but there was an error fetching data
+  if (error && user) {
     return (
       <PageWrapper>
         <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
@@ -333,25 +354,6 @@ export function DashboardPage() {
     );
   }
 
-  // ========== NO USER (should redirect to login) ==========
-  if (!user) {
-    return (
-      <PageWrapper>
-        <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <h2>Not Logged In</h2>
-          <p className="muted">Please log in to view your dashboard.</p>
-          <button 
-            onClick={() => window.location.href = "/auth"} 
-            className="btn"
-            style={{ marginTop: "20px" }}
-          >
-            Go to Login
-          </button>
-        </section>
-      </PageWrapper>
-    );
-  }
-
   // ============================
   // RENDER
   // ============================
@@ -360,9 +362,18 @@ export function DashboardPage() {
       <section className="section dash-shell">
         <div className="dash-layout">
           {/* ========== SIDEBAR ========== */}
-          <aside className="dash-sidebar">
-            <div className="dash-profile">
-              <img
+          <motion.aside 
+            className="dash-sidebar"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <motion.div 
+              className="dash-profile"
+              whileHover={{ x: 4 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.img
                 src={
                   form.profilePicUrl ||
                   "https://ui-avatars.com/api/?name=" +
@@ -370,185 +381,285 @@ export function DashboardPage() {
                 }
                 alt="avatar"
                 className="dash-avatar"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
               />
               <div>
                 <p className="dash-name">{user.name}</p>
                 <p className="dash-email">{user.email}</p>
               </div>
-            </div>
+            </motion.div>
 
             <nav className="dash-nav">
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "overview" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("overview")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <LayoutDashboard size={20} />
                 <span>Overview</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "inbox" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("inbox")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <Inbox size={20} />
                 <span>Inbox</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "orders" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("orders")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <ShoppingBag size={20} />
                 <span>Bookings & Orders</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "billing" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("billing")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <CreditCard size={20} />
                 <span>Billing</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "addresses" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("addresses")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <MapPin size={20} />
                 <span>Addresses</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "chores" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("chores")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <ClipboardList size={20} />
                 <span>My Chores</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "quotes" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("quotes")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <Quote size={20} />
                 <span>Quote Requests</span>
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
                 className={`dash-nav-item ${
                   activeTab === "profile" ? "is-active" : ""
                 }`}
                 onClick={() => setActiveTab("profile")}
+                whileHover={{ x: 4 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.2 }}
               >
                 <Settings size={20} />
                 <span>Profile & Settings</span>
-              </button>
+              </motion.button>
             </nav>
 
-            <button
+            <motion.button
               className="dash-nav-item dash-logout"
               onClick={handleLogout}
               type="button"
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.2 }}
             >
               <LogOut size={20} />
               <span>Logout</span>
-            </button>
-          </aside>
+            </motion.button>
+          </motion.aside>
 
           {/* ========== MAIN CONTENT ========== */}
-          <main className="dash-main">
+          <motion.main 
+            className="dash-main"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <AnimatePresence mode="wait">
             {activeTab === "overview" && (
-              <DashboardOverview
-                firstName={firstName}
-                stats={{ totalBookings, completed, upcoming, totalHours }}
-                nextBooking={nextBooking}
-                recent={recentBookings}
-                allBookings={bookings}
-                onStatClick={(filterType) => {
-                  setActiveTab("orders");
-                  setFilter(filterType === "completed" ? "past" : filterType === "upcoming" ? "upcoming" : "all");
-                }}
-              />
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardOverview
+                  firstName={firstName}
+                  stats={{ totalBookings, completed, upcoming, totalHours }}
+                  nextBooking={nextBooking}
+                  recent={recentBookings}
+                  allBookings={bookings}
+                  onStatClick={(filterType) => {
+                    setActiveTab("orders");
+                    setFilter(filterType === "completed" ? "past" : filterType === "upcoming" ? "upcoming" : "all");
+                  }}
+                />
+              </motion.div>
             )}
 
             {activeTab === "inbox" && (
-              <DashboardInbox recent={recentBookings} />
+              <motion.div
+                key="inbox"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardInbox recent={recentBookings} />
+              </motion.div>
             )}
 
             {activeTab === "orders" && (
-                  <DashboardOrders 
-                    bookings={bookings}
-                    onRefresh={() => {
-                      // Refresh bookings
-                      const token = localStorage.getItem("token");
-                      if (token) {
-                        apiClient.get("/api/bookings/mine")
-                          .then((res) => setBookings(res.data || []))
-                          .catch((err) => console.error("Failed to refresh bookings:", err));
-                      }
-                    }}
-                  />
+              <motion.div
+                key="orders"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardOrders 
+                  bookings={bookings}
+                  onRefresh={() => {
+                    // Refresh bookings
+                    const token = localStorage.getItem("token");
+                    if (token) {
+                      apiClient.get("/api/bookings/mine")
+                        .then((res) => setBookings(res.data || []))
+                        .catch((err) => console.error("Failed to refresh bookings:", err));
+                    }
+                  }}
+                />
+              </motion.div>
             )}
 
             {activeTab === "billing" && (
-              <DashboardBilling bookings={bookings} user={user} />
+              <motion.div
+                key="billing"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardBilling bookings={bookings} user={user} />
+              </motion.div>
             )}
 
             {activeTab === "addresses" && (
-              <AddressManagement />
+              <motion.div
+                key="addresses"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <AddressManagement />
+              </motion.div>
             )}
 
             {activeTab === "chores" && (
-              <DashboardChores 
-                chores={chores} 
-                onRefresh={async () => {
-                  try {
-                    const res = await apiClient.get("/api/chores");
-                    setChores(res.data || []);
-                  } catch (err) {
-                    console.error("Failed to refresh chores:", err);
-                  }
-                }}
-              />
+              <motion.div
+                key="chores"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardChores 
+                  chores={chores} 
+                  onRefresh={async () => {
+                    try {
+                      const res = await apiClient.get("/api/chores");
+                      setChores(res.data || []);
+                    } catch (err) {
+                      console.error("Failed to refresh chores:", err);
+                    }
+                  }}
+                />
+              </motion.div>
             )}
 
             {activeTab === "quotes" && (
-              <DashboardQuotes 
-                quotes={quotes} 
-                onRefresh={async () => {
-                  try {
-                    const res = await apiClient.get("/api/quotes/mine");
-                    setQuotes(res.data || []);
-                  } catch (err) {
-                    console.error("Failed to refresh quotes:", err);
-                  }
-                }}
-              />
+              <motion.div
+                key="quotes"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardQuotes 
+                  quotes={quotes} 
+                  onRefresh={async () => {
+                    try {
+                      const res = await apiClient.get("/api/quotes/mine");
+                      setQuotes(res.data || []);
+                    } catch (err) {
+                      console.error("Failed to refresh quotes:", err);
+                    }
+                  }}
+                />
+              </motion.div>
             )}
 
             {activeTab === "profile" && (
-              <DashboardProfile
-                form={form}
-                onChange={handleChange}
-                onSave={handleSave}
-                onAvatarChange={handleAvatarChange}
-              />
+              <motion.div
+                key="profile"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <DashboardProfile
+                  form={form}
+                  onChange={handleChange}
+                  onSave={handleSave}
+                  onAvatarChange={handleAvatarChange}
+                />
+              </motion.div>
             )}
-          </main>
+            </AnimatePresence>
+          </motion.main>
         </div>
       </section>
     </PageWrapper>
@@ -580,6 +691,7 @@ function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings,
           icon={Calendar}
           onClick={() => onStatClick && onStatClick("all")}
           clickable
+          variant="blue"
         />
         <StatCardLegacy
           label="Completed"
@@ -587,6 +699,7 @@ function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings,
           icon={CheckCircle2}
           onClick={() => onStatClick && onStatClick("completed")}
           clickable
+          variant="green"
         />
         <StatCardLegacy
           label="Upcoming"
@@ -594,6 +707,7 @@ function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings,
           icon={Clock}
           onClick={() => onStatClick && onStatClick("upcoming")}
           clickable
+          variant="orange"
         />
         <StatCardLegacy
           label="Hours booked"
@@ -601,12 +715,18 @@ function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings,
           icon={Timer}
           onClick={() => onStatClick && onStatClick("all")}
           clickable
+          variant="purple"
         />
       </div>
 
       <div className="dash-two-col fade-in-up fade-in-delay-md">
-        <div className="dash-card">
-          <h3 className="dash-card-title">Next booking</h3>
+        <div className="dash-card dash-card-next">
+          <div className="dash-card-header-enhanced">
+            <h3 className="dash-card-title">
+              <Calendar size={20} />
+              Next booking
+            </h3>
+          </div>
           {!nextBooking && (
             <EmptyState
               icon={Calendar}
@@ -642,8 +762,13 @@ function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings,
           )}
         </div>
 
-        <div className="dash-card">
-          <h3 className="dash-card-title">Recent activity</h3>
+        <div className="dash-card dash-card-recent">
+          <div className="dash-card-header-enhanced">
+            <h3 className="dash-card-title">
+              <Clock size={20} />
+              Recent activity
+            </h3>
+          </div>
           {recent.length === 0 ? (
             <EmptyState
               icon={Clock}
@@ -652,8 +777,8 @@ function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings,
             />
           ) : (
             <ul className="dash-list">
-              {recent.map((b) => (
-                <li key={b.id}>
+              {recent.map((b, idx) => (
+                <li key={b.id} className="dash-list-item-enhanced" style={{ animationDelay: `${idx * 0.05}s` }}>
                   <div className="dash-list-main">
                     <span className="dash-list-title">
                       {b.service?.name ||
@@ -1771,7 +1896,7 @@ function DashboardProfile({ form, onChange, onSave, onAvatarChange }) {
 }
 
 /* ================== STAT CARD ================== */
-function StatCardLegacy({ label, value, icon: Icon, onClick, clickable = false }) {
+function StatCardLegacy({ label, value, icon: Icon, onClick, clickable = false, variant = "default" }) {
   const CardComponent = clickable ? 'button' : 'div';
   const cardProps = clickable ? {
     onClick,
@@ -1781,22 +1906,23 @@ function StatCardLegacy({ label, value, icon: Icon, onClick, clickable = false }
       padding: 0,
       width: '100%',
       cursor: 'pointer',
-      textAlign: 'left',
+      textAlign: 'center',
     }
   } : {};
 
   return (
     <CardComponent 
-      className={`dash-stat-card ${clickable ? 'dash-stat-card-clickable' : ''}`}
+      className={`dash-stat-card dash-stat-card-${variant} ${clickable ? 'dash-stat-card-clickable' : ''}`}
       {...cardProps}
     >
-      <div className="dash-stat-icon-wrap">
-        <Icon size={22} strokeWidth={2} />
+      <div className={`dash-stat-icon-wrap dash-stat-icon-${variant}`}>
+        <Icon size={22} strokeWidth={2.5} />
       </div>
       <div className="dash-stat-content">
-        <p className="stat-val">{value ?? 0}</p>
+        <p className={`stat-val stat-val-${variant}`}>{value ?? 0}</p>
         <p className="stat-label">{label}</p>
       </div>
+      <div className={`dash-stat-accent dash-stat-accent-${variant}`}></div>
     </CardComponent>
   );
 }

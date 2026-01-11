@@ -1,22 +1,20 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Moon, Sun, ShoppingBag, User, LogOut, LayoutDashboard, ChevronDown, Shield, Briefcase } from "lucide-react";
+import { ShoppingBag, User, LogOut, LayoutDashboard, ChevronDown, Shield, Briefcase } from "lucide-react";
 import logo from "../assets/chorebunny.png";
 import { AuthModal } from "./auth-modal";
 import { Tooltip } from "./ui/Tooltip.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
-
-document.body.classList.add("dark-theme");
-
 export function Navbar() {
   // Use AuthContext for user, profile, role, loading, and logout
   const { user, profile, role, loading, logout } = useAuth();
-  const [dark, setDark] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const userMenuRef = useRef(null);
 
   const navigate = useNavigate();
@@ -42,11 +40,28 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Dark mode toggle
+  // Handle scroll-based navbar visibility
   useEffect(() => {
-    const root = document.documentElement;
-    dark ? root.classList.add("dark-theme") : root.classList.remove("dark-theme");
-  }, [dark]);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // Always show navbar at the top
+      if (currentScrollY < 10) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down - hide navbar
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up - show navbar
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   const handleLogout = async () => {
     try {
@@ -78,17 +93,18 @@ export function Navbar() {
   const isCustomer = role === "CUSTOMER" || !role; // Default to customer if no role
 
   return (
-    <header className="nav">
-      {/* LEFT SECTION */}
-      <div className="nav-left">
-        <div className="brand" onClick={() => navigate("/")}>
-          <img src={logo} alt="ChorEscape Logo" className="brand-logo" />
-          <span className="brand-title">ChorEscape</span>
+    <header className={`nav ${isVisible ? 'nav-visible' : 'nav-hidden'}`}>
+      <div className="nav-container">
+        {/* LEFT SECTION */}
+        <div className="nav-left">
+          <div className="brand" onClick={() => navigate("/")}>
+            <div className="brand-logo"></div>
+            <span className="brand-title">ChorEscape</span>
+          </div>
         </div>
-      </div>
 
-      {/* CENTER SECTION – desktop */}
-      <nav className="nav-center">
+        {/* CENTER SECTION – desktop */}
+        <nav className="nav-center">
         <Link className={linkClass("/")} to="/">
           Home
         </Link>
@@ -117,6 +133,7 @@ export function Navbar() {
             <button
               className="nav-user-button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
+              aria-label="User menu"
             >
               {userAvatar ? (
                 <img src={userAvatar} alt={firstName} className="nav-user-avatar" />
@@ -126,7 +143,7 @@ export function Navbar() {
                 </div>
               )}
               <span className="nav-user-name">{firstName}</span>
-              <ChevronDown size={16} style={{ transition: "transform 0.2s", transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
+              <ChevronDown size={16} className="nav-user-chevron" style={{ transition: "transform 0.2s", transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
             </button>
             
             {userMenuOpen && (
@@ -143,19 +160,9 @@ export function Navbar() {
                     <div className="nav-user-menu-name">{userDisplayName}</div>
                     <div className="nav-user-menu-email">{profile?.email || user?.email}</div>
                     {role && (
-                      <div style={{ 
-                        display: "inline-block",
-                        marginTop: "4px",
-                        padding: "2px 8px",
-                        borderRadius: "4px",
-                        fontSize: "11px",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        background: role === "ADMIN" ? "#dc2626" : role === "WORKER" ? "#059669" : "#3b82f6",
-                        color: "white"
-                      }}>
+                      <span className={`role-badge role-badge-${role.toLowerCase()}`}>
                         {role}
-                      </div>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -212,31 +219,26 @@ export function Navbar() {
           </div>
         )}
 
-        {!user && (
+        {!loading && !user && (
           <button
             onClick={() => setAuthModalOpen(true)}
-            className="nav-pill nav-pill-desktop"
+            className="btn btn-primary nav-pill nav-pill-desktop"
           >
             Log in
           </button>
         )}
+        
+        {loading && (
+          <div className="nav-loading">Loading...</div>
+        )}
 
-        {/* Cart */}
-        <Tooltip text={`${cartCount} item${cartCount !== 1 ? 's' : ''} in cart`}>
-          <div className="icon-btn cart-icon-wrapper">
-            <Link to="/cart">
-              <ShoppingBag size={20} style={{ color: "var(--primary)" }} />
-            </Link>
-            {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-          </div>
-        </Tooltip>
-
-        {/* Dark Mode */}
-        <Tooltip text={dark ? "Switch to light mode" : "Switch to dark mode"}>
-          <span className="icon-btn dark-toggle" onClick={() => setDark(!dark)}>
-            {dark ? <Sun size={20} /> : <Moon size={20} />}
-          </span>
-        </Tooltip>
+        {/* Cart - Hidden on mobile, shown in mobile menu */}
+        <div className="icon-btn cart-icon-wrapper nav-desktop-only">
+          <Link to="/cart">
+            <ShoppingBag size={20} style={{ color: "var(--primary)" }} />
+          </Link>
+          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+        </div>
 
         {/* Mobile hamburger */}
         <button
@@ -274,6 +276,22 @@ export function Navbar() {
           </Link>
         </nav>
 
+        {/* Mobile Menu - Cart */}
+        <div className="nav-mobile-tools">
+          {/* Cart in Mobile Menu */}
+          <Link 
+            to="/cart" 
+            className="nav-mobile-tool-item"
+            onClick={() => setMobileOpen(false)}
+          >
+            <ShoppingBag size={20} />
+            <span>Cart</span>
+            {cartCount > 0 && (
+              <span className="nav-mobile-tool-badge">{cartCount}</span>
+            )}
+          </Link>
+        </div>
+
         <div className="nav-mobile-actions">
           {user ? (
             <>
@@ -304,6 +322,7 @@ export function Navbar() {
         </div>
       </div>
 
+      </div>
       {/* Auth Modal */}
       <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </header>

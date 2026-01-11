@@ -1,0 +1,106 @@
+/* ============================================================
+   📈 STAT CARD — Dashboard Statistics Cards
+=============================================================== */
+
+.stat-card {
+  background: var(--color-bg-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+}
+
+.stat-card-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.stat-card-value {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.stat-card-change {
+  font-size: var(--font-size-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.stat-card-change-positive {
+  color: var(--color-success);
+}
+
+.stat-card-change-negative {
+  color: var(--color-error);
+}
+
+.stat-card-change-neutral {
+  color: var(--color-text-secondary);
+}
+
+.stat-card-footer {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+/* ========== STAT CARD VARIANTS ========== */
+.stat-card-primary .stat-card-icon {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.stat-card-success .stat-card-icon {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.stat-card-error .stat-card-icon {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.stat-card-warning .stat-card-icon {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.stat-card-info .stat-card-icon {
+  background: var(--color-info-light);
+  color: var(--color-info);
+}
+
+

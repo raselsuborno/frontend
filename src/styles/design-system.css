@@ -1,0 +1,23 @@
+/* ============================================================
+   🎨 DESIGN SYSTEM — Main Entry Point
+   Import all design system modules
+=============================================================== */
+
+/* Core tokens and variables */
+@import './tokens.css';
+
+/* Global resets and base styles */
+@import './globals.css';
+
+/* Typography system */
+@import './typography.css';
+
+/* Layout system */
+@import './layout.css';
+
+/* Utility classes */
+@import './utilities.css';
+
+/* Component styles */
+@import './components/index.css';
+

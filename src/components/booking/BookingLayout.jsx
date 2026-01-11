@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import BookingTracker from "./BookingTracker";
@@ -9,21 +9,28 @@ import BookingScheduleCard from "./BookingScheduleCard";
 import BookingAddressCard from "./BookingAddressCard";
 import BookingSummaryCard from "./BookingSummaryCard";
 import BookingReviewCard from "./BookingReviewCard";
+import BookingPaymentCard from "./BookingPaymentCard";
 
-import { SERVICE_DEFS } from "./serviceDefs";
 import "./booking.layout.css";
+import apiClient from "../../lib/api.js";
 
 export default function BookingLayout() {
-  const TOTAL_STEPS = 5;
-
+  const TOTAL_STEPS = 6;
+  const navigate = useNavigate();
   const location = useLocation();
 
   const [step, setStep] = useState(1);
   const [service, setService] = useState(null);
 
+  const [serviceData, setServiceData] = useState(null);
   const [details, setDetails] = useState({
+    // New schema-driven structure
+    blocks: {},
+    // Legacy format (maintained for backward compatibility with other steps)
     subService: "",
     frequency: "",
+    customFields: {},
+    extraNotes: "",
     extras: {
       homeSize: "",
       laundryUnits: "",
@@ -34,21 +41,35 @@ export default function BookingLayout() {
       autoVehicleType: "",
       extraNotes: "",
     },
+    schedule: {},
+    address: {},
   });
 
   /* =========================================
      PRESELECT SERVICE (FROM SERVICES PAGE)
   ========================================= */
-useEffect(() => {
-  const incoming = location.state?.preselectedService;
-  const mapped = mapServiceKey(incoming);
-
-  if (mapped) {
-    setService(mapped);
-    setStep(2);
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
+  useEffect(() => {
+    const preselectedId = location.state?.preselectedService;
+    if (preselectedId) {
+      // Fetch service data from backend
+      const fetchService = async () => {
+        try {
+          const response = await apiClient.get(`/public/services?type=RESIDENTIAL`);
+          const found = response.data.find(
+            (s) => s.id === preselectedId || s.slug === preselectedId
+          );
+          if (found) {
+            setService(found);
+            setServiceData(found);
+            setStep(2);
+          }
+        } catch (error) {
+          console.error("Failed to fetch preselected service:", error);
+        }
+      };
+      fetchService();
+    }
+  }, [location.state]);
 
   /* =========================
      NAVIGATION
@@ -56,11 +77,27 @@ useEffect(() => {
   const next = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   const back = () => setStep((s) => Math.max(s - 1, 1));
 
-  const handleServiceSelect = (svc) => {
+  const handleServiceSelect = async (svc) => {
     setService(svc);
+    setServiceData(svc); // Set immediately for UI
+    
+    try {
+      // Fetch full service data with options if we have an id or slug
+      if (svc.id || svc.slug) {
+        const response = await apiClient.get(`/public/services/${svc.id || svc.slug}`);
+        setServiceData(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch service details:", error);
+      // Keep the service data we already set
+    }
+    
     setDetails({
+      blocks: {},
       subService: "",
       frequency: "",
+      customFields: {},
+      extraNotes: "",
       extras: {
         homeSize: "",
         laundryUnits: "",
@@ -71,18 +108,15 @@ useEffect(() => {
         autoVehicleType: "",
         extraNotes: "",
       },
+      schedule: {},
+      address: {},
     });
-if (!location.state?.preselectedService) {
-  setStep(1);
-}
+    
+    // Don't reset step if we're navigating forward
+    if (!location.state?.preselectedService && step === 1) {
+      // Stay on step 1, wait for user to click Next
+    }
   };
-const mapServiceKey = (id) => {
-  if (!id) return null;
-  return Object.keys(SERVICE_DEFS).find(
-    (key) => key.toLowerCase() === id.toLowerCase()
-  );
-};
-  const serviceConfig = service ? SERVICE_DEFS[service] : null;
 
   return (
     <div className="booking-layout">
@@ -105,10 +139,10 @@ const mapServiceKey = (id) => {
               </motion.div>
             )}
 
-            {step === 2 && serviceConfig && (
+            {step === 2 && (serviceData || service) && (
               <motion.div key="details">
                 <BookingDetailsCard
-                  serviceConfig={serviceConfig}
+                  service={serviceData || service}
                   details={details}
                   setDetails={setDetails}
                   onBack={back}
@@ -139,6 +173,33 @@ const mapServiceKey = (id) => {
                 />
               </motion.div>
             )}
+
+            {step === 5 && serviceData && (
+              <motion.div key="review">
+                <BookingReviewCard
+                  service={serviceData.title || serviceData.name}
+                  details={details}
+                  onEditService={() => setStep(1)}
+                  onEditSchedule={() => setStep(3)}
+                  onEditAddress={() => setStep(4)}
+                  onBack={back}
+                />
+              </motion.div>
+            )}
+
+            {step === 6 && (
+              <motion.div key="payment">
+                <BookingPaymentCard
+                  service={serviceData}
+                  details={details}
+                  onBack={back}
+                  onComplete={(bookingData) => {
+                    // Handle booking completion
+                    navigate("/dashboard", { state: { bookingCreated: true } });
+                  }}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </motion.div>
 
@@ -148,20 +209,11 @@ const mapServiceKey = (id) => {
               step === 5 ? "review-expanded" : ""
             }`}
           >
-            {step !== 5 ? (
+            {step < 5 && (
               <BookingSummaryCard
-                service={service}
+                service={serviceData || service}
                 details={details}
                 step={step}
-              />
-            ) : (
-              <BookingReviewCard
-                service={service}
-                details={details}
-                onEditService={() => setStep(1)}
-                onEditSchedule={() => setStep(3)}
-                onEditAddress={() => setStep(4)}
-                onBack={() => setStep(4)}
               />
             )}
           </motion.div>

@@ -1,0 +1,65 @@
+/* ============================================================
+   🌐 GLOBAL EDGE-TO-EDGE LAYOUT
+   Makes the entire website edge-to-edge like Square
+   Overrides all layout constraints
+=============================================================== */
+
+/* Force edge-to-edge on main layout wrapper */
+.layout {
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+/* Override any max-width constraints on page wrappers */
+.svc-shell,
+.shop-page-wrapper,
+.cart-page-wrapper,
+.about-page-wrapper,
+.contact-page-wrapper,
+.careers-page-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ensure pages can have their own internal containers */
+.page-content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+@media (max-width: 768px) {
+  .page-content-container {
+    padding: 0 24px;
+  }
+}
+
+/* Update Container component to work with edge-to-edge */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 24px;
+  }
+}
+
+/* Override mobile padding */
+@media (max-width: 768px) {
+  .layout {
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout {
+    padding: 0 !important;
+  }
+}

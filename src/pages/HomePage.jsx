@@ -1,105 +1,49 @@
-// src/pages/HomePage.jsx
-import React, { useState, useRef, useEffect, useMemo } from "react";
+// src/pages/HomePage.jsx - Square-style Minimalist Landing Page
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring, useAnimationFrame } from "framer-motion";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { PostChoreModal } from "../components/PostChoreModal.jsx";
-import GlobalPresence from "../components/ui/global-presence";
-import GoogleReviews from "../components/ui/google-reviews";
+import CountryMap from "../components/CountryMap.jsx";
+import { AnimatedSection, AnimatedItem, AnimatedCard } from "../components/AnimatedSection.jsx";
+import { ParallaxSection, ScrollReveal, ScrollProgress } from "../components/ParallaxSection.jsx";
+import { ScrollAnimatedCard, ScrollAnimatedReview } from "../components/ScrollAnimatedCard.jsx";
 import { 
-  Search, 
   ArrowRight, 
-  CheckCircle2, 
   Shield, 
   DollarSign, 
   MapPin, 
-  Star,
+  CheckCircle2,
   Sparkles,
-  X,
-  Plus,
-  Clock,
-  Users,
-  Award,
-  Snowflake,
-  Shirt,
-  ChefHat,
-  Package,
-  Car,
-  Home,
-  CheckCircle
+  Star,
+  ThumbsUp,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { WorkerCTACard } from "../components/WorkerCTACard.jsx";
+import "../styles/home-square.css";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "null");
-  const isLoggedIn = !!user;
-  const [searchQuery, setSearchQuery] = useState("");
   const [postChoreModalOpen, setPostChoreModalOpen] = useState(false);
-  const searchWrapperRef = useRef(null);
 
-  // Suggestions for "Need ideas" section
-  const suggestions = [
-    { title: "Hassle-free snow clearing", caption: "Book weekly or one-time.", icon: Snowflake },
-    { title: "Laundry & folding", caption: "Fresh clothes with no effort.", icon: Shirt },
-    { title: "Deep kitchen reset", caption: "Grease, fridge, oven — done.", icon: ChefHat },
-    { title: "Move-out clean", caption: "Leave the keys, we'll handle it.", icon: Package },
-    { title: "Car inside & out", caption: "Showroom clean again.", icon: Car },
-    { title: "Basement reset", caption: "Declutter & reclaim space.", icon: Home },
-  ];
-
-  // Reviews for social proof
   const reviews = [
-    { 
-      quote: "Absolutely phenomenal service! My home has never looked better. The team was professional, punctual, and paid attention to every detail. I'll definitely be booking again.", 
-      name: "Sarah Mitchell", 
-      tag: "Home Cleaning",
-      rating: 5,
-      timeAgo: "2 days ago",
-      location: "San Francisco, CA"
-    },
-    { 
-      quote: "Quick, efficient, and incredibly skilled. Fixed three issues in my apartment in under two hours. Pricing was transparent and fair. Highly recommend!", 
-      name: "Marcus Johnson", 
-      tag: "Handyman",
-      rating: 5,
-      timeAgo: "5 days ago",
-      location: "Austin, TX"
-    },
-    { 
-      quote: "This service is a game-changer! As a busy professional, having someone handle my laundry has given me back so much time. Everything comes back perfectly folded and fresh.", 
-      name: "Emily Chen", 
-      tag: "Laundry & Folding",
-      rating: 5,
-      timeAgo: "1 week ago",
-      location: "Seattle, WA"
-    },
-    { 
-      quote: "Best decision I made this winter. They show up early, clear everything perfectly, and I haven't had to shovel once. Worth every penny!", 
-      name: "David Rodriguez", 
-      tag: "Snow Removal",
-      rating: 5,
-      timeAgo: "1 week ago",
-      location: "Denver, CO"
-    },
-    { 
-      quote: "Made moving so much easier! They handled the entire cleaning while I focused on packing. Got my full deposit back thanks to their thorough work.", 
-      name: "Jennifer Adams", 
-      tag: "Move-out Clean",
-      rating: 5,
-      timeAgo: "2 weeks ago",
-      location: "Boston, MA"
-    },
-    { 
-      quote: "My car looks brand new again! They came to my office, detailed it while I worked, and the results were incredible. Interior and exterior are spotless.", 
-      name: "Alex Thompson", 
-      tag: "Car Detailing",
-      rating: 5,
-      timeAgo: "2 weeks ago",
-      location: "Los Angeles, CA"
-    },
+    { name: "Johnny Ho", time: "2 days ago", text: "The cleaners from Call the Cleaners were very professional, polite and timely. They left no spot left uncleaned, especially the bathroom and kitchen." },
+    { name: "Eugene Shcherban", time: "2 days ago", text: "All went fine. Great service!" },
+    { name: "Áine Hamilton", time: "2 days ago", text: "We were very happy with the service provided by call the cleaners, they were friendly efficient and reasonably priced. We get a regular fortnightly cl..." },
+    { name: "Louise Rigby", time: "2 days ago", text: "My cleaner was so professional and worked really hard. She checked in at the end that I was happy and I was over the moon!" },
+    { name: "Daniel Eyre", time: "3 days ago", text: "Very nice clean. Good job." },
+    { name: "Lisa Schaup", time: "4 days ago", text: "We used Call the Cleaners for our end-of-lease clean in Randwick and couldn't be happier with the service — communication was great and we got our ful..." },
+    { name: "Ceci Yu", time: "2 days ago", text: "I booked a general clean in Pyrmont. Very happy with the service." },
   ];
 
-  // Partners/Used by logos for partners section
+  const popularTasks = [
+    { title: "Hassle-free snow clearing", subtitle: "Book weekly or one-time.", image: "https://images.unsplash.com/photo-1732645556313-841fed3ead13?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbm93JTIwcmVtb3ZhbCUyMHdpbnRlcnxlbnwxfHx8fDE3NjgxMTI4MDR8MA&ixlib=rb-4.1.0&q=80&w=1080" },
+    { title: "Laundry & folding", subtitle: "Fresh clothes with no effort.", image: "https://images.unsplash.com/photo-1604762434310-c6def6a3d844?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXVuZHJ5JTIwZm9sZGluZyUyMGNsZWFufGVufDF8fHx8MTc2ODExMjgwNHww&ixlib=rb-4.1.0&q=80&w=1080" },
+    { title: "Deep kitchen reset", subtitle: "Grease, fridge, oven — done.", image: "https://images.unsplash.com/photo-1567767326925-e2047bf469d0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxraXRjaGVuJTIwY2xlYW5pbmd8ZW58MXx8fHwxNzY4MTEyODA1fDA&ixlib=rb-4.1.0&q=80&w=1080" },
+    { title: "Move-out clean", subtitle: "Leave the keys, we'll handle it.", image: "https://images.unsplash.com/photo-1718066236069-a4d42a6436a1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbiUyMGVtcHR5JTIwcm9vbXxlbnwxfHx8fDE3NjgxMTI4MDV8MA&ixlib=rb-4.1.0&q=80&w=1080" },
+    { title: "Car inside & out", subtitle: "Showroom clean again.", image: "https://images.unsplash.com/photo-1761312834150-4beefff097a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjYXIlMjB3YXNoJTIwY2xlYW58ZW58MXx8fHwxNzY4MDYzNzc3fDA&ixlib=rb-4.1.0&q=80&w=1080" },
+    { title: "Basement reset", subtitle: "Declutter & reclaim space.", image: "https://images.unsplash.com/photo-1732900309946-7efe975d6ae1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvcmdhbml6ZWQlMjBiYXNlbWVudHxlbnwxfHx8fDE3NjgxMTI4MDZ8MA&ixlib=rb-4.1.0&q=80&w=1080" },
+  ];
+
   const partners = [
     { name: "SGI", logo: "SGI" },
     { name: "SaskPower", logo: "SaskPower" },
@@ -109,400 +53,627 @@ export function HomePage() {
     { name: "SaskTel", logo: "SaskTel" },
   ];
 
-
-  // All services for search (combining residential and corporate services)
-  const allServices = useMemo(() => [
-    { id: "cleaning", title: "Cleaning", keywords: ["cleaning", "clean", "house cleaning", "apartment cleaning", "deep clean"] },
-    { id: "maid", title: "Maid Service", keywords: ["maid", "housekeeping", "maid service", "regular cleaning"] },
-    { id: "laundry", title: "Laundry Service", keywords: ["laundry", "washing", "folding", "clothes", "dry cleaning"] },
-    { id: "lawn", title: "Lawn Care", keywords: ["lawn", "mowing", "yard", "grass", "landscaping", "gardening"] },
-    { id: "handyman", title: "Handyman", keywords: ["handyman", "repair", "fix", "assembly", "mounting", "installation"] },
-    { id: "reno", title: "Home Renovation", keywords: ["renovation", "renovate", "remodel", "home improvement", "construction"] },
-    { id: "pest", title: "Pest Control", keywords: ["pest", "bugs", "insects", "rodent", "exterminator"] },
-    { id: "snow", title: "Snow Removal", keywords: ["snow", "snow removal", "shoveling", "snow clearing", "winter"] },
-    { id: "move", title: "Move-In / Move-Out", keywords: ["move", "moving", "move in", "move out", "packing"] },
-    { id: "airbnb", title: "Vacation Home / Airbnb", keywords: ["airbnb", "vacation", "short term rental", "turnover"] },
-    { id: "auto", title: "Automotive", keywords: ["car", "automotive", "detailing", "car wash", "tire", "oil change"] },
-    { id: "trades", title: "Heating, Cooling & Plumbing", keywords: ["plumbing", "heating", "cooling", "hvac", "electrician", "electric"] },
-  ], []);
-
-  // Fuzzy match function
-  const fuzzyMatch = (query, text) => {
-    const queryLower = query.toLowerCase().trim();
-    const textLower = text.toLowerCase();
-    
-    // Exact match gets highest priority
-    if (textLower === queryLower) return 100;
-    
-    // Starts with query
-    if (textLower.startsWith(queryLower)) return 90;
-    
-    // Contains query
-    if (textLower.includes(queryLower)) return 80;
-    
-    // Check if all characters of query exist in order in text
-    let queryIndex = 0;
-    for (let i = 0; i < textLower.length && queryIndex < queryLower.length; i++) {
-      if (textLower[i] === queryLower[queryIndex]) {
-        queryIndex++;
-      }
-    }
-    if (queryIndex === queryLower.length) return 70;
-    
-    // Check individual words
-    const queryWords = queryLower.split(/\s+/);
-    const textWords = textLower.split(/\s+/);
-    let matchCount = 0;
-    for (const qWord of queryWords) {
-      for (const tWord of textWords) {
-        if (tWord.includes(qWord) || qWord.includes(tWord)) {
-          matchCount++;
-          break;
-        }
-      }
-    }
-    if (matchCount > 0) return 60 + (matchCount * 5);
-    
-    return 0;
-  };
-
-  const findBestMatch = (query) => {
-    if (!query.trim()) return null;
-    
-    const matches = allServices.map(service => {
-      // Check title match
-      const titleScore = fuzzyMatch(query, service.title);
-      
-      // Check keywords match
-      const keywordScores = service.keywords.map(keyword => fuzzyMatch(query, keyword));
-      const maxKeywordScore = Math.max(...keywordScores, 0);
-      
-      // Take the best score
-      const score = Math.max(titleScore, maxKeywordScore);
-      
-      return { service, score };
-    }).filter(m => m.score > 0).sort((a, b) => b.score - a.score);
-    
-    return matches.length > 0 ? matches[0].service : null;
-  };
-
   const handleServiceClick = (service) => {
     navigate("/pricing-booking", { state: { service } });
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const query = searchQuery.trim();
-    if (query) {
-      const matchedService = findBestMatch(query);
-      if (matchedService) {
-        handleServiceClick(matchedService.title);
-      } else {
-        // If no match, navigate with the query as custom service
-        handleServiceClick(query);
-      }
-    }
-  };
+  // Scroll progress indicator
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
 
-  const handleSearchWrapperClick = () => {
-    // Focus the input when clicking anywhere on the wrapper
-    const input = searchWrapperRef.current?.querySelector('.home-search-input');
-    if (input) {
-      input.focus();
-    }
-  };
-
+  // Hero image parallax - use global scroll for simplicity
+  const heroY = useTransform(scrollYProgress, [0, 0.5], [0, -150]);
 
   return (
     <PageWrapper>
-      <div className="home-page">
-        {/* ========== HERO SECTION ========== */}
-        <section className="home-hero-section fade-in-up">
-          <h1 className="home-hero-title">
-          Give yourself a break & relax
-            <br />
-            <span className="home-hero-highlight">Let us handle the chores</span>
-          </h1>
-
-          <p className="home-hero-subtitle">
-            Professional cleaning, handyman services, laundry & more — all booked in minutes.
-          </p>
-
-          <div className="home-hero-cta">
-            <button 
-              className="btn home-hero-btn-primary"
-              onClick={() => navigate("/pricing-booking")}
-            >
-              Book a service
-              <ArrowRight size={18} />
-          </button>
-            <button 
-              className="btn outline home-hero-btn-secondary"
-              onClick={() => navigate("/services")}
-            >
-              Browse services
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="home-search-container">
-            <div 
-              className="home-search-wrapper" 
-              onClick={handleSearchWrapperClick}
-              ref={searchWrapperRef}
-            >
-              <Search size={20} className="home-search-icon-left" />
-              <input
-                type="text"
-                className="home-search-input"
-                placeholder="What do you need done today?"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="home-search-popular">
-              <span className="home-search-popular-label">Popular:</span>
-              {["Cleaning", "Laundry", "Handyman", "Snow Removal"].map((service) => (
-                    <button
-                  key={service}
-                  type="button"
-                  className="home-search-popular-btn"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setSearchQuery(service);
-                    handleServiceClick(service);
-                  }}
-                >
-                  {service}
-                    </button>
-                  ))}
-            </div>
-            <div className="home-hero-badge">
-              <Sparkles size={16} />
-              <span>Trusted by 50,000+ users across Saskatchewan</span>
-            </div>
-          </form>
-
-        </section>
-
-        {/* ========== NEED IDEAS ========== */}
-        <section className="home-section fade-in-up fade-in-delay-md">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Need ideas?</h2>
-            <p className="home-section-subtitle">
-              Popular tasks people are booking this week
-            </p>
-          </div>
-
-          <div className="home-suggestions-grid">
-            {suggestions.map((s) => {
-              const IconComponent = s.icon;
-              return (
-                <div 
-                  key={s.title} 
-                  className="home-suggestion-card"
-                  onClick={() => handleServiceClick(s.title)}
-                >
-                  <div className="home-suggestion-icon">
-                    <IconComponent size={32} />
-                  </div>
-                  <h3 className="home-suggestion-title">{s.title}</h3>
-                  <p className="home-suggestion-caption">{s.caption}</p>
-                  <button className="home-suggestion-cta">
-                    Book now
-                    <ArrowRight size={14} />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* ========== POST A CUSTOM CHORE ========== */}
-        <section className="home-custom-chore-section fade-in-up fade-in-delay-lg">
-          <div className="home-custom-wide" onClick={() => setPostChoreModalOpen(true)}>
-            <div className="custom-left-pattern">
-              <svg className="task-anim" viewBox="0 0 260 150">
-                <g className="anim-group">
-                  <rect className="box b1" x="10" y="20" width="25" height="25" />
-                  <rect className="box b2" x="10" y="60" width="25" height="25" />
-                  <rect className="box b3" x="10" y="100" width="25" height="25" />
-
-                  <path className="tick t1" d="M12 33 l7 7 l13 -13" />
-                  <path className="tick t2" d="M12 73 l7 7 l13 -13" />
-                  <path className="tick t3" d="M12 113 l7 7 l13 -13" />
-
-                  <text className="label label1" x="60" y="38">Home Cleaning</text>
-                  <text className="label label2" x="60" y="78">Snow Removal</text>
-                  <text className="label label3" x="60" y="118">Laundry</text>
-                </g>
-              </svg>
-            </div>
-
-            <div className="custom-right-content">
-              <p className="custom-eyebrow">Can't find what you're looking for?</p>
-              <h3 className="custom-title">Post a Custom Chore</h3>
-              <p className="custom-sub">
-                Tell us what you need — we'll match you with the right helper ASAP.
-              </p>
-
-              <button className="custom-cta">Post Your Chore →</button>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== HOW IT WORKS ========== */}
-        <section className="home-section fade-in-up fade-in-delay-lg">
-          <div className="home-section-header">
-            <h2 className="home-section-title">How It Works</h2>
-            <p className="home-section-subtitle">
-              Book your service in three simple steps
-            </p>
-          </div>
-
-          <div className="home-steps-grid">
-            <div className="home-step-card">
-              <div className="home-step-number">1</div>
-              <h3 className="home-step-title">Choose a service</h3>
-              <p className="home-step-desc">
-                Browse our services or describe what you need
-              </p>
-            </div>
-
-            <div className="home-step-card">
-              <div className="home-step-number">2</div>
-              <h3 className="home-step-title">Pick a time</h3>
-              <p className="home-step-desc">
-                Select a date and time that works for you
-              </p>
-            </div>
-
-            <div className="home-step-card">
-              <div className="home-step-number">3</div>
-              <h3 className="home-step-title">Relax</h3>
-              <p className="home-step-desc">
-                We handle it — you get your time back
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== WHY CHOOSE ========== */}
-        <section className="home-section fade-in-up fade-in-delay-lg">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Why Choose ChorEscape</h2>
-            <p className="home-section-subtitle">
-              Trusted, transparent, and always reliable
-            </p>
-          </div>
-
-          <div className="home-features-grid">
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <Shield size={24} />
-              </div>
-              <h3 className="home-feature-title">Vetted Professionals</h3>
-              <p className="home-feature-desc">
-                Background-checked and verified
-              </p>
-            </div>
-
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <DollarSign size={24} />
-              </div>
-              <h3 className="home-feature-title">Transparent Pricing</h3>
-              <p className="home-feature-desc">
-                No hidden fees, ever
-              </p>
-            </div>
-
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <MapPin size={24} />
-              </div>
-              <h3 className="home-feature-title">Local & Reliable</h3>
-              <p className="home-feature-desc">
-                Available in your area
-              </p>
-            </div>
-
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <CheckCircle2 size={24} />
-              </div>
-              <h3 className="home-feature-title">Satisfaction Guaranteed</h3>
-              <p className="home-feature-desc">
-                Not happy? We'll make it right
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== GLOBAL REACH ========== */}
-        <section className="home-globe-section fade-in-up fade-in-delay-lg">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Operating Worldwide</h2>
-            <p className="home-section-subtitle">
-              Serving customers across Canada, Australia, and UAE
-            </p>
-          </div>
-          <div className="globe-wrap">
-            <GlobalPresence />
-          </div>
-        </section>
-
-        {/* ========== USED BY ========== */}
-        <section className="home-partners-section fade-in-up fade-in-delay-lg">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Trusted by leading organizations</h2>
-            <p className="home-section-subtitle">
-              Serving businesses and institutions across Saskatchewan
-            </p>
-          </div>
-
-          <div className="home-partners-grid">
-            {partners.map((partner, idx) => (
-              <div 
-                key={idx} 
-                className="home-partner-logo"
-                title={partner.name}
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="scroll-progress-bar"
+        style={{ scaleX }}
+      />
+      <div className="home-square-page">
+        {/* Hero Section - Edge to Edge */}
+        <section className="square-hero">
+          <div className="square-container">
+            <div className="square-hero-grid">
+              <motion.div 
+                className="square-hero-text"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                {partner.logo}
+                <motion.div 
+                  className="square-hero-badge"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <span>Fresh to Saskatchewan • Committed to quality</span>
+                </motion.div>
+                <motion.h1 
+                  className="square-hero-title"
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.9, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  Give yourself a break & relax
+                </motion.h1>
+                <motion.p 
+                  className="square-hero-description"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  Let us handle the chores Professional cleaning, handyman services, laundry & more — all booked in minutes.
+                </motion.p>
+                <motion.div 
+                  className="square-hero-actions"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <motion.button 
+                    className="square-btn-primary"
+                    onClick={() => navigate("/pricing-booking")}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Book a Service
+                  </motion.button>
+                </motion.div>
+                <motion.div 
+                  className="square-hero-trust"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <div className="square-trust-stars">
+                    {[...Array(5)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, delay: 1 + i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      >
+                        <Star size={18} fill="#FFB800" color="#FFB800" />
+                      </motion.div>
+                    ))}
+                  </div>
+                  <span className="square-trust-label">QUALITY FIRST</span>
+                  <span className="square-trust-text">Building trust, one service at a time</span>
+                </motion.div>
+              </motion.div>
+              <motion.div 
+                className="square-hero-image"
+                initial={{ opacity: 0, x: 50, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                style={{ y: heroY }}
+              >
+                <img 
+                  src="https://images.unsplash.com/photo-1763026227930-ec2c91d4e7f2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbmluZyUyMHNlcnZpY2UlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzY4MDQ0Mjg4fDA&ixlib=rb-4.1.0&q=80&w=1080"
+                  alt="Professional cleaning service" 
+                />
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Reviews Section - Edge to Edge Scroll */}
+        <section className="square-reviews">
+          <div className="square-reviews-scroll">
+            {[...reviews, ...reviews].map((review, idx) => (
+              <ScrollAnimatedReview
+                key={idx} 
+                idx={idx}
+                className="square-review-card"
+              >
+                <div onClick={() => window.open('https://www.google.com/maps/search/ChorEscape', '_blank')}>
+                <div className="square-review-header">
+                    <motion.div 
+                      className="square-review-avatar"
+                      whileHover={{ rotate: 360, scale: 1.1 }}
+                      transition={{ duration: 0.6 }}
+                    >
+                    {review.name.charAt(0)}
+                    </motion.div>
+                  <div className="square-review-info">
+                    <h4 className="square-review-name">{review.name}</h4>
+                    <p className="square-review-time">{review.time}</p>
+                  </div>
+                </div>
+                <div className="square-review-stars">
+                  {[...Array(5)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, scale: 0 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: false }}
+                        transition={{ duration: 0.3, delay: (idx % reviews.length) * 0.1 + i * 0.05 }}
+                      >
+                        <Star size={14} fill="#FFB800" color="#FFB800" />
+                      </motion.div>
+                  ))}
+                </div>
+                <p className="square-review-text">{review.text}</p>
               </div>
+              </ScrollAnimatedReview>
             ))}
           </div>
         </section>
 
-        {/* ========== SOCIAL PROOF / GOOGLE REVIEWS ========== */}
-        <section className="home-social-proof fade-in-up fade-in-delay-lg">
-          <div className="home-section-header">
-            <h2 className="home-section-title">What Our Customers Say</h2>
-            <p className="home-section-subtitle">Real reviews from real people who got their time back.</p>
-          </div>
-
-          <GoogleReviews />
-        </section>
-
-        {/* ========== GET STARTED CTA ========== */}
-        <section className="home-cta-section fade-in-up fade-in-delay-lg">
-          <div className="home-cta-content">
-            <h2 className="home-cta-title">Ready to get started?</h2>
-            <p className="home-cta-subtitle">
-              Join thousands who've already reclaimed their time.
-            </p>
-            <button 
-              className="btn home-cta-btn"
-              onClick={() => navigate("/pricing-booking")}
+        {/* Popular Tasks - 3 Column Grid */}
+        <AnimatedSection className="square-section" parallax={true} speed={0.2}>
+          <div className="square-container">
+            <AnimatedItem>
+            <div className="square-section-header">
+              <h2 className="square-section-title">Need ideas?</h2>
+              <p className="square-section-subtitle">
+                Popular tasks people are booking this week
+              </p>
+            </div>
+            </AnimatedItem>
+            
+            <motion.div 
+              className="square-grid-3"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                  },
+                },
+              }}
             >
-              Book your first service
-              <ArrowRight size={18} />
-            </button>
+              {popularTasks.map((task, idx) => (
+                <ScrollAnimatedCard
+                  key={idx} 
+                  idx={idx}
+                  type="task"
+                  className="square-card"
+                  delay={idx * 0.1}
+                >
+                  <motion.div
+                  onClick={() => handleServiceClick(task.title)}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    transition={{ duration: 0.3 }}
+                >
+                  <div className="square-card-image">
+                      <motion.img 
+                        src={task.image} 
+                        alt={task.title}
+                        whileHover={{ scale: 1.15, rotate: idx % 2 === 0 ? 1 : -1 }}
+                        transition={{ duration: 0.4 }}
+                      />
+                  </div>
+                  <div className="square-card-content">
+                      <motion.h3 
+                        className="square-card-title"
+                        whileHover={{ x: 5 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {task.title}
+                      </motion.h3>
+                    <p className="square-card-subtitle">{task.subtitle}</p>
+                      <motion.div 
+                        className="square-card-cta"
+                        whileHover={{ x: 5, scale: 1.05 }}
+                      >
+                      Book now <ArrowRight size={14} />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+                </ScrollAnimatedCard>
+              ))}
+            </motion.div>
           </div>
-        </section>
+        </AnimatedSection>
+
+        {/* Custom Chore CTA - Full Width */}
+        <AnimatedSection className="square-cta-section">
+          <div className="square-container">
+            <motion.div 
+              className="square-cta-card"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="square-cta-content">
+                <motion.h2 
+                  className="square-cta-title"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  Can't find what you're looking for?
+                </motion.h2>
+                <motion.p 
+                  className="square-cta-subtitle"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  Tell us what you need — we're here to help and learn what matters to you.
+                </motion.p>
+                <motion.button 
+                  className="square-btn-primary square-btn-large"
+                  onClick={() => setPostChoreModalOpen(true)}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Post Your Chore <ArrowRight size={18} />
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        </AnimatedSection>
+
+        {/* How It Works - 3 Column */}
+        <AnimatedSection className="square-section" parallax={true} speed={0.15}>
+          <div className="square-container">
+            <AnimatedItem>
+            <div className="square-section-header">
+              <h2 className="square-section-title">How It Works</h2>
+              <p className="square-section-subtitle">
+                Book your service in three simple steps
+              </p>
+            </div>
+            </AnimatedItem>
+            
+            <motion.div 
+              className="square-steps-container"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.2,
+                  },
+                },
+              }}
+            >
+              {[
+                { num: "1", icon: Sparkles, title: "Choose a service", desc: "Browse our services or describe what you need" },
+                { num: "2", icon: CheckCircle2, title: "Pick a time", desc: "Select a date and time that works for you" },
+                { num: "3", icon: ThumbsUp, title: "Relax", desc: "We handle it — you get your time back" },
+              ].map((step, idx) => {
+                const Icon = step.icon;
+                return (
+                  <ScrollAnimatedCard
+                    key={idx}
+                    idx={idx}
+                    type="step"
+                    className="square-step-card"
+                    delay={idx * 0.2}
+                  >
+                    <motion.div
+                      whileHover={{ y: -15, scale: 1.05, z: 50 }}
+                    >
+                      <div className="square-step-indicator">
+                        <motion.div 
+                          className="square-step-number"
+                          whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.15 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          {step.num}
+                        </motion.div>
+                        {idx < 2 && (
+                          <motion.div 
+                            className="square-step-connector"
+                            initial={{ scaleX: 0 }}
+                            whileInView={{ scaleX: 1 }}
+                            viewport={{ once: false }}
+                            transition={{ duration: 0.8, delay: 0.5 }}
+                          />
+                        )}
+              </div>
+                      <div className="square-step-content">
+                        <motion.div 
+                          className="square-step-icon-wrapper"
+                          whileHover={{ rotate: 360, scale: 1.15, y: -5 }}
+                          transition={{ duration: 0.6 }}
+                        >
+                          <Icon className="square-step-icon" size={28} />
+                        </motion.div>
+                        <motion.h3 
+                          className="square-step-title"
+                          whileHover={{ x: 5, scale: 1.05 }}
+                        >
+                          {step.title}
+                        </motion.h3>
+                        <p className="square-step-description">{step.desc}</p>
+              </div>
+                    </motion.div>
+                  </ScrollAnimatedCard>
+                );
+              })}
+            </motion.div>
+          </div>
+        </AnimatedSection>
+
+        {/* Why Choose - 4 Column */}
+        <AnimatedSection className="square-section square-section-alt" parallax={true} speed={-0.1}>
+          <div className="square-container">
+            <AnimatedItem>
+            <div className="square-section-header">
+              <h2 className="square-section-title">Why Choose ChorEscape</h2>
+              <p className="square-section-subtitle">
+                A fresh approach built on transparency and reliability
+              </p>
+            </div>
+            </AnimatedItem>
+            
+            <motion.div 
+              className="square-benefits-grid"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.15,
+                  },
+                },
+              }}
+            >
+              {[
+                { icon: Shield, title: "Carefully Selected", desc: "We handpick our service providers and verify their credentials" },
+                { icon: DollarSign, title: "Honest Pricing", desc: "No surprises. What you see is what you pay — upfront and clear" },
+                { icon: MapPin, title: "Growing Locally", desc: "Building our network in Saskatchewan with quality, not quantity" },
+                { icon: ThumbsUp, title: "Your Satisfaction Matters", desc: "We're here to help. If something's not right, we'll fix it" },
+              ].map((benefit, idx) => {
+                const Icon = benefit.icon;
+                return (
+                  <ScrollAnimatedCard
+                    key={idx}
+                    idx={idx}
+                    type="benefit"
+                    className="square-benefit-card"
+                    delay={idx * 0.15}
+                  >
+                    <motion.div
+                      whileHover={{ y: -15, scale: 1.05, z: 50 }}
+                    >
+                      <motion.div 
+                        className="square-benefit-icon-wrapper"
+                        whileHover={{ rotate: [0, -15, 15, -15, 0], scale: 1.2, y: -5 }}
+                        transition={{ duration: 0.6 }}
+                      >
+                        <Icon className="square-benefit-icon" size={28} />
+                      </motion.div>
+                      <motion.h3 
+                        className="square-benefit-title"
+                        whileHover={{ x: 5, scale: 1.05 }}
+                      >
+                        {benefit.title}
+                      </motion.h3>
+                      <motion.p 
+                        className="square-benefit-description"
+                        whileHover={{ x: 3 }}
+                      >
+                        {benefit.desc}
+                      </motion.p>
+                    </motion.div>
+                  </ScrollAnimatedCard>
+                );
+              })}
+            </motion.div>
+                </div>
+        </AnimatedSection>
+
+        {/* Worker CTA - Subtle Placement */}
+        <AnimatedSection className="square-section square-section-alt">
+          <div className="square-container">
+            <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+              <WorkerCTACard variant="default" />
+            </div>
+          </div>
+        </AnimatedSection>
+
+        {/* Operating Worldwide */}
+        <AnimatedSection className="square-section">
+          <div className="square-container">
+            <AnimatedItem>
+            <div className="square-section-header">
+              <h2 className="square-section-title">Growing Our Reach</h2>
+              <p className="square-section-subtitle">
+                Starting in Saskatchewan, expanding to serve more communities
+              </p>
+            </div>
+            </AnimatedItem>
+            
+            <motion.div 
+              className="square-worldwide-grid"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.2,
+                  },
+                },
+              }}
+            >
+              {[
+                { country: "australia", flag: "🇦🇺", title: "Australia", location: "Sydney", desc: "Coming soon. We're expanding to bring quality services to Australian communities", stats: [{ value: "Coming", label: "Soon" }, { value: "Quality", label: "First" }] },
+                { country: "canada", flag: "🇨🇦", title: "Canada", location: "Saskatchewan", desc: "Our home base. Starting here in Saskatchewan, building relationships with local service providers and communities", stats: [{ value: "New", label: "Startup" }, { value: "Local", label: "Focus" }], featured: true },
+                { country: "uae", flag: "🇦🇪", title: "United Arab Emirates", location: "7 Emirates", desc: "Future expansion. We're planning to bring our transparent, quality-focused approach to the Emirates", stats: [{ value: "Future", label: "Plans" }, { value: "Quality", label: "Promise" }] },
+              ].map((country, idx) => (
+                <ScrollAnimatedCard
+                  key={idx}
+                  idx={idx}
+                  type="worldwide"
+                  className={`square-worldwide-card ${country.featured ? 'square-worldwide-card-featured' : ''}`}
+                  delay={idx * 0.2}
+                >
+                  <motion.div
+                    whileHover={{ y: -15, scale: 1.05, z: 200 }}
+                  >
+                <div className="square-worldwide-map-container">
+                      <CountryMap country={country.country} color="#0b5c28" />
+                      <div className="square-worldwide-map-overlay"></div>
+                      <motion.div 
+                        className={`square-worldwide-badge ${country.featured ? 'square-worldwide-badge-featured' : ''}`}
+                        whileHover={{ scale: 1.1, rotate: [0, -5, 5, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <span className="square-worldwide-flag">{country.flag}</span>
+                        <span className="square-worldwide-badge-text">{country.featured ? 'Launching' : 'Coming Soon'}</span>
+                      </motion.div>
+                </div>
+                <div className="square-worldwide-card-content">
+                      <div className="square-worldwide-header">
+                        <h3 className="square-worldwide-title">{country.title}</h3>
+                        <p className="square-worldwide-location">
+                          <MapPin size={14} />
+                          {country.location}
+                        </p>
+                </div>
+                      <p className="square-worldwide-description">{country.desc}</p>
+                      <div className="square-worldwide-stats">
+                        {country.stats.map((stat, statIdx) => (
+                          <motion.div 
+                            key={statIdx}
+                            className="square-worldwide-stat"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: false }}
+                            transition={{ duration: 0.5, delay: statIdx * 0.1 }}
+                          >
+                            <span className="square-worldwide-stat-value">{stat.value}</span>
+                            <span className="square-worldwide-stat-label">{stat.label}</span>
+                          </motion.div>
+                        ))}
+                </div>
+              </div>
+                  </motion.div>
+                </ScrollAnimatedCard>
+              ))}
+            </motion.div>
+          </div>
+        </AnimatedSection>
+
+        {/* Trusted Organizations */}
+        <AnimatedSection className="square-section square-section-alt">
+          <div className="square-container">
+            <AnimatedItem>
+            <div className="square-section-header">
+              <p className="square-partners-label">Growing with local businesses</p>
+              <p className="square-section-subtitle">
+                Building partnerships with Saskatchewan organizations
+              </p>
+            </div>
+            </AnimatedItem>
+            
+            <motion.div 
+              className="square-partners-grid"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                  },
+                },
+              }}
+            >
+              {partners.map((partner, idx) => (
+                <motion.div
+                  key={idx}
+                  className="square-partner-logo"
+                  variants={{
+                    hidden: { opacity: 0, scale: 0.8 },
+                    visible: {
+                      opacity: 1,
+                      scale: 1,
+                      transition: {
+                        duration: 0.4,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                      },
+                    },
+                  }}
+                  whileHover={{ scale: 1.1, y: -5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {partner.logo}
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </AnimatedSection>
+
+        {/* Final CTA */}
+        <AnimatedSection className="square-section">
+          <div className="square-container">
+            <motion.div 
+              className="square-final-cta"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.h2 
+                className="square-final-cta-title"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                Ready to get started?
+              </motion.h2>
+              <motion.p 
+                className="square-final-cta-subtitle"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                Be part of our journey. Let's make your life easier, together.
+              </motion.p>
+              <motion.button 
+                className="square-btn-primary square-btn-large"
+                onClick={() => navigate("/pricing-booking")}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Get started
+              </motion.button>
+            </motion.div>
+          </div>
+        </AnimatedSection>
       </div>
 
-      {/* ========== POST CHORE MODAL ========== */}
+      {/* Post Chore Modal */}
       <PostChoreModal 
         isOpen={postChoreModalOpen} 
         onClose={() => setPostChoreModalOpen(false)} 

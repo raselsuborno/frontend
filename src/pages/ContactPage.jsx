@@ -1,7 +1,9 @@
 // src/pages/ContactPage.jsx
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import apiClient from "../lib/api.js";
+import "../styles/unified-page-layout.css";
 import { 
   Send, 
   Mail, 
@@ -80,21 +82,46 @@ export function ContactPage() {
 
   return (
     <PageWrapper>
-      <div className="contact-page">
+      <div className="unified-page contact-page-section">
         {/* ========== HERO SECTION ========== */}
-        <section className="contact-hero fade-in-up">
-          <h1 className="contact-hero-title">Get in Touch</h1>
-          <p className="contact-hero-subtitle">
-            Have a question? We're here to help.
-          </p>
-          <div className="home-hero-badge">
-            <Sparkles size={14} />
-            <span>Trusted by 50,000+ users across Saskatchewan</span>
+        <motion.header 
+          className="unified-hero"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <div className="unified-hero-content">
+            <motion.div 
+              className="unified-hero-badge"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <Sparkles size={14} />
+              <span>We're here to help</span>
+            </motion.div>
+            <motion.h1 
+              className="unified-hero-title"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              Get in Touch
+            </motion.h1>
+            <motion.p 
+              className="unified-hero-subtitle"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              Have a question? We're here to help.
+            </motion.p>
           </div>
-        </section>
+        </motion.header>
 
         {/* ========== MAIN CONTENT ========== */}
-        <div className="contact-content fade-in-up fade-in-delay-sm">
+        <div className="unified-section">
+          <div className="contact-content unified-grid-2 fade-in-up fade-in-delay-sm">
           {/* Left Column - Contact Form */}
           <div className="contact-form-section">
             <div className="contact-form-card">
@@ -240,10 +267,12 @@ export function ContactPage() {
               </div>
             </div>
           </div>
+          </div>
         </div>
 
         {/* ========== FAQ SECTION ========== */}
-        <section className="contact-faq-section fade-in-up fade-in-delay-md">
+        <div className="unified-section">
+          <section className="contact-faq-section fade-in-up fade-in-delay-md">
           <div className="contact-faq-header">
             <h2 className="contact-faq-title">Frequently Asked Questions</h2>
           </div>
@@ -272,8 +301,9 @@ export function ContactPage() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
         </div>
-      </section>
       </div>
     </PageWrapper>
   );

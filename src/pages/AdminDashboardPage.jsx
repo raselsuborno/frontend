@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, lazy, Suspense, useMemo, useRef } from "react";
 import apiClient from "../lib/api.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
+import * as LucideIcons from "lucide-react";
+import { Sparkles } from "lucide-react";
+import "./admin-bookings-sheet.css";
+
+// Lazy load BookingBlocksBuilder to prevent blocking app initialization
+const BookingBlocksBuilder = lazy(() => import("../components/admin/BookingBlocksBuilder.jsx"));
 import {
   LayoutDashboard,
   Users,
@@ -26,6 +32,8 @@ import {
   Trash2,
   BarChart3,
   TrendingUp,
+  Home,
+  Building2,
 } from "lucide-react";
 
 export function AdminDashboardPage() {
@@ -46,9 +54,26 @@ export function AdminDashboardPage() {
     try {
       // Load in batches to avoid overwhelming the API
       const [statsRes, bookingsRes, workersRes] = await Promise.all([
-        apiClient.get("/api/admin/stats"),
-        apiClient.get("/api/admin/bookings"),
-        apiClient.get("/api/admin/workers"),
+        apiClient.get("/api/admin/stats").catch((err) => {
+          console.error("[Admin] Failed to load stats:", err);
+          toast.error("Failed to load dashboard stats");
+          // Return default stats structure to prevent crashes
+          return { 
+            data: {
+              users: { total: 0 },
+              workers: { total: 0 },
+              bookings: { total: 0, pending: 0, assigned: 0, completed: 0 },
+            }
+          };
+        }),
+        apiClient.get("/api/admin/bookings").catch((err) => {
+          console.error("[Admin] Failed to load bookings:", err);
+          return { data: { bookings: [] } };
+        }),
+        apiClient.get("/api/admin/workers").catch((err) => {
+          console.error("[Admin] Failed to load workers:", err);
+          return { data: [] };
+        }),
       ]);
 
       setStats(statsRes.data);
@@ -213,6 +238,13 @@ export function AdminDashboardPage() {
                 <span>Services</span>
               </button>
               <button
+                className={`dash-nav-item ${activeTab === "shop" ? "is-active" : ""}`}
+                onClick={() => setActiveTab("shop")}
+              >
+                <ShoppingBag size={20} />
+                <span>Shop</span>
+              </button>
+              <button
                 className={`dash-nav-item ${activeTab === "users" ? "is-active" : ""}`}
                 onClick={() => setActiveTab("users")}
               >
@@ -367,6 +399,8 @@ export function AdminDashboardPage() {
 
             {activeTab === "services" && <ServicesTab />}
 
+            {activeTab === "shop" && <ShopTab />}
+
             {activeTab === "users" && <UsersTab users={users} onRefresh={loadData} />}
 
             {activeTab === "analytics" && <AnalyticsTab />}
@@ -450,8 +484,6 @@ function StatCard({ label, value, icon: Icon }) {
 function BookingsTab({ bookings, workers, onAssign, onUnassign, assigningWorker, onRefresh }) {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [selectedWorker, setSelectedWorker] = useState("");
-  const [editForm, setEditForm] = useState({});
-  const [updating, setUpdating] = useState(false);
 
   const handleAssign = () => {
     if (!selectedWorker) {
@@ -463,35 +495,38 @@ function BookingsTab({ bookings, workers, onAssign, onUnassign, assigningWorker,
     setSelectedWorker("");
   };
 
-  const handleEdit = (booking) => {
-    setSelectedBooking(booking);
-    setEditForm({
-      status: booking.status,
-      date: booking.date ? new Date(booking.date).toISOString().split('T')[0] : "",
-      timeSlot: booking.timeSlot || "",
-      addressLine: booking.addressLine || "",
-      city: booking.city || "",
-      province: booking.province || "",
-      postal: booking.postal || "",
-      notes: booking.notes || "",
-      totalAmount: booking.totalAmount || "",
-      assignedWorkerId: booking.assignedWorkerId || "",
+  const formatDate = (date) => {
+    if (!date) return "—";
+    return new Date(date).toLocaleDateString("en-US", { 
+      month: "short", 
+      day: "numeric", 
+      year: "numeric" 
     });
   };
 
-  const handleSaveBooking = async () => {
-    if (!selectedBooking) return;
-    setUpdating(true);
-    try {
-      await apiClient.put(`/api/admin/bookings/${selectedBooking.id}`, editForm);
-      toast.success("Booking updated successfully");
-      setSelectedBooking(null);
-      if (onRefresh) onRefresh();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update booking");
-    } finally {
-      setUpdating(false);
+  const formatAddress = (booking) => {
+    const parts = [
+      booking.addressLine,
+      booking.city,
+      booking.province,
+      booking.postal
+    ].filter(Boolean);
+    return parts.join(", ") || "—";
+  };
+
+  const getCustomerInfo = (booking) => {
+    if (booking.customer) {
+      return {
+        name: booking.customer.fullName || booking.customer.email || "N/A",
+        email: booking.customer.email || "—",
+        phone: booking.customer.phone || "—"
+      };
     }
+    return {
+      name: booking.guestName || "Guest",
+      email: booking.guestEmail || "—",
+      phone: booking.guestPhone || "—"
+    };
   };
 
   return (
@@ -500,74 +535,151 @@ function BookingsTab({ bookings, workers, onAssign, onUnassign, assigningWorker,
         <div>
           <h2 className="dash-title">All Bookings</h2>
           <p className="muted dash-subtitle">
-            Manage and assign bookings to workers
+            Manage and assign bookings to workers ({bookings.length} total)
           </p>
         </div>
       </header>
 
-      <div className="dash-card fade-in-up fade-in-delay-sm">
-        <div className="dash-table-wrapper">
-          <div className="dash-table">
-            <div className="dash-table-head">
-              <span>Service</span>
-              <span>Customer</span>
-              <span>Date & Time</span>
-              <span>Address</span>
-              <span>Worker</span>
-              <span>Status</span>
-              <span>Actions</span>
-            </div>
-            {bookings.map((booking) => (
-              <div className="dash-table-row" key={booking.id}>
-                <span className="dash-table-cell-main">
-                  {booking.serviceName}
-                  {booking.subService && ` - ${booking.subService}`}
+      <div className="bookings-sheet-container">
+        <div className="bookings-sheet-wrapper">
+          <table className="bookings-sheet-table">
+            <thead className="bookings-sheet-header">
+              <tr>
+                <th className="bookings-sheet-col-id">ID</th>
+                <th className="bookings-sheet-col-date">Date</th>
+                <th className="bookings-sheet-col-time">Time</th>
+                <th className="bookings-sheet-col-customer">Customer</th>
+                <th className="bookings-sheet-col-email">Email</th>
+                <th className="bookings-sheet-col-phone">Phone</th>
+                <th className="bookings-sheet-col-service">Service</th>
+                <th className="bookings-sheet-col-subservice">Sub-Service</th>
+                <th className="bookings-sheet-col-frequency">Frequency</th>
+                <th className="bookings-sheet-col-address">Address</th>
+                <th className="bookings-sheet-col-city">City</th>
+                <th className="bookings-sheet-col-province">Province</th>
+                <th className="bookings-sheet-col-postal">Postal</th>
+                <th className="bookings-sheet-col-worker">Worker</th>
+                <th className="bookings-sheet-col-status">Status</th>
+                <th className="bookings-sheet-col-amount">Amount</th>
+                <th className="bookings-sheet-col-payment">Payment</th>
+                <th className="bookings-sheet-col-paystatus">Pay Status</th>
+                <th className="bookings-sheet-col-notes">Notes</th>
+                <th className="bookings-sheet-col-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bookings-sheet-body">
+              {bookings.length === 0 ? (
+                <tr>
+                  <td colSpan="20" style={{ textAlign: "center", padding: "48px", color: "var(--text-secondary)" }}>
+                    No bookings found
+                  </td>
+                </tr>
+              ) : (
+                bookings.map((booking) => {
+                  const customer = getCustomerInfo(booking);
+                  return (
+                    <tr key={booking.id} className="bookings-sheet-row">
+                      <td className="bookings-sheet-cell bookings-sheet-col-id" title={booking.id}>
+                        {booking.id.slice(0, 8)}...
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-date">
+                        {formatDate(booking.date)}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-time">
+                        {booking.timeSlot || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-customer">
+                        {customer.name}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-email" title={customer.email}>
+                        {customer.email.length > 20 ? customer.email.slice(0, 20) + "..." : customer.email}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-phone">
+                        {customer.phone}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-service">
+                        {booking.serviceName || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-subservice">
+                        {booking.subService || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-frequency">
+                        {booking.frequency || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-address" title={formatAddress(booking)}>
+                        {booking.addressLine || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-city">
+                        {booking.city || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-province">
+                        {booking.province || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-postal">
+                        {booking.postal || "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-worker">
+                        {booking.assignedWorker || booking.worker ? (
+                          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <UserCheck size={12} />
+                            {booking.assignedWorker?.name || booking.worker?.name || booking.assignedWorker?.email || booking.worker?.email || "N/A"}
                 </span>
-                <span className="dash-table-cell">
-                  {booking.user?.name || booking.guestName || "Guest"}
+                        ) : (
+                          <span className="muted" style={{ fontSize: "12px" }}>Unassigned</span>
+                        )}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-status">
+                        <span className={`bookings-status-badge bookings-status-${(booking.status?.toLowerCase() || "pending").replace(/_/g, "-")}`}>
+                          {booking.status || "PENDING"}
                 </span>
-                <span className="dash-table-cell">
-                  {new Date(booking.date).toLocaleDateString()}
-                  {booking.timeSlot && ` ${booking.timeSlot}`}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-amount">
+                        {booking.totalAmount ? `$${booking.totalAmount.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-payment">
+                        {booking.paymentMethod ? booking.paymentMethod.replace("_", " ").toUpperCase() : "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-paystatus">
+                        <span className={`bookings-payment-badge bookings-payment-${booking.paymentStatus || "pending"}`}>
+                          {booking.paymentStatus || "PENDING"}
                 </span>
-                <span className="dash-table-cell">
-                  {booking.addressLine}, {booking.city}
-                </span>
-                <span className="dash-table-cell">
-                  {booking.worker ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <UserCheck size={14} />
-                      {booking.worker.name || booking.worker.email}
-                    </div>
-                  ) : (
-                    <span className="muted">Unassigned</span>
-                  )}
-                </span>
-                <span className={`dash-status-pill dash-status-pill-${booking.status?.toLowerCase()}`}>
-                  {booking.status}
-                </span>
-                <span className="dash-table-cell">
-                  {booking.worker ? (
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-notes" title={booking.notes || ""}>
+                        {booking.notes ? (booking.notes.length > 30 ? booking.notes.slice(0, 30) + "..." : booking.notes) : "—"}
+                      </td>
+                      <td className="bookings-sheet-cell bookings-sheet-col-actions">
+                        <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                          {booking.assignedWorker || booking.worker ? (
                     <button
-                      className="btn btn-sm outline"
+                              className="bookings-action-btn"
                       onClick={() => onUnassign(booking.id)}
                       title="Unassign worker"
+                              style={{ color: "var(--error)" }}
                     >
                       <X size={14} />
                     </button>
                   ) : (
                     <button
-                      className="btn btn-sm"
+                              className="bookings-action-btn bookings-action-btn-primary"
                       onClick={() => setSelectedBooking(booking)}
                       disabled={assigningWorker === booking.id}
-                    >
-                      {assigningWorker === booking.id ? "Assigning..." : "Assign"}
+                              title="Assign worker"
+                            >
+                              {assigningWorker === booking.id ? (
+                                <Clock size={14} />
+                              ) : (
+                                <UserPlus size={14} />
+                              )}
                     </button>
                   )}
-                </span>
               </div>
-            ))}
-          </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -689,19 +801,80 @@ function WorkersTab({ workers }) {
 function ServicesTab() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [serviceTypeFilter, setServiceTypeFilter] = useState("RESIDENTIAL"); // Filter by type
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingService, setEditingService] = useState(null);
   const [creating, setCreating] = useState(false);
+  const formRef = useRef(null); // Ref for auto-scrolling to form
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
+    type: "RESIDENTIAL",
     description: "",
+    imageUrl: "",
+    isTrending: false,
     basePrice: "",
     isActive: true,
+    options: [],
+    bookingBlocks: [],
   });
+  const [newBullet, setNewBullet] = useState("");
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     loadServices();
   }, []);
+
+  // Auto-scroll to form when it opens
+  useEffect(() => {
+    if (showCreateForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showCreateForm]);
+
+  const toggleDescription = (serviceId) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [serviceId]: !prev[serviceId],
+    }));
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Check file size (max 10MB = 10000 KB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Image size must be less than 10MB (${(file.size / (1024 * 1024)).toFixed(2)}MB selected). Please compress your image and try again.`);
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      // Convert to base64 for preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        setFormData({ ...formData, imageUrl: base64String });
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const loadServices = async () => {
     try {
@@ -715,23 +888,112 @@ function ServicesTab() {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      slug: "",
+      type: serviceTypeFilter, // Use current filter as default
+      description: "",
+      imageUrl: "",
+      iconName: "",
+      isTrending: false,
+      basePrice: "",
+      isActive: true,
+      options: [],
+      bookingBlocks: [],
+    });
+    setNewBullet("");
+    setImagePreview(null);
+    setShowCreateForm(false);
+    setEditingService(null);
+  };
+
+  // Filter services by type
+  const residentialServices = services.filter(s => s.type === "RESIDENTIAL");
+  const corporateServices = services.filter(s => s.type === "CORPORATE");
+
+  const handleEdit = (service) => {
+    setEditingService(service);
+    setFormData({
+      name: service.name || "",
+      slug: service.slug || "",
+      type: service.type || "RESIDENTIAL",
+      description: service.description || "",
+      imageUrl: service.imageUrl || "",
+      iconName: service.iconName || "",
+      isTrending: service.isTrending || false,
+      basePrice: service.basePrice || "",
+      isActive: service.isActive !== undefined ? service.isActive : true,
+      options: service.options?.map((opt) => opt.name) || [],
+      bookingBlocks: service.bookingBlocks || [],
+    });
+    setImagePreview(service.imageUrl || null);
+    setServiceTypeFilter(service.type || "RESIDENTIAL"); // Switch to the service's type
+    setShowCreateForm(true);
+    // Scroll to form after state updates
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const addBullet = () => {
+    if (newBullet.trim()) {
+      setFormData({
+        ...formData,
+        options: [...formData.options, newBullet.trim()],
+      });
+      setNewBullet("");
+    }
+  };
+
+  const removeBullet = (index) => {
+    setFormData({
+      ...formData,
+      options: formData.options.filter((_, i) => i !== index),
+    });
+  };
+
   const handleCreateService = async (e) => {
     e.preventDefault();
     setCreating(true);
     try {
-      await apiClient.post("/api/admin/services", {
+      const payload = {
         ...formData,
         basePrice: formData.basePrice ? parseFloat(formData.basePrice) : null,
-      });
-      toast.success("Service created successfully!");
-      setFormData({ name: "", slug: "", description: "", basePrice: "", isActive: true });
-      setShowCreateForm(false);
+        options: formData.options.map((opt) => ({ name: opt })),
+        bookingBlocks: formData.bookingBlocks && formData.bookingBlocks.length > 0 
+          ? formData.bookingBlocks 
+          : null,
+      };
+
+      if (editingService) {
+        await apiClient.patch(`/api/admin/services/${editingService.id}`, payload);
+        toast.success("Service updated successfully!");
+      } else {
+        await apiClient.post("/api/admin/services", payload);
+        toast.success("Service created successfully!");
+      }
+      resetForm();
       loadServices();
     } catch (err) {
-      console.error("Create service error:", err);
-      toast.error(err.response?.data?.message || "Failed to create service");
+      console.error("Create/Update service error:", err);
+      toast.error(err.response?.data?.message || "Failed to save service");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDelete = async (service) => {
+    if (!confirm(`Are you sure you want to delete "${service.name}"?`)) return;
+    try {
+      await apiClient.delete(`/api/admin/services/${service.id}`);
+      toast.success("Service deleted successfully!");
+      loadServices();
+    } catch (err) {
+      console.error("Delete service error:", err);
+      toast.error(err.response?.data?.message || "Failed to delete service");
     }
   };
 
@@ -767,26 +1029,87 @@ function ServicesTab() {
         </div>
         <button
           className="btn"
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={() => {
+            setShowCreateForm(!showCreateForm);
+            if (!showCreateForm) {
+              setFormData(prev => ({ ...prev, type: serviceTypeFilter }));
+              setTimeout(() => {
+                if (formRef.current) {
+                  formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }, 100);
+            }
+          }}
         >
           <Plus size={18} />
           {showCreateForm ? "Cancel" : "Create Service"}
         </button>
       </header>
 
+      {/* Service Type Tabs */}
+      <div style={{
+        display: "flex",
+        gap: "12px",
+        marginBottom: "24px",
+        borderBottom: "2px solid #e5e7eb",
+        paddingBottom: "0",
+      }}>
+        <button
+          onClick={() => {
+            setServiceTypeFilter("RESIDENTIAL");
+            setShowCreateForm(false);
+          }}
+          style={{
+            padding: "12px 24px",
+            background: serviceTypeFilter === "RESIDENTIAL" ? "#0b5c28" : "transparent",
+            color: serviceTypeFilter === "RESIDENTIAL" ? "white" : "#6b7280",
+            border: "none",
+            borderBottom: serviceTypeFilter === "RESIDENTIAL" ? "3px solid #0b5c28" : "3px solid transparent",
+            cursor: "pointer",
+            fontWeight: 600,
+            fontSize: "14px",
+            transition: "all 0.2s ease",
+            marginBottom: "-2px",
+          }}
+        >
+          Residential Services ({residentialServices.length})
+        </button>
+        <button
+          onClick={() => {
+            setServiceTypeFilter("CORPORATE");
+            setShowCreateForm(false);
+          }}
+          style={{
+            padding: "12px 24px",
+            background: serviceTypeFilter === "CORPORATE" ? "#0b5c28" : "transparent",
+            color: serviceTypeFilter === "CORPORATE" ? "white" : "#6b7280",
+            border: "none",
+            borderBottom: serviceTypeFilter === "CORPORATE" ? "3px solid #0b5c28" : "3px solid transparent",
+            cursor: "pointer",
+            fontWeight: 600,
+            fontSize: "14px",
+            transition: "all 0.2s ease",
+            marginBottom: "-2px",
+          }}
+        >
+          Corporate Services ({corporateServices.length})
+        </button>
+      </div>
+
       {showCreateForm && (
-        <div className="dash-card fade-in-up fade-in-delay-sm" style={{ marginBottom: "24px" }}>
-          <h3 className="dash-card-title">Create New Service</h3>
+        <div ref={formRef} className="dash-card fade-in-up fade-in-delay-sm" style={{ marginBottom: "24px" }}>
+          <h3 className="dash-card-title">{editingService ? "Edit Service" : "Create New Service"}</h3>
           <form onSubmit={handleCreateService}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
               <div>
-                <label className="dash-label">Name *</label>
+                <label className="dash-label">Service Name *</label>
                 <input
                   type="text"
                   className="dash-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  placeholder="e.g., Cleaning"
                 />
               </div>
               <div>
@@ -798,16 +1121,84 @@ function ServicesTab() {
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase() })}
                   required
                   pattern="[a-z0-9-]+"
+                  disabled={!!editingService}
                 />
               </div>
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label className="dash-label">Description</label>
-                <textarea
+              <div>
+                <label className="dash-label">Type *</label>
+                <select
                   className="dash-input"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                />
+                  value={formData.type}
+                  onChange={(e) => {
+                    setFormData({ ...formData, type: e.target.value });
+                    // Switch to the selected type's tab when creating new service
+                    if (!editingService) {
+                      setServiceTypeFilter(e.target.value);
+                    }
+                  }}
+                  required
+                >
+                  <option value="RESIDENTIAL">Residential</option>
+                  <option value="CORPORATE">Corporate</option>
+                </select>
+              </div>
+              <div>
+                <label className="dash-label">Icon Name (Lucide)</label>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <input
+                  type="text"
+                  className="dash-input"
+                  value={formData.iconName || ""}
+                  onChange={(e) => setFormData({ ...formData, iconName: e.target.value })}
+                  placeholder="e.g., Brush, Home, Truck"
+                    style={{ flex: 1 }}
+                  />
+                  {formData.iconName && (() => {
+                    // Get icon component dynamically - try multiple variations
+                    const normalizedName = formData.iconName.charAt(0).toUpperCase() + formData.iconName.slice(1);
+                    const iconNameWithSuffix = normalizedName + 'Icon';
+                    
+                    let IconComponent = null;
+                    
+                    if (normalizedName in LucideIcons) {
+                      IconComponent = LucideIcons[normalizedName];
+                    } else if (iconNameWithSuffix in LucideIcons) {
+                      IconComponent = LucideIcons[iconNameWithSuffix];
+                    } else if (formData.iconName in LucideIcons) {
+                      IconComponent = LucideIcons[formData.iconName];
+                    }
+                    
+                    const isInvalid = !IconComponent;
+                    
+                    if (isInvalid) {
+                      IconComponent = Sparkles;
+                    }
+                    
+                    return (
+                      <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "48px",
+                        height: "48px",
+                        borderRadius: "8px",
+                        background: isInvalid ? "#fee2e2" : "#eef9f5",
+                        border: `2px solid ${isInvalid ? "#dc2626" : "#0b5c28"}`,
+                        flexShrink: 0,
+                      }}>
+                        <IconComponent size={24} color={isInvalid ? "#dc2626" : "#0b5c28"} />
+                      </div>
+                    );
+                  })()}
+                </div>
+                <p className="muted" style={{ fontSize: "12px", marginTop: "4px" }}>
+                  Enter any Lucide icon name (e.g., Car, Brush, Home, Truck, Sparkles, Settings, Heart, Star, etc.)
+                  {formData.iconName && !LucideIcons[formData.iconName.charAt(0).toUpperCase() + formData.iconName.slice(1)] && !LucideIcons[formData.iconName.charAt(0).toUpperCase() + formData.iconName.slice(1) + 'Icon'] && (
+                    <span style={{ color: "#dc2626", display: "block", marginTop: "4px" }}>
+                      ⚠️ Icon "{formData.iconName}" not found. Check the icon name spelling. Visit lucide.dev/icons to find valid names.
+                    </span>
+                  )}
+                </p>
               </div>
               <div>
                 <label className="dash-label">Base Price ($)</label>
@@ -818,7 +1209,116 @@ function ServicesTab() {
                   onChange={(e) => setFormData({ ...formData, basePrice: e.target.value })}
                   step="0.01"
                   min="0"
+                  placeholder="Optional"
                 />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="dash-label">Service Image</label>
+                <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                  <div style={{ flex: 1 }}>
+                    <label className="btn btn-sm outline" style={{ cursor: "pointer", display: "inline-block" }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: "none" }}
+                        disabled={uploadingImage}
+                      />
+                      {uploadingImage ? "Uploading..." : "Upload from Computer"}
+                    </label>
+                    <input
+                      type="url"
+                      className="dash-input"
+                      value={formData.imageUrl?.startsWith("data:") ? "" : formData.imageUrl}
+                      onChange={(e) => {
+                        setFormData({ ...formData, imageUrl: e.target.value });
+                        setImagePreview(e.target.value || null);
+                      }}
+                      placeholder="Or enter image URL"
+                      style={{ marginTop: "8px" }}
+                    />
+                  </div>
+                  {(imagePreview || formData.imageUrl) && (
+                    <img
+                      src={imagePreview || formData.imageUrl}
+                      alt="Preview"
+                      style={{
+                        width: "200px",
+                        height: "150px",
+                        objectFit: "cover",
+                        borderRadius: "8px",
+                        border: "1px solid var(--border-subtle)",
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="dash-label">Description</label>
+                <textarea
+                  className="dash-input"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  placeholder="Service description that appears on the services page"
+                />
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <label className="dash-label">
+                  Sub-services (Bullet Points)
+                  <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
+                    <input
+                      type="text"
+                      className="dash-input"
+                      value={newBullet}
+                      onChange={(e) => setNewBullet(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addBullet();
+                        }
+                      }}
+                      placeholder="e.g., Home & apartment cleaning"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm"
+                      onClick={addBullet}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {formData.options.length > 0 && (
+                    <ul style={{ marginTop: "12px", paddingLeft: "20px" }}>
+                      {formData.options.map((opt, idx) => (
+                        <li key={idx} style={{ marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span>{opt}</span>
+                          <button
+                            type="button"
+                            className="btn-outline btn-sm"
+                            onClick={() => removeBullet(idx)}
+                            style={{ marginLeft: "12px" }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </label>
+              </div>
+              <div>
+                <label className="dash-label">
+                  <input
+                    type="checkbox"
+                    checked={formData.isTrending}
+                    onChange={(e) => setFormData({ ...formData, isTrending: e.target.checked })}
+                  />
+                  Mark as Trending
+                </label>
               </div>
               <div>
                 <label className="dash-label">
@@ -830,30 +1330,96 @@ function ServicesTab() {
                   Active
                 </label>
               </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                {showCreateForm && (
+                  <Suspense fallback={<div style={{ padding: "20px", textAlign: "center" }}>Loading block builder...</div>}>
+                    <BookingBlocksBuilder
+                      blocks={formData.bookingBlocks || []}
+                      onChange={(blocks) => setFormData({ ...formData, bookingBlocks: blocks })}
+                      subServices={formData.options || []}
+                    />
+                  </Suspense>
+                )}
+              </div>
             </div>
-            <button type="submit" className="btn" disabled={creating}>
-              {creating ? "Creating..." : "Create Service"}
-            </button>
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button type="submit" className="btn" disabled={creating}>
+                {creating ? "Saving..." : editingService ? "Update Service" : "Create Service"}
+              </button>
+              <button type="button" className="btn-outline" onClick={resetForm}>
+                Cancel
+              </button>
+            </div>
           </form>
         </div>
       )}
 
+      {/* Residential Services Section */}
+      {serviceTypeFilter === "RESIDENTIAL" && (
+        <div style={{ marginBottom: "32px" }}>
+          <h3 style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            marginBottom: "16px",
+            color: "#1a1a1a",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}>
+            <Home size={18} />
+            Residential Services
+          </h3>
       <div className="dash-grid">
-        {services.length === 0 ? (
+            {residentialServices.length === 0 ? (
           <div className="dash-empty-state">
             <Package size={48} className="dash-empty-icon" />
-            <p className="dash-empty-text">No services yet</p>
-            <p className="muted">Create a service to get started</p>
+                <p className="dash-empty-text">No residential services yet</p>
+                <p className="muted">Create a residential service to get started</p>
           </div>
         ) : (
-          services.map((service) => (
+              residentialServices.map((service) => (
             <div className="dash-card" key={service.id}>
               <div className="dash-card-header">
-                <Package size={20} className="dash-card-icon" />
+                {service.imageUrl ? (
+                  <img
+                    src={service.imageUrl}
+                    alt={service.name}
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      marginRight: "12px",
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <Package size={20} className="dash-card-icon" />
+                )}
                 <div style={{ flex: 1 }}>
-                  <h3 className="dash-card-title">{service.name}</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <h3 className="dash-card-title">{service.name}</h3>
+                    {service.isTrending && (
+                      <span style={{
+                        background: "var(--primary)",
+                        color: "white",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}>
+                        <TrendingUp size={12} />
+                        Trending
+                      </span>
+                    )}
+                  </div>
                   <p className="muted" style={{ fontSize: "13px", marginTop: "4px" }}>
-                    {service.slug}
+                    {service.slug} • {service.type}
                   </p>
                 </div>
                 <span className={`dash-status-pill dash-status-pill-${service.isActive ? "active" : "inactive"}`}>
@@ -862,28 +1428,76 @@ function ServicesTab() {
               </div>
               <div className="dash-card-content">
                 {service.description && (
-                  <p className="muted" style={{ marginBottom: "12px" }}>{service.description}</p>
+                  <div style={{ marginBottom: "12px" }}>
+                    <p className="muted" style={{ 
+                      display: "-webkit-box",
+                      WebkitLineClamp: expandedDescriptions[service.id] ? "none" : 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: "1.5",
+                    }}>
+                      {service.description}
+                    </p>
+                    {service.description.length > 150 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleDescription(service.id)}
+                        className="btn-outline btn-sm"
+                        style={{ marginTop: "8px", fontSize: "12px" }}
+                      >
+                        {expandedDescriptions[service.id] ? "Read less" : "Read more..."}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {service.options && service.options.length > 0 && (
+                  <div style={{ marginBottom: "12px" }}>
+                    <span className="dash-info-label" style={{ display: "block", marginBottom: "6px" }}>Sub-services:</span>
+                    <ul style={{ paddingLeft: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
+                      {service.options.slice(0, 3).map((opt, idx) => (
+                        <li key={idx}>{opt.name || opt}</li>
+                      ))}
+                      {service.options.length > 3 && (
+                        <li style={{ fontStyle: "italic" }}>+{service.options.length - 3} more</li>
+                      )}
+                    </ul>
+                  </div>
                 )}
                 <div className="dash-info-row">
-                  <span className="dash-info-label">Base Price</span>
+                  <span className="dash-info-label">Pricing</span>
                   <span className="dash-info-value">
-                    {service.basePrice ? `$${service.basePrice.toFixed(2)}` : "Not set"}
+                    {service.basePrice ? `Starting from $${service.basePrice.toFixed(2)}` : "Contact for pricing"}
                   </span>
                 </div>
                 <div className="dash-info-row">
-                  <span className="dash-info-label">Options</span>
+                  <span className="dash-info-label">Sub-services</span>
                   <span className="dash-info-value">{service.options?.length || 0}</span>
                 </div>
                 <div className="dash-info-row">
                   <span className="dash-info-label">Bookings</span>
                   <span className="dash-info-value">{service._count?.bookings || 0}</span>
                 </div>
-                <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
+                <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    className="btn btn-sm outline"
+                    onClick={() => handleEdit(service)}
+                  >
+                    <Edit size={14} style={{ marginRight: "4px" }} />
+                    Edit
+                  </button>
                   <button
                     className="btn btn-sm outline"
                     onClick={() => handleToggleActive(service)}
                   >
                     {service.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    className="btn btn-sm outline"
+                    onClick={() => handleDelete(service)}
+                    style={{ color: "var(--error)", borderColor: "var(--error)" }}
+                  >
+                    <Trash2 size={14} style={{ marginRight: "4px" }} />
+                    Delete
                   </button>
                 </div>
               </div>
@@ -891,6 +1505,889 @@ function ServicesTab() {
           ))
         )}
       </div>
+        </div>
+      )}
+
+      {/* Corporate Services Section */}
+      {serviceTypeFilter === "CORPORATE" && (
+        <div style={{ marginBottom: "32px" }}>
+          <h3 style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            marginBottom: "16px",
+            color: "#1a1a1a",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}>
+            <Building2 size={18} />
+            Corporate Services
+          </h3>
+          <div className="dash-grid">
+            {corporateServices.length === 0 ? (
+              <div className="dash-empty-state">
+                <Package size={48} className="dash-empty-icon" />
+                <p className="dash-empty-text">No corporate services yet</p>
+                <p className="muted">Create a corporate service to get started</p>
+              </div>
+            ) : (
+              corporateServices.map((service) => (
+            <div className="dash-card" key={service.id}>
+              <div className="dash-card-header">
+                {service.imageUrl ? (
+                  <img
+                    src={service.imageUrl}
+                    alt={service.name}
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      marginRight: "12px",
+                    }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <Package size={20} className="dash-card-icon" />
+                )}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <h3 className="dash-card-title">{service.name}</h3>
+                    {service.isTrending && (
+                      <span style={{
+                        background: "var(--primary)",
+                        color: "white",
+                        padding: "2px 8px",
+                        borderRadius: "12px",
+                        fontSize: "11px",
+                        fontWeight: 600,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                      }}>
+                        <TrendingUp size={12} />
+                        Trending
+                      </span>
+                    )}
+                  </div>
+                  <p className="muted" style={{ fontSize: "13px", marginTop: "4px" }}>
+                    {service.slug} • {service.type}
+                  </p>
+                </div>
+                <span className={`dash-status-pill dash-status-pill-${service.isActive ? "active" : "inactive"}`}>
+                  {service.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div className="dash-card-content">
+                {service.description && (
+                  <div style={{ marginBottom: "12px" }}>
+                    <p className="muted" style={{ 
+                      display: "-webkit-box",
+                      WebkitLineClamp: expandedDescriptions[service.id] ? "none" : 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      lineHeight: "1.5",
+                    }}>
+                      {service.description}
+                    </p>
+                    {service.description.length > 150 && (
+                      <button
+                        type="button"
+                        onClick={() => toggleDescription(service.id)}
+                        className="btn-outline btn-sm"
+                        style={{ marginTop: "8px", fontSize: "12px" }}
+                      >
+                        {expandedDescriptions[service.id] ? "Read less" : "Read more..."}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {service.options && service.options.length > 0 && (
+                  <div style={{ marginBottom: "12px" }}>
+                    <span className="dash-info-label" style={{ display: "block", marginBottom: "6px" }}>Sub-services:</span>
+                    <ul style={{ paddingLeft: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
+                      {service.options.slice(0, 3).map((opt, idx) => (
+                        <li key={idx}>{opt.name || opt}</li>
+                      ))}
+                      {service.options.length > 3 && (
+                        <li style={{ fontStyle: "italic" }}>+{service.options.length - 3} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                <div className="dash-info-row">
+                  <span className="dash-info-label">Pricing</span>
+                  <span className="dash-info-value">
+                    {service.basePrice ? `$${service.basePrice.toFixed(2)}` : "Custom"}
+                  </span>
+                </div>
+                <div className="dash-info-row">
+                  <span className="dash-info-label">Sub-services</span>
+                  <span className="dash-info-value">{service.options?.length || 0}</span>
+                </div>
+                <div className="dash-info-row">
+                  <span className="dash-info-label">Bookings</span>
+                  <span className="dash-info-value">{service._count?.bookings || 0}</span>
+                </div>
+                <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <button
+                    className="btn btn-sm outline"
+                    onClick={() => handleEdit(service)}
+                  >
+                    <Edit size={14} style={{ marginRight: "4px" }} />
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-sm outline"
+                    onClick={() => handleToggleActive(service)}
+                  >
+                    {service.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    className="btn btn-sm outline"
+                    onClick={() => handleDelete(service)}
+                    style={{ color: "var(--error)", borderColor: "var(--error)" }}
+                  >
+                    <Trash2 size={14} style={{ marginRight: "4px" }} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShopTab() {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState("products"); // "products" or "categories"
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const formRef = useRef(null);
+  const [productForm, setProductForm] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    price: "",
+    categoryId: "",
+    imageUrl: "",
+    isActive: true,
+  });
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    slug: "",
+    description: "",
+    imageUrl: "",
+    isActive: true,
+  });
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (showCreateForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showCreateForm]);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [productsRes, categoriesRes] = await Promise.all([
+        apiClient.get("/api/admin/shop/products"),
+        apiClient.get("/api/admin/shop/categories"),
+      ]);
+      setProducts(productsRes.data || []);
+      setCategories(categoriesRes.data || []);
+    } catch (err) {
+      console.error("Load shop data error:", err);
+      toast.error(err.response?.data?.message || "Failed to load shop data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Check file size (max 10MB = 10000 KB)
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Image size must be less than 10MB (${(file.size / (1024 * 1024)).toFixed(2)}MB selected). Please compress your image and try again.`);
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImagePreview(base64String);
+        if (activeView === "products") {
+          setProductForm({ ...productForm, imageUrl: base64String });
+        } else {
+          setCategoryForm({ ...categoryForm, imageUrl: base64String });
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const resetForms = () => {
+    setProductForm({
+      name: "",
+      slug: "",
+      description: "",
+      price: "",
+      categoryId: "",
+      imageUrl: "",
+      isActive: true,
+    });
+    setCategoryForm({
+      name: "",
+      slug: "",
+      description: "",
+      imageUrl: "",
+      isActive: true,
+    });
+    setImagePreview(null);
+    setEditingItem(null);
+    setShowCreateForm(false);
+  };
+
+  const handleCreateProduct = async () => {
+    if (!productForm.name || !productForm.slug || !productForm.price) {
+      toast.error("Name, slug, and price are required");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      await apiClient.post("/api/admin/shop/products", productForm);
+      toast.success("Product created successfully!");
+      resetForms();
+      loadData();
+    } catch (err) {
+      console.error("Create product error:", err);
+      toast.error(err.response?.data?.message || "Failed to create product");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCreateCategory = async () => {
+    if (!categoryForm.name || !categoryForm.slug) {
+      toast.error("Name and slug are required");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      await apiClient.post("/api/admin/shop/categories", categoryForm);
+      toast.success("Category created successfully!");
+      resetForms();
+      loadData();
+    } catch (err) {
+      console.error("Create category error:", err);
+      toast.error(err.response?.data?.message || "Failed to create category");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    if (activeView === "products") {
+      setProductForm({
+        name: item.name || "",
+        slug: item.slug || "",
+        description: item.description || "",
+        price: item.price || "",
+        categoryId: item.categoryId || "",
+        imageUrl: item.imageUrl || "",
+        isActive: item.isActive !== undefined ? item.isActive : true,
+      });
+      if (item.imageUrl) setImagePreview(item.imageUrl);
+    } else {
+      setCategoryForm({
+        name: item.name || "",
+        slug: item.slug || "",
+        description: item.description || "",
+        imageUrl: item.imageUrl || "",
+        isActive: item.isActive !== undefined ? item.isActive : true,
+      });
+      if (item.imageUrl) setImagePreview(item.imageUrl);
+    }
+    setShowCreateForm(true);
+    setTimeout(() => {
+      if (formRef.current) {
+        formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!editingItem) return;
+    setCreating(true);
+    try {
+      await apiClient.patch(`/api/admin/shop/products/${editingItem.id}`, productForm);
+      toast.success("Product updated successfully!");
+      resetForms();
+      loadData();
+    } catch (err) {
+      console.error("Update product error:", err);
+      toast.error(err.response?.data?.message || "Failed to update product");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleUpdateCategory = async () => {
+    if (!editingItem) return;
+    setCreating(true);
+    try {
+      await apiClient.patch(`/api/admin/shop/categories/${editingItem.id}`, categoryForm);
+      toast.success("Category updated successfully!");
+      resetForms();
+      loadData();
+    } catch (err) {
+      console.error("Update category error:", err);
+      toast.error(err.response?.data?.message || "Failed to update category");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDelete = async (item, type) => {
+    if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+
+    try {
+      await apiClient.delete(`/api/admin/shop/${type}/${item.id}`);
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
+      loadData();
+    } catch (err) {
+      console.error(`Delete ${type} error:`, err);
+      toast.error(err.response?.data?.message || `Failed to delete ${type}`);
+    }
+  };
+
+  const toggleDescription = (itemId) => {
+    setExpandedDescriptions((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
+  };
+
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  };
+
+  if (loading) {
+    return (
+      <div className="dash-main-inner fade-in-up">
+        <p>Loading shop data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dash-main-inner fade-in-up">
+      <header className="dash-page-header">
+        <div>
+          <h2 className="dash-title">Shop Management</h2>
+          <p className="muted dash-subtitle">
+            Manage products and categories
+          </p>
+        </div>
+        <div style={{ display: "flex", gap: "12px" }}>
+          <div style={{ display: "flex", gap: "8px", background: "#f3f4f6", padding: "4px", borderRadius: "8px" }}>
+            <button
+              className={`btn btn-sm ${activeView === "products" ? "" : "outline"}`}
+              onClick={() => {
+                setActiveView("products");
+                resetForms();
+              }}
+            >
+              Products ({products.length})
+            </button>
+            <button
+              className={`btn btn-sm ${activeView === "categories" ? "" : "outline"}`}
+              onClick={() => {
+                setActiveView("categories");
+                resetForms();
+              }}
+            >
+              Categories ({categories.length})
+            </button>
+          </div>
+          <button
+            className="btn"
+            onClick={() => {
+              resetForms();
+              setShowCreateForm(true);
+            }}
+          >
+            <Plus size={16} style={{ marginRight: "4px" }} />
+            Create {activeView === "products" ? "Product" : "Category"}
+          </button>
+        </div>
+      </header>
+
+      {/* Create/Edit Form */}
+      {showCreateForm && (
+        <div ref={formRef} className="dash-card fade-in-up fade-in-delay-sm" style={{ marginBottom: "24px" }}>
+          <div className="dash-card-header">
+            <h3 className="dash-card-title">
+              {editingItem ? `Edit ${activeView === "products" ? "Product" : "Category"}` : `Create New ${activeView === "products" ? "Product" : "Category"}`}
+            </h3>
+            <button className="btn btn-sm outline" onClick={resetForms}>
+              <X size={16} />
+            </button>
+          </div>
+          <div className="dash-card-content">
+            {activeView === "products" ? (
+              <div style={{ display: "grid", gap: "16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label className="dash-label">Product Name *</label>
+                    <input
+                      className="dash-input"
+                      value={productForm.name}
+                      onChange={(e) => {
+                        setProductForm({ ...productForm, name: e.target.value, slug: generateSlug(e.target.value) });
+                      }}
+                      placeholder="e.g., Dish Wash Liquid"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="dash-label">Slug *</label>
+                    <input
+                      className="dash-input"
+                      value={productForm.slug}
+                      onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
+                      placeholder="e.g., dish-wash-liquid"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="dash-label">Description</label>
+                  <textarea
+                    className="dash-input"
+                    value={productForm.description}
+                    onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                    placeholder="Product description"
+                    rows={3}
+                  />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label className="dash-label">Price *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="dash-input"
+                      value={productForm.price}
+                      onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="dash-label">Category</label>
+                    <select
+                      className="dash-input"
+                      value={productForm.categoryId}
+                      onChange={(e) => setProductForm({ ...productForm, categoryId: e.target.value })}
+                    >
+                      <option value="">No Category</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="dash-label">Image URL</label>
+                  <input
+                    className="dash-input"
+                    value={productForm.imageUrl}
+                    onChange={(e) => {
+                      setProductForm({ ...productForm, imageUrl: e.target.value });
+                      setImagePreview(e.target.value);
+                    }}
+                    placeholder="https://example.com/image.png or upload file"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ marginTop: "8px" }}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        marginTop: "12px",
+                        maxWidth: "200px",
+                        maxHeight: "200px",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="dash-label">
+                    <input
+                      type="checkbox"
+                      checked={productForm.isActive}
+                      onChange={(e) => setProductForm({ ...productForm, isActive: e.target.checked })}
+                      style={{ marginRight: "8px" }}
+                    />
+                    Active
+                  </label>
+                </div>
+                <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+                  <button
+                    className="btn"
+                    onClick={editingItem ? handleUpdateProduct : handleCreateProduct}
+                    disabled={creating}
+                  >
+                    {creating ? "Saving..." : editingItem ? "Update Product" : "Create Product"}
+                  </button>
+                  <button className="btn outline" onClick={resetForms}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gap: "16px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label className="dash-label">Category Name *</label>
+                    <input
+                      className="dash-input"
+                      value={categoryForm.name}
+                      onChange={(e) => {
+                        setCategoryForm({ ...categoryForm, name: e.target.value, slug: generateSlug(e.target.value) });
+                      }}
+                      placeholder="e.g., Home Care & Essentials"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="dash-label">Slug *</label>
+                    <input
+                      className="dash-input"
+                      value={categoryForm.slug}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, slug: e.target.value })}
+                      placeholder="e.g., home-care-essentials"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="dash-label">Description</label>
+                  <textarea
+                    className="dash-input"
+                    value={categoryForm.description}
+                    onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
+                    placeholder="Category description"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="dash-label">Image URL</label>
+                  <input
+                    className="dash-input"
+                    value={categoryForm.imageUrl}
+                    onChange={(e) => {
+                      setCategoryForm({ ...categoryForm, imageUrl: e.target.value });
+                      setImagePreview(e.target.value);
+                    }}
+                    placeholder="https://example.com/image.png or upload file"
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ marginTop: "8px" }}
+                  />
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        marginTop: "12px",
+                        maxWidth: "200px",
+                        maxHeight: "200px",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="dash-label">
+                    <input
+                      type="checkbox"
+                      checked={categoryForm.isActive}
+                      onChange={(e) => setCategoryForm({ ...categoryForm, isActive: e.target.checked })}
+                      style={{ marginRight: "8px" }}
+                    />
+                    Active
+                  </label>
+                </div>
+                <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+                  <button
+                    className="btn"
+                    onClick={editingItem ? handleUpdateCategory : handleCreateCategory}
+                    disabled={creating}
+                  >
+                    {creating ? "Saving..." : editingItem ? "Update Category" : "Create Category"}
+                  </button>
+                  <button className="btn outline" onClick={resetForms}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Products List */}
+      {activeView === "products" && (
+        <div className="dash-card fade-in-up fade-in-delay-sm">
+          <h3 className="dash-card-title" style={{ marginBottom: "16px" }}>All Products</h3>
+          {products.length === 0 ? (
+            <div className="dash-empty-state">
+              <ShoppingBag size={48} className="dash-empty-icon" />
+              <p className="dash-empty-text">No products yet</p>
+              <p className="muted">Create a product to get started</p>
+            </div>
+          ) : (
+            <div className="dash-grid">
+              {products.map((product) => (
+                <div className="dash-card" key={product.id}>
+                  <div className="dash-card-header">
+                    {product.imageUrl ? (
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        style={{
+                          width: "48px",
+                          height: "48px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          marginRight: "12px",
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <ShoppingBag size={20} className="dash-card-icon" />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <h3 className="dash-card-title">{product.name}</h3>
+                      <p className="muted" style={{ fontSize: "13px", marginTop: "4px" }}>
+                        {product.slug} • {product.category?.name || "No Category"}
+                      </p>
+                    </div>
+                    <span className={`dash-status-pill dash-status-pill-${product.isActive ? "active" : "inactive"}`}>
+                      {product.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div className="dash-card-content">
+                    {product.description && (
+                      <div style={{ marginBottom: "12px" }}>
+                        <p className="muted" style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: expandedDescriptions[product.id] ? "none" : 3,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          lineHeight: "1.5",
+                        }}>
+                          {product.description}
+                        </p>
+                        {product.description.length > 150 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleDescription(product.id)}
+                            className="btn-outline btn-sm"
+                            style={{ marginTop: "8px", fontSize: "12px" }}
+                          >
+                            {expandedDescriptions[product.id] ? "Read less" : "Read more..."}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    <div className="dash-info-row">
+                      <span className="dash-info-label">Price</span>
+                      <span className="dash-info-value">${product.price.toFixed(2)}</span>
+                    </div>
+                    <div className="dash-info-row">
+                      <span className="dash-info-label">Category</span>
+                      <span className="dash-info-value">{product.category?.name || "—"}</span>
+                    </div>
+                    <div className="dash-info-row">
+                      <span className="dash-info-label">Orders</span>
+                      <span className="dash-info-value">{product._count?.orderItems || 0}</span>
+                    </div>
+                    <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <button
+                        className="btn btn-sm outline"
+                        onClick={() => handleEdit(product)}
+                      >
+                        <Edit size={14} style={{ marginRight: "4px" }} />
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-sm outline"
+                        onClick={() => handleDelete(product, "products")}
+                        style={{ color: "var(--error)", borderColor: "var(--error)" }}
+                      >
+                        <Trash2 size={14} style={{ marginRight: "4px" }} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Categories List */}
+      {activeView === "categories" && (
+        <div className="dash-card fade-in-up fade-in-delay-sm">
+          <h3 className="dash-card-title" style={{ marginBottom: "16px" }}>All Categories</h3>
+          {categories.length === 0 ? (
+            <div className="dash-empty-state">
+              <Package size={48} className="dash-empty-icon" />
+              <p className="dash-empty-text">No categories yet</p>
+              <p className="muted">Create a category to get started</p>
+            </div>
+          ) : (
+            <div className="dash-grid">
+              {categories.map((category) => (
+                <div className="dash-card" key={category.id}>
+                  <div className="dash-card-header">
+                    {category.imageUrl ? (
+                      <img
+                        src={category.imageUrl}
+                        alt={category.name}
+                        style={{
+                          width: "48px",
+                          height: "48px",
+                          objectFit: "cover",
+                          borderRadius: "8px",
+                          marginRight: "12px",
+                        }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <Package size={20} className="dash-card-icon" />
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <h3 className="dash-card-title">{category.name}</h3>
+                      <p className="muted" style={{ fontSize: "13px", marginTop: "4px" }}>
+                        {category.slug}
+                      </p>
+                    </div>
+                    <span className={`dash-status-pill dash-status-pill-${category.isActive ? "active" : "inactive"}`}>
+                      {category.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                  <div className="dash-card-content">
+                    {category.description && (
+                      <div style={{ marginBottom: "12px" }}>
+                        <p className="muted" style={{
+                          display: "-webkit-box",
+                          WebkitLineClamp: expandedDescriptions[category.id] ? "none" : 3,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                          lineHeight: "1.5",
+                        }}>
+                          {category.description}
+                        </p>
+                        {category.description.length > 150 && (
+                          <button
+                            type="button"
+                            onClick={() => toggleDescription(category.id)}
+                            className="btn-outline btn-sm"
+                            style={{ marginTop: "8px", fontSize: "12px" }}
+                          >
+                            {expandedDescriptions[category.id] ? "Read less" : "Read more..."}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    <div className="dash-info-row">
+                      <span className="dash-info-label">Products</span>
+                      <span className="dash-info-value">{category._count?.products || 0}</span>
+                    </div>
+                    <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                      <button
+                        className="btn btn-sm outline"
+                        onClick={() => handleEdit(category)}
+                      >
+                        <Edit size={14} style={{ marginRight: "4px" }} />
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-sm outline"
+                        onClick={() => handleDelete(category, "categories")}
+                        style={{ color: "var(--error)", borderColor: "var(--error)" }}
+                      >
+                        <Trash2 size={14} style={{ marginRight: "4px" }} />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1075,18 +2572,34 @@ function AnalyticsTab() {
     setLoading(true);
     try {
       const [overviewRes, bookingsRes, revenueRes, workersRes, servicesRes] = await Promise.all([
-        apiClient.get("/api/admin/analytics/overview"),
-        apiClient.get("/api/admin/analytics/bookings"),
-        apiClient.get("/api/admin/analytics/revenue"),
-        apiClient.get("/api/admin/analytics/workers"),
-        apiClient.get("/api/admin/analytics/services"),
+        apiClient.get("/api/admin/analytics/overview").catch((err) => {
+          console.error("[Analytics] Failed to load overview:", err);
+          toast.error("Failed to load overview analytics");
+          return { data: null };
+        }),
+        apiClient.get("/api/admin/analytics/bookings").catch((err) => {
+          console.error("[Analytics] Failed to load bookings analytics:", err);
+          return { data: null };
+        }),
+        apiClient.get("/api/admin/analytics/revenue").catch((err) => {
+          console.error("[Analytics] Failed to load revenue analytics:", err);
+          return { data: null };
+        }),
+        apiClient.get("/api/admin/analytics/workers").catch((err) => {
+          console.error("[Analytics] Failed to load workers analytics:", err);
+          return { data: null };
+        }),
+        apiClient.get("/api/admin/analytics/services").catch((err) => {
+          console.error("[Analytics] Failed to load services analytics:", err);
+          return { data: null };
+        }),
       ]);
 
-      setOverview(overviewRes.data);
-      setBookings(bookingsRes.data);
-      setRevenue(revenueRes.data);
-      setWorkers(workersRes.data);
-      setServices(servicesRes.data);
+      if (overviewRes.data) setOverview(overviewRes.data);
+      if (bookingsRes.data) setBookings(bookingsRes.data);
+      if (revenueRes.data) setRevenue(revenueRes.data);
+      if (workersRes.data) setWorkers(workersRes.data);
+      if (servicesRes.data) setServices(servicesRes.data);
     } catch (err) {
       console.error("Load analytics error:", err);
       toast.error(err.response?.data?.message || "Failed to load analytics");
@@ -1121,7 +2634,7 @@ function AnalyticsTab() {
               <Calendar size={22} strokeWidth={2} />
             </div>
             <div className="dash-stat-content">
-              <p className="stat-val">{overview.bookings.total}</p>
+              <p className="stat-val">{overview.bookings?.total || 0}</p>
               <p className="stat-label">Total Bookings</p>
             </div>
           </div>
@@ -1130,7 +2643,7 @@ function AnalyticsTab() {
               <CheckCircle2 size={22} strokeWidth={2} />
             </div>
             <div className="dash-stat-content">
-              <p className="stat-val">{overview.bookings.completed}</p>
+              <p className="stat-val">{overview.bookings?.completed || 0}</p>
               <p className="stat-label">Completed</p>
             </div>
           </div>
@@ -1139,7 +2652,7 @@ function AnalyticsTab() {
               <DollarSign size={22} strokeWidth={2} />
             </div>
             <div className="dash-stat-content">
-              <p className="stat-val">${overview.revenue.total.toFixed(2)}</p>
+              <p className="stat-val">${(overview.revenue?.total || 0).toFixed(2)}</p>
               <p className="stat-label">Total Revenue</p>
             </div>
           </div>
@@ -1148,7 +2661,7 @@ function AnalyticsTab() {
               <TrendingUp size={22} strokeWidth={2} />
             </div>
             <div className="dash-stat-content">
-              <p className="stat-val">${overview.revenue.averageBookingValue.toFixed(2)}</p>
+              <p className="stat-val">${(overview.revenue?.averageBookingValue || 0).toFixed(2)}</p>
               <p className="stat-label">Avg Booking Value</p>
             </div>
           </div>
@@ -1157,7 +2670,7 @@ function AnalyticsTab() {
               <Briefcase size={22} strokeWidth={2} />
             </div>
             <div className="dash-stat-content">
-              <p className="stat-val">{overview.workers.active}</p>
+              <p className="stat-val">{overview.workers?.active || 0}</p>
               <p className="stat-label">Active Workers</p>
             </div>
           </div>
@@ -1166,14 +2679,14 @@ function AnalyticsTab() {
               <Package size={22} strokeWidth={2} />
             </div>
             <div className="dash-stat-content">
-              <p className="stat-val">{overview.services.active}</p>
+              <p className="stat-val">{overview.services?.active || 0}</p>
               <p className="stat-label">Active Services</p>
             </div>
           </div>
         </div>
       )}
 
-      {revenue && (
+      {revenue && revenue.summary && (
         <div className="dash-card fade-in-up fade-in-delay-md" style={{ marginTop: "24px" }}>
           <div className="dash-card-header">
             <DollarSign size={20} className="dash-card-icon" />
@@ -1183,15 +2696,15 @@ function AnalyticsTab() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "24px" }}>
               <div>
                 <p className="muted" style={{ fontSize: "13px", marginBottom: "4px" }}>Today</p>
-                <p style={{ fontSize: "20px", fontWeight: 600 }}>${revenue.summary.today.toFixed(2)}</p>
+                <p style={{ fontSize: "20px", fontWeight: 600 }}>${(revenue.summary?.today || 0).toFixed(2)}</p>
               </div>
               <div>
                 <p className="muted" style={{ fontSize: "13px", marginBottom: "4px" }}>This Week</p>
-                <p style={{ fontSize: "20px", fontWeight: 600 }}>${revenue.summary.thisWeek.toFixed(2)}</p>
+                <p style={{ fontSize: "20px", fontWeight: 600 }}>${(revenue.summary?.thisWeek || 0).toFixed(2)}</p>
               </div>
               <div>
                 <p className="muted" style={{ fontSize: "13px", marginBottom: "4px" }}>This Month</p>
-                <p style={{ fontSize: "20px", fontWeight: 600 }}>${revenue.summary.thisMonth.toFixed(2)}</p>
+                <p style={{ fontSize: "20px", fontWeight: 600 }}>${(revenue.summary?.thisMonth || 0).toFixed(2)}</p>
               </div>
             </div>
             {revenue.byService && revenue.byService.length > 0 && (
@@ -1206,10 +2719,10 @@ function AnalyticsTab() {
                     </div>
                     {revenue.byService.slice(0, 10).map((item) => (
                       <div className="dash-table-row" key={item.serviceId || item.serviceName}>
-                        <span className="dash-table-cell-main">{item.serviceName}</span>
-                        <span className="dash-table-cell">{item.bookingCount}</span>
+                        <span className="dash-table-cell-main">{item.serviceName || "N/A"}</span>
+                        <span className="dash-table-cell">{item.bookingCount || 0}</span>
                         <span className="dash-table-cell" style={{ fontWeight: 600 }}>
-                          ${item.revenue.toFixed(2)}
+                          ${(item.revenue || 0).toFixed(2)}
                         </span>
                       </div>
                     ))}
@@ -1228,16 +2741,18 @@ function AnalyticsTab() {
             <h3 className="dash-card-title">Worker Performance</h3>
           </div>
           <div className="dash-card-content">
+            {workers.summary && (
             <div style={{ marginBottom: "16px", display: "flex", gap: "16px" }}>
               <div>
                 <p className="muted" style={{ fontSize: "13px" }}>Avg Completion Rate</p>
-                <p style={{ fontSize: "18px", fontWeight: 600 }}>{workers.summary.averageCompletionRate}%</p>
+                  <p style={{ fontSize: "18px", fontWeight: 600 }}>{workers.summary.averageCompletionRate || 0}%</p>
               </div>
               <div>
                 <p className="muted" style={{ fontSize: "13px" }}>Total Completed Jobs</p>
-                <p style={{ fontSize: "18px", fontWeight: 600 }}>{workers.summary.totalCompletedJobs}</p>
+                  <p style={{ fontSize: "18px", fontWeight: 600 }}>{workers.summary.totalCompletedJobs || 0}</p>
               </div>
             </div>
+            )}
             <div className="dash-table-wrapper">
               <div className="dash-table">
                 <div className="dash-table-head">
@@ -1249,16 +2764,16 @@ function AnalyticsTab() {
                 </div>
                 {workers.workers.slice(0, 10).map((worker) => (
                   <div className="dash-table-row" key={worker.workerId}>
-                    <span className="dash-table-cell-main">{worker.workerName}</span>
-                    <span className="dash-table-cell">{worker.totalJobs}</span>
-                    <span className="dash-table-cell">{worker.completedJobs}</span>
+                    <span className="dash-table-cell-main">{worker.workerName || "N/A"}</span>
+                    <span className="dash-table-cell">{worker.totalJobs || 0}</span>
+                    <span className="dash-table-cell">{worker.completedJobs || 0}</span>
                     <span className="dash-table-cell">
-                      <span className={`dash-status-pill ${worker.completionRate >= 80 ? "dash-status-pill-active" : ""}`}>
-                        {worker.completionRate}%
+                      <span className={`dash-status-pill ${(worker.completionRate || 0) >= 80 ? "dash-status-pill-active" : ""}`}>
+                        {worker.completionRate || 0}%
                       </span>
                     </span>
                     <span className="dash-table-cell" style={{ fontWeight: 600 }}>
-                      ${worker.revenue.toFixed(2)}
+                      ${(worker.revenue || 0).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -1302,11 +2817,11 @@ function AnalyticsTab() {
                 </div>
                 {services.services.slice(0, 10).map((service) => (
                   <div className="dash-table-row" key={service.serviceId}>
-                    <span className="dash-table-cell-main">{service.serviceName}</span>
-                    <span className="dash-table-cell">{service.totalBookings}</span>
-                    <span className="dash-table-cell">{service.completedBookings}</span>
+                    <span className="dash-table-cell-main">{service.serviceName || "N/A"}</span>
+                    <span className="dash-table-cell">{service.totalBookings || 0}</span>
+                    <span className="dash-table-cell">{service.completedBookings || 0}</span>
                     <span className="dash-table-cell" style={{ fontWeight: 600 }}>
-                      ${service.revenue.toFixed(2)}
+                      ${(service.revenue || 0).toFixed(2)}
                     </span>
                     <span className="dash-table-cell">
                       <span className={`dash-status-pill dash-status-pill-${service.isActive ? "active" : "inactive"}`}>
@@ -1321,7 +2836,7 @@ function AnalyticsTab() {
         </div>
       )}
 
-      {bookings && (
+      {bookings && bookings.summary && (
         <div className="dash-card fade-in-up fade-in-delay-md" style={{ marginTop: "24px" }}>
           <div className="dash-card-header">
             <Calendar size={20} className="dash-card-icon" />
@@ -1331,15 +2846,15 @@ function AnalyticsTab() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px", marginBottom: "24px" }}>
               <div>
                 <p className="muted" style={{ fontSize: "13px", marginBottom: "4px" }}>Today</p>
-                <p style={{ fontSize: "20px", fontWeight: 600 }}>{bookings.summary.today}</p>
+                <p style={{ fontSize: "20px", fontWeight: 600 }}>{bookings.summary?.today || 0}</p>
               </div>
               <div>
                 <p className="muted" style={{ fontSize: "13px", marginBottom: "4px" }}>This Week</p>
-                <p style={{ fontSize: "20px", fontWeight: 600 }}>{bookings.summary.thisWeek}</p>
+                <p style={{ fontSize: "20px", fontWeight: 600 }}>{bookings.summary?.thisWeek || 0}</p>
               </div>
               <div>
                 <p className="muted" style={{ fontSize: "13px", marginBottom: "4px" }}>This Month</p>
-                <p style={{ fontSize: "20px", fontWeight: 600 }}>{bookings.summary.thisMonth}</p>
+                <p style={{ fontSize: "20px", fontWeight: 600 }}>{bookings.summary?.thisMonth || 0}</p>
               </div>
             </div>
             {bookings.statusBreakdown && bookings.statusBreakdown.length > 0 && (

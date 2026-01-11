@@ -1,40 +1,67 @@
 // src/pages/ServicesPage.jsx
 import React, { useMemo, useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { PostChoreModal } from "../components/PostChoreModal.jsx";
+import { ServiceDetailModal } from "../components/ServiceDetailModal.jsx";
 import "../styles/services.page.css";
+import "../styles/unified-page-layout.css";
 import { IMAGES } from "../components/serviceImages";
 import toast from "react-hot-toast";
+import apiClient from "../lib/api.js";
 
 import {
-  Brush,
-  Home,
-  Truck,
-  Bug,
-  Snowflake,
-  Shirt,
-  Wrench,
-  Trees,
-  UserCheck,
-  Hammer,
-  Car,
-  Thermometer,
   Sparkles,
-  Building2,
-  ClipboardList,
   ArrowRight,
-  Check,
-  X,
-  Plus,
+  TrendingUp,
 } from "lucide-react";
 
 export function ServicesPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("residential");
   const [postChoreModalOpen, setPostChoreModalOpen] = useState(false);
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedService, setSelectedService] = useState(null);
+  const [serviceModalOpen, setServiceModalOpen] = useState(false);
 
   const isResidential = mode === "residential";
+
+  const handleSeeMore = (service) => {
+    setSelectedService(service);
+    setServiceModalOpen(true);
+  };
+
+  const handleBookFromModal = () => {
+    if (!selectedService) return;
+    if (isResidential) {
+      handleResidentialBook(selectedService.id || selectedService.slug, selectedService.title || selectedService.name);
+    } else {
+      handleCorporateQuote(selectedService.id || selectedService.slug, selectedService.title || selectedService.name);
+    }
+    setServiceModalOpen(false);
+  };
+
+  // Fetch services from backend
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+        const type = isResidential ? "RESIDENTIAL" : "CORPORATE";
+        const response = await apiClient.get(`/public/services?type=${type}`);
+        setServices(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+        toast.error("Failed to load services. Please try again later.");
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, [isResidential]);
 
 const handleResidentialBook = (serviceId, title) => {
   navigate("/pricing-booking", {
@@ -53,363 +80,281 @@ const handleCorporateQuote = (serviceId, title) => {
   });
 };
 
-  /* =========================
-     SERVICES (FLAT LIST)
-  ========================= */
-  const RESIDENTIAL_SERVICES = useMemo(
-    () => [
-      {
-        id: "cleaning",
-        title: "Cleaning",
-        icon: Brush,
-        tag: "Most booked",
-        image: IMAGES.cleaning,
-        description:
-          "From quick tidy-ups to deep cleaning that resets your home.",
-        bullets: [
-          "Home & apartment cleaning",
-          "After-party & post-renovation",
-          "Carpet and exterior cleaning",
-        ],
-      },
-      {
-        id: "maid",
-        title: "Maid Service",
-        icon: UserCheck,
-        image: IMAGES.maid,
-        description: "Regular help to keep life moving smoothly.",
-        bullets: [
-          "Tidy, dishes, mop & vacuum",
-          "Surface dusting & light organizing",
-          "Hourly or recurring visits",
-        ],
-      },
-      {
-        id: "laundry",
-        title: "Laundry Service",
-        icon: Shirt,
-        image: IMAGES.laundry,
-        description: "Drop the baskets, keep the fresh clothes.",
-        bullets: [
-          "Pickup & delivery",
-          "Folding and sorting",
-          "Monthly laundry passes",
-        ],
-      },
-      {
-        id: "lawn",
-        title: "Lawn Care",
-        icon: Trees,
-        image: IMAGES.lawn,
-        description: "Keep the yard as clean as the inside.",
-        bullets: [
-          "Lawn mowing & edging",
-          "Weed control",
-          "Sodding and light landscaping",
-        ],
-      },
-      {
-        id: "handyman",
-        title: "Handyman",
-        icon: Wrench,
-        image: IMAGES.handyman,
-        description:
-          "Small jobs done right without calling five different people.",
-        bullets: [
-          "Furniture assembly & mounting",
-          "Blind & curtain install",
-          "Appliance install help",
-        ],
-      },
-      {
-        id: "reno",
-        title: "Home Renovation",
-        icon: Hammer,
-        image: IMAGES.renovation,
-        description: "Bigger projects with the right pros.",
-        bullets: [
-          "Kitchen & bathroom upgrades",
-          "Basement finishing",
-          "Flooring, painting, repairs",
-        ],
-      },
-      {
-        id: "pest",
-        title: "Pest Control",
-        icon: Bug,
-        image: IMAGES.pest,
-        description: "Keep your home clear of unwanted guests.",
-        bullets: [
-          "Inspection & assessment",
-          "Ants, spiders, crawling insects",
-          "Rodent treatment plans",
-        ],
-      },
-      {
-        id: "snow",
-        title: "Snow Removal",
-        icon: Snowflake,
-        image: IMAGES.snow,
-        description: "Saskatchewan winters, handled for you.",
-        bullets: [
-          "Driveways & walkways cleared",
-          "Small parking areas",
-          "Subscription passes",
-        ],
-      },
-      {
-        id: "move",
-        title: "Move-In / Move-Out",
-        icon: Truck,
-        image: IMAGES.move,
-        description:
-          "Stress-free moves with proper cleaning and lifting help.",
-        bullets: [
-          "Deep move-in / move-out clean",
-          "Packing and light loading help",
-          "Garbage / clutter removal",
-        ],
-      },
-      {
-        id: "airbnb",
-        title: "Vacation Home / Airbnb",
-        icon: Home,
-        image: IMAGES.airbnb,
-        description:
-          "Turnovers that keep your guests happy and ratings high.",
-        bullets: [
-          "Per-stay clean & reset",
-          "Restocking condiments & essentials",
-          "Bedsheets / towel laundry help",
-        ],
-      },
-      {
-        id: "auto",
-        title: "Automotive",
-        icon: Car,
-        image: IMAGES.auto,
-        description: "Car chores handled without waiting rooms.",
-        bullets: [
-          "Inside–out detailing",
-          "Seasonal tire change at home",
-          "Oil change & basic tune-up",
-        ],
-      },
-      {
-        id: "trades",
-        title: "Heating, Cooling & Plumbing",
-        icon: Thermometer,
-        image: IMAGES.trades,
-        description: "Trusted trades for the systems that matter.",
-        bullets: [
-          "Heating & cooling support",
-          "Plumbing & minor electrical",
-          "Water heater service",
-        ],
-      },
-    ],
-    []
-  );
-
-  const CORPORATE_SERVICES = useMemo(
-    () => [
-      {
-        id: "corp-cleaning",
-        title: "Commercial Cleaning",
-        icon: Brush,
-        image: IMAGES.cleaning,
-        description:
-          "Scheduled cleaning tailored for offices, stores, and common areas.",
-        bullets: [
-          "Office & retail cleaning",
-          "Janitorial & common area care",
-          "Post-construction / turnover cleans",
-        ],
-      },
-      {
-        id: "corp-snow",
-        title: "Commercial Snow Removal",
-        icon: Snowflake,
-        image: IMAGES.snow,
-        description:
-          "Keep access safe for staff, tenants, and customers.",
-        bullets: [
-          "Lots, walkways & entrances",
-          "Seasonal contracts",
-          "Salt & sanding add-ons",
-        ],
-      },
-      {
-        id: "corp-landscape",
-        title: "Commercial Landscaping",
-        icon: Trees,
-        image: IMAGES.lawn,
-        description:
-          "Clean, consistent outdoor presentation for your property.",
-        bullets: [
-          "Groundskeeping & mowing",
-          "Weed care & trimming",
-          "Seasonal cleanups",
-        ],
-      },
-      {
-        id: "corp-facility",
-        title: "Facility Maintenance",
-        icon: ClipboardList,
-        image: IMAGES.FacilityMaintenance,
-        description:
-          "One point of contact for everyday fixes and upkeep.",
-        bullets: [
-          "Handyman and fixture repairs",
-          "Appliance installs & minor trades",
-          "HVAC, plumbing & electrical partners",
-        ],
-      },
-      {
-        id: "corp-reno",
-        title: "Commercial Renovation",
-        icon: Building2,
-        image: IMAGES.renovation,
-        description:
-          "Refresh workspaces and tenant areas with minimal disruption.",
-        bullets: [
-          "Office & retail refresh",
-          "Flooring and repainting",
-          "Light reconfiguration work",
-        ],
-      },
-    ],
-    []
-  );
-
-  const services = isResidential
-    ? RESIDENTIAL_SERVICES
-    : CORPORATE_SERVICES;
 
   return (
     <PageWrapper>
-      <div className="svc-shell">
+      <div className="unified-page">
         {/* HERO */}
-        <header className="svc-hero">
-          <div className="shop-header fade-in-up">
-            <div className="shop-hero-badge">
+        <motion.header 
+          className="unified-hero"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="unified-hero-content">
+            <motion.div 
+              className="unified-hero-badge"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
               <Sparkles size={14} />
               <span>Professional services for every need</span>
-            </div>
+            </motion.div>
 
-            <h1 className="shop-title">Our Services</h1>
+            <motion.h1 
+              className="unified-hero-title"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              Our Services
+            </motion.h1>
 
-            <p className="shop-subtitle">
+            <motion.p 
+              className="unified-hero-subtitle"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
               One platform for everyday chores, seasonal work, and long-term
               partners — for homes and businesses.
-            </p>
+            </motion.p>
 
-            <div className="svc-toggle">
-              <button
+            <motion.div 
+              className="svc-toggle"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <motion.button
                 className={`svc-toggle-btn ${isResidential ? "active" : ""}`}
                 onClick={() => setMode("residential")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 For Home
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 className={`svc-toggle-btn ${!isResidential ? "active" : ""}`}
                 onClick={() => setMode("corporate")}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 For Business
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
 
-            <p className="svc-mode-line">
+            <motion.p 
+              className="svc-mode-line"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
               {isResidential
                 ? "Residential services · Book online in a few taps."
                 : "Corporate services · Request a custom quote."}
-            </p>
+            </motion.p>
           </div>
-        </header>
+        </motion.header>
 
         {/* GRID */}
-        <div className="svc-grid">
-          {services.map((card) => {
-            const Icon = card.icon || Sparkles;
+        <div className="page-content-container">
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "60px 20px" }}>
+              <p>Loading services...</p>
+            </div>
+          ) : services.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 20px" }}>
+              <p>No services available at the moment.</p>
+            </div>
+          ) : (
+             <div className="svc-grid">
+             {services.map((card) => {
+               return (
+                 <article 
+                 key={card.id} 
+                 className="svc-card" 
+                 onClick={() => handleSeeMore(card)}
+                 style={{ 
+                   cursor: "pointer",
+                   background: "white",
+                   borderRadius: "16px",
+                   border: "1px solid rgba(11, 92, 40, 0.15)",
+                   overflow: "hidden",
+                   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                   transition: "all 0.3s ease",
+                 }}
+                 onMouseEnter={(e) => {
+                   e.currentTarget.style.transform = "translateY(-4px)";
+                   e.currentTarget.style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.12)";
+                   e.currentTarget.style.borderColor = "rgba(11, 92, 40, 0.25)";
+                 }}
+                 onMouseLeave={(e) => {
+                   e.currentTarget.style.transform = "translateY(0)";
+                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.08)";
+                   e.currentTarget.style.borderColor = "rgba(11, 92, 40, 0.15)";
+                 }}
+                 >
+                   {/* Image Section */}
+                   <div 
+                     className="svc-card-media" 
+                     style={{ 
+                       position: "relative",
+                       width: "100%",
+                       height: "240px",
+                       overflow: "hidden",
+                     }}
+                   >
+                     <img
+                       src={card.image || card.imageUrl || IMAGES.cleaning}
+                       alt={card.title || card.name}
+                       style={{
+                         width: "100%",
+                         height: "100%",
+                         objectFit: "cover",
+                       }}
+                       onError={(e) => {
+                         e.target.src = IMAGES.cleaning;
+                       }}
+                     />
+                     
+                     {/* Price overlay in top-right */}
+                     {card.basePrice && (
+                       <div style={{
+                         position: "absolute",
+                         top: "12px",
+                         right: "12px",
+                         background: "rgba(255, 255, 255, 0.95)",
+                         padding: "6px 12px",
+                         borderRadius: "6px",
+                         fontSize: "14px",
+                         fontWeight: 700,
+                         color: "#1a1a1a",
+                         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                       }}>
+                         ${card.basePrice.toFixed(0)}+
+                       </div>
+                     )}
 
-            return (
-              <article key={card.id} className="svc-card">
-                <div className="svc-card-media">
-                  <img
-                    src={card.image}
-                    alt={card.title}
-                    className="svc-card-img"
-                    loading="lazy"
-                  />
-                  <div className="svc-card-overlay" />
-                  <div className="svc-card-image">
-                        <h3 className="svc-card-title">{card.title}</h3>
-                  </div>
-                  {card.tag && <div className="svc-tag">{card.tag}</div>}
-                </div>
+                     {/* Trending badge */}
+                     {card.isTrending && (
+                       <div style={{
+                         position: "absolute",
+                         top: "12px",
+                         left: "12px",
+                         background: "var(--primary, #6366f1)",
+                         color: "white",
+                         padding: "6px 12px",
+                         borderRadius: "6px",
+                         fontSize: "12px",
+                         fontWeight: 600,
+                         display: "flex",
+                         alignItems: "center",
+                         gap: "4px",
+                         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+                       }}>
+                         <TrendingUp size={12} />
+                         Trending
+                       </div>
+                     )}
+                   </div>
 
-                {/* HOVER REVEAL */}
-                <div className="svc-card-reveal">
-                  <div className="svc-card-body">
-                    <h3 className="svc-card-title">{card.title}</h3>
-                    <p className="svc-card-desc">{card.description}</p>
+                   {/* Text Section */}
+                   <div style={{
+                     padding: "20px",
+                     background: "white",
+                   }}>
+                     {/* Title */}
+                     <h3 style={{
+                       fontSize: "18px",
+                       fontWeight: 700,
+                       color: "#1a1a1a",
+                       margin: "0 0 8px 0",
+                       lineHeight: "1.3",
+                     }}>
+                       {card.title || card.name}
+                     </h3>
 
-                    <ul className="svc-bullets">
-                      {card.bullets.map((b) => (
-                        <li key={b}>
-                          <Check size={16} />
-                          <span>{b}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                     {/* Starting Price */}
+                     {card.basePrice && (
+                       <p style={{
+                         fontSize: "14px",
+                         color: "#666",
+                         margin: "0 0 16px 0",
+                         fontWeight: 400,
+                       }}>
+                         Starting from ${card.basePrice.toFixed(2)}
+                       </p>
+                     )}
 
-                  <div className="svc-card-footer">
-                    {isResidential ? (
-                      <button
-                        className="svc-cta"
-                        onClick={() =>
-                          handleResidentialBook(card.id, card.title)
-                        }
-                      >
-                        Book this service <ArrowRight size={18} />
-                      </button>
-                    ) : (
-                      <button
-                        className="svc-cta outline"
-                        onClick={() =>
-                          handleCorporateQuote(card.id, card.title)
-                        }
-                      >
-                        Request a quote <ArrowRight size={18} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+                     {/* View Details Link */}
+                     <div style={{
+                       display: "flex",
+                       justifyContent: "flex-end",
+                       alignItems: "center",
+                       marginTop: "12px",
+                     }}>
+                       <button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleSeeMore(card);
+                         }}
+                         style={{
+                           background: "none",
+                           border: "none",
+                           color: "#1a1a1a",
+                           fontSize: "14px",
+                           fontWeight: 500,
+                           cursor: "pointer",
+                           display: "flex",
+                           alignItems: "center",
+                           gap: "6px",
+                           padding: "4px 0",
+                           transition: "all 0.2s ease",
+                         }}
+                         onMouseEnter={(e) => {
+                           e.currentTarget.style.color = "var(--primary, #6366f1)";
+                           e.currentTarget.style.gap = "8px";
+                         }}
+                         onMouseLeave={(e) => {
+                           e.currentTarget.style.color = "#1a1a1a";
+                           e.currentTarget.style.gap = "6px";
+                         }}
+                       >
+                         View Details
+                         <ArrowRight size={16} />
+                       </button>
+                     </div>
+                   </div>
+                 </article>
+               );
+             })}
+           </div>
+          )}
         </div>
 
         {/* Post a Chore Section - Only for Residential */}
         {isResidential && (
           <section className="svc-custom-chore-section">
-            <div className="svc-custom-chore-card" onClick={() => setPostChoreModalOpen(true)}>
-              <div className="svc-custom-chore-left">
-                <div className="svc-custom-chore-icon">
-                  <Sparkles size={24} />
+            <div className="page-content-container">
+              <div className="svc-custom-chore-card" onClick={() => setPostChoreModalOpen(true)}>
+                <div className="svc-custom-chore-left">
+                  <div className="svc-custom-chore-icon">
+                    <Sparkles size={24} />
+                  </div>
+                  <div className="svc-custom-chore-content">
+                    <p className="svc-custom-eyebrow">Can't find what you're looking for?</p>
+                    <h3 className="svc-custom-title">Post a Custom Chore</h3>
+                    <p className="svc-custom-sub">
+                      Tell us what you need — we'll match you with the right helper ASAP.
+                    </p>
+                  </div>
                 </div>
-                <div className="svc-custom-chore-content">
-                  <p className="svc-custom-eyebrow">Can't find what you're looking for?</p>
-                  <h3 className="svc-custom-title">Post a Custom Chore</h3>
-                  <p className="svc-custom-sub">
-                    Tell us what you need — we'll match you with the right helper ASAP.
-                  </p>
-                </div>
+                <button className="svc-custom-cta" onClick={(e) => { e.stopPropagation(); setPostChoreModalOpen(true); }}>
+                  Post Your Chore <ArrowRight size={18} />
+                </button>
               </div>
-              <button className="svc-custom-cta" onClick={(e) => { e.stopPropagation(); setPostChoreModalOpen(true); }}>
-                Post Your Chore <ArrowRight size={18} />
-              </button>
             </div>
           </section>
         )}
@@ -419,6 +364,18 @@ const handleCorporateQuote = (serviceId, title) => {
       <PostChoreModal 
         isOpen={postChoreModalOpen} 
         onClose={() => setPostChoreModalOpen(false)} 
+      />
+
+      {/* ========== SERVICE DETAIL MODAL ========== */}
+      <ServiceDetailModal
+        isOpen={serviceModalOpen}
+        service={selectedService}
+        onClose={() => {
+          setServiceModalOpen(false);
+          setSelectedService(null);
+        }}
+        onBook={handleBookFromModal}
+        isResidential={isResidential}
       />
     </PageWrapper>
   );

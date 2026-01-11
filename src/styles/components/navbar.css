@@ -1,0 +1,53 @@
+/* ============================================================
+   🧭 NAVBAR — Navigation Component Styles
+=============================================================== */
+
+/* ========== ROLE BADGES ========== */
+.role-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-inverse);
+}
+
+.role-badge-admin {
+  background: var(--color-role-admin);
+}
+
+.role-badge-worker {
+  background: var(--color-role-worker);
+}
+
+.role-badge-customer {
+  background: var(--color-role-customer);
+}
+
+/* ========== NAVBAR LOADING STATE ========== */
+.nav-loading {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ========== NAVBAR BUTTONS ========== */
+.nav-pill {
+  padding: var(--space-md) var(--space-xl);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-fast);
+}
+
+.nav-pill-desktop {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .nav-pill-desktop {
+    display: inline-flex;
+  }
+}
+

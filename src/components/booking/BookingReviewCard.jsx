@@ -13,7 +13,15 @@ export default function BookingReviewCard({
   onEditAddress,
   onBack,
 }) {
-  const { subService, frequency, extras, schedule, address } = details;
+  // Read from new blocks structure, fallback to legacy format
+  const blocks = details.blocks || {};
+  const subService = blocks.subService || details.subService || "";
+  const frequency = blocks.frequency || details.frequency || "";
+  const extraNotes = blocks.simpleNote || details.extraNotes || extras?.extraNotes || "";
+  
+  const extras = details.extras || {};
+  const schedule = details.schedule || {};
+  const address = details.address || {};
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
@@ -56,7 +64,7 @@ export default function BookingReviewCard({
         province: address?.province || "SK",
         postal: address?.postalCode || address?.postal || "",
         country: address?.country || "Canada",
-        notes: extras?.extraNotes || null,
+        notes: extras?.extraNotes || details?.extraNotes || null,
         paymentMethod: "pay_later", // Default, can be changed based on payment selection
         paymentStatus: "pending",
       };
@@ -113,9 +121,9 @@ export default function BookingReviewCard({
           <div className="review-subtext">{frequency}</div>
         )}
 
-        {extras?.extraNotes && (
+        {(extras?.extraNotes || extraNotes) && (
           <div className="review-subtext">
-            Notes: {extras.extraNotes}
+            Notes: {extras?.extraNotes || extraNotes}
           </div>
         )}
       </div>

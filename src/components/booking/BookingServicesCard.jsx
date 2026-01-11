@@ -1,67 +1,107 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  BrushCleaning,
-  Home,
-  Truck,
-  Bug,
-  Snowflake,
-  Shirt,
-  Wrench,
-  Trees,
-  UserCheck,
-  Hammer,
-  Car,
-  Thermometer,
-} from "lucide-react";
+import * as LucideIcons from "lucide-react";
+import apiClient from "../../lib/api.js";
+import { Sparkles } from "lucide-react";
 
-const SERVICES = [
-  { id: "Cleaning", label: "Cleaning", Icon: BrushCleaning },
-  { id: "Airbnb", label: "Airbnb or Rental", Icon: Home },
-  { id: "Move", label: "Move-In or Out", Icon: Truck },
-  { id: "Pest", label: "Pest Control", Icon: Bug },
-  { id: "Snow", label: "Snow Removal", Icon: Snowflake },
-  { id: "Laundry", label: "Laundry", Icon: Shirt },
-  { id: "Handyman", label: "Handyman", Icon: Wrench },
-  { id: "Lawn", label: "Lawn Care", Icon: Trees },
-  { id: "Maid", label: "Maid Service", Icon: UserCheck },
-  { id: "Renovation", label: "Home Renovation", Icon: Hammer },
-  { id: "Automotive", label: "Automotive", Icon: Car },
-  { id: "HVAC", label: "HVAC & Plumbing", Icon: Thermometer },
+// Common icons for services
+const ICON_OPTIONS = [
+  "Brush", "Home", "Truck", "Bug", "Snowflake", "Shirt", "Wrench", "Trees",
+  "UserCheck", "Hammer", "Car", "Thermometer", "Building2", "ClipboardList",
+  "Sparkles", "Droplet", "Wind", "Zap", "Package", "Heart", "Star", "Settings"
 ];
 
 export default function BookingServicesCard({ selected, onSelect, onNext }) {
-  const navigate = useNavigate(); // ✅ ADD THIS
+  const navigate = useNavigate();
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await apiClient.get("/public/services?type=RESIDENTIAL");
+        setServices(response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  const getIcon = (iconName) => {
+    if (!iconName) return Sparkles;
+    
+    // Normalize icon name (capitalize first letter)
+    const normalizedName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+    const iconNameWithSuffix = normalizedName + 'Icon';
+    
+    // Try different variations: Car, CarIcon, original name
+    // Lucide exports icons as objects, so we check for existence
+    let IconComponent = null;
+    
+    if (normalizedName in LucideIcons) {
+      IconComponent = LucideIcons[normalizedName];  // Try "Car"
+    } else if (iconNameWithSuffix in LucideIcons) {
+      IconComponent = LucideIcons[iconNameWithSuffix];  // Try "CarIcon"
+    } else if (iconName in LucideIcons) {
+      IconComponent = LucideIcons[iconName];  // Try original
+    }
+    
+    if (!IconComponent) {
+      console.warn(`Icon "${iconName}" (tried: ${normalizedName}, ${iconNameWithSuffix}) not found, using Sparkles as fallback`);
+      return Sparkles;
+    }
+    
+    return IconComponent;
+  };
+
+  if (loading) {
+    return (
+      <div className="service-card">
+        <h2 className="service-title">Choose your service</h2>
+        <p>Loading services...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="service-card">
       <h2 className="service-title">Choose your service</h2>
 
       <div className="service-grid">
-        {SERVICES.map(({ id, label, Icon }) => {
-          const active = selected === id;
+        {services.length === 0 ? (
+          <p>No services available</p>
+        ) : (
+          services.map((service) => {
+            const Icon = getIcon(service.iconName);
+            const active = selected?.id === service.id || selected?.slug === service.slug;
 
-          return (
-            <button
-              key={id}
-              type="button"
-              className={`service-tile ${active ? "active" : ""}`}
-              onClick={() => onSelect(id)}
-            >
-              <div className="service-icon">
-                <Icon size={18} />
-              </div>
-              <span>{label}</span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={service.id}
+                type="button"
+                className={`service-tile ${active ? "active" : ""}`}
+                onClick={() => onSelect(service)}
+              >
+                <div className="service-icon">
+                  <Icon size={18} />
+                </div>
+                <span>{service.title}</span>
+              </button>
+            );
+          })
+        )}
       </div>
 
       <div className="service-footer">
         <button
           type="button"
           className="btn-secondary"
-          onClick={() => navigate("/services")} // ✅ THIS IS IT
+          onClick={() => navigate("/services")}
         >
           Back to services
         </button>
@@ -78,3 +118,6 @@ export default function BookingServicesCard({ selected, onSelect, onNext }) {
     </div>
   );
 }
+
+// Export for admin use
+export { ICON_OPTIONS };

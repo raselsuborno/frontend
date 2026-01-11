@@ -8,11 +8,21 @@
 ================================ */
 .booking-layout {
   max-width: 1180px;
-  margin: 32px auto 64px;
-  padding: 0 12px;
+  margin: 0 auto;
+  padding: var(--space-5xl) var(--space-lg);
+  padding-top: calc(var(--navbar-height) + var(--space-3xl));
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-xl);
+  min-height: calc(100vh - var(--navbar-height));
+}
+
+@media (max-width: 768px) {
+  .booking-layout {
+    padding-top: calc(var(--navbar-height-mobile) + var(--space-2xl));
+    padding: var(--space-3xl) var(--space-md);
+    gap: var(--space-lg);
+  }
 }
 
 /* Soft entrance animation for each step container */
@@ -488,6 +498,89 @@
   resize: vertical;
   min-height: 90px;
 }
+
+/* --- Photo upload --- */
+.photo-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.photo-upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: 2px dashed #e5e7eb;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 450;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.photo-upload-button:hover {
+  border-color: #0b5c28;
+  background: #eef9f5;
+  color: #0b5c28;
+}
+
+.photo-upload-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+}
+
+.photo-preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.photo-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-remove-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.photo-remove-button:hover {
+  background: rgba(220, 38, 38, 0.9);
+  transform: scale(1.1);
+}
+
 /* ===============================
    SUMMARY CARD (FIGMA MATCH)
 ================================ */

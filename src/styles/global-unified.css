@@ -1,0 +1,351 @@
+/* =========================================
+   GLOBAL UNIFIED DESIGN SYSTEM
+   Consistent typography, spacing, colors, animations
+   Brand green: #0b5c28
+========================================= */
+
+:root {
+  /* ==== NAVBAR HEIGHT (IMPORTANT FOR OVERLAP FIX) ==== */
+  --navbar-height: 80px; /* 64px navbar + 16px margin */
+  --navbar-height-mobile: 76px;
+
+  /* ==== COLORS - Now using unified-color-system.css ==== */
+  /* Variables are defined in unified-color-system.css for consistency */
+
+  /* ==== TYPOGRAPHY ==== */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  /* Font Sizes */
+  --font-xs: 12px;
+  --font-sm: 13px;
+  --font-base: 14px;
+  --font-md: 16px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-2xl: 24px;
+  --font-3xl: 28px;
+  --font-4xl: 32px;
+  --font-5xl: 36px;
+  --font-6xl: 48px;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.4;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+  --leading-loose: 1.8;
+
+  /* ==== SPACING SYSTEM ==== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 40px;
+  --space-4xl: 48px;
+  --space-5xl: 64px;
+  --space-6xl: 80px;
+
+  /* ==== BORDER RADIUS ==== */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* ==== SHADOWS ==== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* ==== TRANSITIONS ==== */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* =========================================
+   GLOBAL RESETS & BASE STYLES
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-md);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* =========================================
+   PAGE TOP PADDING (FIX NAVBAR OVERLAP)
+========================================= */
+
+.page-wrapper {
+  padding-top: var(--navbar-height);
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding-top: var(--navbar-height-mobile);
+  }
+}
+
+/* Unified page wrapper override for pages that need edge-to-edge */
+.unified-page {
+  padding-top: calc(var(--navbar-height) - 24px);
+  min-height: calc(100vh - var(--navbar-height));
+}
+
+@media (max-width: 768px) {
+  .unified-page {
+    padding-top: calc(var(--navbar-height-mobile) - 20px);
+    min-height: calc(100vh - var(--navbar-height-mobile));
+  }
+}
+
+/* =========================================
+   UNIFIED TYPOGRAPHY
+========================================= */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-5xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--font-4xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: var(--font-3xl);
+  font-weight: var(--font-semibold);
+}
+
+h4 {
+  font-size: var(--font-2xl);
+  font-weight: var(--font-semibold);
+}
+
+h5 {
+  font-size: var(--font-xl);
+  font-weight: var(--font-semibold);
+}
+
+h6 {
+  font-size: var(--font-lg);
+  font-weight: var(--font-semibold);
+}
+
+p {
+  font-size: var(--font-md);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* =========================================
+   UNIFIED SPACING SYSTEM
+========================================= */
+
+.unified-section {
+  padding: var(--space-5xl) 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.unified-section-sm {
+  padding: var(--space-4xl) 0;
+  max-width: 1280px;
+}
+
+.unified-section-lg {
+  padding: var(--space-6xl) 0;
+  max-width: 1280px;
+}
+
+@media (max-width: 768px) {
+  .unified-section {
+    padding: var(--space-4xl) 0;
+  }
+
+  .unified-section-sm {
+    padding: var(--space-3xl) 0;
+  }
+
+  .unified-section-lg {
+    padding: var(--space-5xl) 0;
+  }
+}
+
+/* =========================================
+   UNIFIED GRID SYSTEM
+========================================= */
+
+.unified-grid {
+  display: grid;
+  gap: 32px;
+}
+
+.unified-grid-2 {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px;
+}
+
+.unified-grid-3 {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 32px;
+}
+
+.unified-grid-4 {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 32px;
+}
+
+@media (max-width: 1024px) {
+  .unified-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .unified-grid,
+  .unified-grid-2,
+  .unified-grid-3,
+  .unified-grid-4 {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* =========================================
+   UNIFIED ANIMATIONS
+========================================= */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.unified-fade-in {
+  animation: fadeInUp 0.6s var(--transition-smooth) forwards;
+  opacity: 0;
+}
+
+.unified-fade-in-delay-1 {
+  animation: fadeInUp 0.6s var(--transition-smooth) 0.1s forwards;
+  opacity: 0;
+}
+
+.unified-fade-in-delay-2 {
+  animation: fadeInUp 0.6s var(--transition-smooth) 0.2s forwards;
+  opacity: 0;
+}
+
+.unified-fade-in-delay-3 {
+  animation: fadeInUp 0.6s var(--transition-smooth) 0.3s forwards;
+  opacity: 0;
+}
+
+/* =========================================
+   UNIFIED COLOR TRANSITIONS
+========================================= */
+
+a, button, input, textarea, select {
+  transition: 
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-fast);
+}
+
+a:hover, button:hover {
+  transition: 
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-slow),
+    transform var(--transition-base);
+}
+
+/* Smooth color transitions - prevent jarring changes */
+* {
+  transition: 
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+
+/* Disable transitions during initial load for better performance */
+.preload * {
+  transition: none !important;
+}

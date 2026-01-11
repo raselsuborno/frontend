@@ -11,6 +11,11 @@ export default function BookingSummaryCard({ service, details, step }) {
     address = {},
   } = details;
 
+  // Handle service object or string
+  const serviceName = typeof service === 'string' 
+    ? service 
+    : (service?.title || service?.name || 'Service');
+
   const SERVICES_WITH_FREQUENCY = [
     "Snow",
     "Cleaning",
@@ -30,7 +35,7 @@ export default function BookingSummaryCard({ service, details, step }) {
       {/* SERVICE */}
       <div className="summary-section">
         <span className="summary-label">Service</span>
-        <span className="summary-value">{service}</span>
+        <span className="summary-value">{serviceName}</span>
       </div>
 
       {/* SUB SERVICE */}
@@ -43,7 +48,6 @@ export default function BookingSummaryCard({ service, details, step }) {
 
       {/* FREQUENCY */}
       {step >= 2 &&
-        SERVICES_WITH_FREQUENCY.includes(service) &&
         frequency && (
           <div className="summary-section">
             <span className="summary-label">Frequency</span>

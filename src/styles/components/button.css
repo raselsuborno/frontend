@@ -1,0 +1,330 @@
+/* ============================================================
+   🔘 BUTTON COMPONENT — Single Source of Truth
+   All button styles consolidated here
+   =========================================================== */
+
+/* ============================================================
+   BASE BUTTON
+   =========================================================== */
+.btn,
+button.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: 12px 24px;
+  border-radius: var(--radius-lg-legacy);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(11, 92, 40, 0.2);
+}
+
+/* Shimmer effect */
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(11, 92, 40, 0.3);
+}
+
+.btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(11, 92, 40, 0.2);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+/* ============================================================
+   BUTTON VARIANTS
+   =========================================================== */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  background: var(--brand-primary-active);
+}
+
+.btn-secondary {
+  background: var(--bg-soft);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  box-shadow: none;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(11, 92, 40, 0.2);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  box-shadow: none;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(11, 92, 40, 0.25);
+}
+
+.btn-outline.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.btn-link {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  box-shadow: none;
+  padding: 8px 12px;
+  text-decoration: underline;
+}
+
+.btn-link:hover:not(:disabled) {
+  background: var(--primary-soft);
+  text-decoration: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  box-shadow: none;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.btn-danger {
+  background: var(--status-error);
+  color: white;
+  border-color: var(--status-error);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 2px solid var(--status-error);
+  color: var(--status-error);
+  box-shadow: none;
+}
+
+.btn-outline-danger:hover:not(:disabled) {
+  background: var(--status-error);
+  color: white;
+}
+
+.btn-success {
+  background: var(--status-success);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #059669;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+}
+
+/* ============================================================
+   BUTTON SIZES
+   =========================================================== */
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  gap: 6px;
+}
+
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 17px;
+  gap: 10px;
+}
+
+.btn-xl {
+  padding: var(--space-lg) var(--space-2xl);
+  font-size: var(--font-size-xl);
+}
+
+/* ============================================================
+   BUTTON ICONS
+   =========================================================== */
+.btn-icon {
+  padding: 10px;
+  width: 40px;
+  height: 40px;
+  min-width: auto;
+}
+
+.btn-icon-sm {
+  padding: var(--space-xs);
+  width: auto;
+  height: auto;
+}
+
+.btn-icon-lg {
+  padding: var(--space-md);
+  width: auto;
+  height: auto;
+}
+
+/* ============================================================
+   BUTTON GROUP
+   =========================================================== */
+.btn-group {
+  display: inline-flex;
+  gap: var(--space-sm);
+}
+
+.btn-group .btn {
+  border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+}
+
+.btn-group .btn:last-child {
+  border-top-right-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+/* ============================================================
+   BUTTON STATES
+   =========================================================== */
+.btn-block {
+  width: 100%;
+}
+
+.btn-loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-left: -8px;
+  margin-top: -8px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   PAGE-SPECIFIC VARIANTS (Preserved for compatibility)
+   =========================================================== */
+.btn-minimal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: none;
+}
+
+.btn-minimal-primary {
+  background: #0b5c28;
+  color: white;
+}
+
+.btn-minimal-primary:hover {
+  background: #094a20;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(11, 92, 40, 0.2);
+}
+
+.btn-minimal-secondary {
+  background: transparent;
+  color: #0b5c28;
+  border: 1.5px solid #0b5c28;
+}
+
+.btn-minimal-secondary:hover {
+  background: rgba(11, 92, 40, 0.05);
+}
+
+.btn-minimal-outline {
+  background: transparent;
+  color: #0b5c28;
+  border: 1.5px solid rgba(11, 92, 40, 0.2);
+}
+
+.btn-minimal-outline:hover {
+  border-color: #0b5c28;
+  background: rgba(11, 92, 40, 0.05);
+}
+
+.btn-minimal-large {
+  padding: 16px 32px;
+  font-size: 18px;
+}

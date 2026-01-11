@@ -16,6 +16,9 @@ import {
   Upload,
   FileText,
   Shield,
+  Camera,
+  X,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
@@ -42,6 +45,10 @@ export function WorkerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [completingBooking, setCompletingBooking] = useState(null);
+  const [completionPhoto, setCompletionPhoto] = useState(null);
+  const [completionNotes, setCompletionNotes] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     if (role === 'WORKER') {
@@ -126,18 +133,67 @@ export function WorkerDashboardPage() {
     }
   };
 
-  const handleAction = async (bookingId, action) => {
+  const handleAction = async (bookingId, action, additionalData = {}) => {
     setActionLoading(bookingId);
     try {
-      await apiClient.patch(`/api/worker/bookings/${bookingId}/${action}`);
+      await apiClient.patch(`/api/worker/bookings/${bookingId}/${action}`, additionalData);
       toast.success(`Booking ${action}ed successfully!`);
       loadBookings();
+      // Reset completion modal state
+      if (action === 'complete') {
+        setCompletingBooking(null);
+        setCompletionPhoto(null);
+        setCompletionNotes("");
+      }
     } catch (err) {
       console.error(`${action} booking error:`, err);
       toast.error(err.response?.data?.message || `Failed to ${action} booking`);
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleCompleteClick = (booking) => {
+    setCompletingBooking(booking);
+  };
+
+  const handleCompletionPhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`Image size must be less than 10MB (${(file.size / (1024 * 1024)).toFixed(2)}MB selected). Please compress your image and try again.`);
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setCompletionPhoto(base64String);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleCompleteSubmit = () => {
+    if (!completingBooking) return;
+    handleAction(completingBooking.id, 'complete', {
+      completionPhotoUrl: completionPhoto || null,
+      workerNotes: completionNotes.trim() || null,
+    });
   };
 
   const formatDate = (dateString) => {
@@ -416,6 +472,7 @@ export function WorkerDashboardPage() {
                         showActions={[]}
                         formatDate={formatDate}
                         formatTime={formatTime}
+                        showCompletionInfo={true}
                       />
                     ))}
                   </div>
@@ -429,6 +486,119 @@ export function WorkerDashboardPage() {
                     <Briefcase size={48} className="dash-empty-icon" />
                     <p className="dash-empty-text">No assigned jobs yet</p>
                     <p className="muted">Jobs assigned by admins will appear here</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Completion Modal */}
+              {completingBooking && (
+                <div className="modal-overlay" onClick={() => {
+                  setCompletingBooking(null);
+                  setCompletionPhoto(null);
+                  setCompletionNotes("");
+                }}>
+                  <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-header">
+                      <h3>Complete Job</h3>
+                      <button
+                        className="modal-close"
+                        onClick={() => {
+                          setCompletingBooking(null);
+                          setCompletionPhoto(null);
+                          setCompletionNotes("");
+                        }}
+                      >
+                        <X size={20} />
+                      </button>
+                    </div>
+                    <div className="modal-body">
+                      <p className="muted" style={{ marginBottom: "20px" }}>
+                        Job: <strong>{completingBooking.service?.name || completingBooking.serviceName}</strong>
+                      </p>
+                      
+                      <div style={{ marginBottom: "20px" }}>
+                        <label className="dash-label">
+                          Upload Completion Photo (Optional)
+                        </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleCompletionPhotoUpload}
+                          disabled={uploadingPhoto}
+                          style={{ marginTop: "8px" }}
+                        />
+                        {completionPhoto && (
+                          <div style={{ marginTop: "12px", position: "relative", display: "inline-block" }}>
+                            <img
+                              src={completionPhoto}
+                              alt="Completion preview"
+                              style={{
+                                maxWidth: "300px",
+                                maxHeight: "300px",
+                                borderRadius: "8px",
+                                border: "1px solid #e5e7eb",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setCompletionPhoto(null)}
+                              className="btn btn-sm outline"
+                              style={{
+                                position: "absolute",
+                                top: "8px",
+                                right: "8px",
+                                background: "white",
+                              }}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        )}
+                        {uploadingPhoto && (
+                          <p className="muted" style={{ marginTop: "8px", fontSize: "14px" }}>
+                            Uploading photo...
+                          </p>
+                        )}
+                      </div>
+
+                      <div style={{ marginBottom: "20px" }}>
+                        <label className="dash-label">
+                          Job Notes (Optional)
+                        </label>
+                        <textarea
+                          className="dash-input"
+                          value={completionNotes}
+                          onChange={(e) => setCompletionNotes(e.target.value)}
+                          placeholder="Add any notes about the completed job..."
+                          rows={4}
+                          style={{ marginTop: "8px" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="modal-footer">
+                      <button
+                        className="btn outline"
+                        onClick={() => {
+                          setCompletingBooking(null);
+                          setCompletionPhoto(null);
+                          setCompletionNotes("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="btn"
+                        onClick={handleCompleteSubmit}
+                        disabled={actionLoading === completingBooking.id}
+                      >
+                        {actionLoading === completingBooking.id ? "Completing..." : (
+                          <>
+                            <CheckCircle2 size={16} style={{ marginRight: "4px" }} />
+                            Complete Job
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -566,8 +736,37 @@ function BookingCard({ booking, onAction, actionLoading, showActions, formatDate
               {booking.notes && (
                 <div style={{ marginTop: "4px" }}>
                   <span className="muted" style={{ fontSize: "13px" }}>
-                    Notes: {booking.notes}
+                    Customer Notes: {booking.notes}
                   </span>
+                </div>
+              )}
+              {showCompletionInfo && booking.workerNotes && (
+                <div style={{ marginTop: "4px" }}>
+                  <span className="muted" style={{ fontSize: "13px" }}>
+                    <strong>Worker Notes:</strong> {booking.workerNotes}
+                  </span>
+                </div>
+              )}
+              {showCompletionInfo && booking.completionPhotoUrl && (
+                <div style={{ marginTop: "8px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                    <Camera size={14} />
+                    <span className="muted" style={{ fontSize: "13px", fontWeight: 500 }}>
+                      Completion Photo:
+                    </span>
+                  </div>
+                  <img
+                    src={booking.completionPhotoUrl}
+                    alt="Job completion"
+                    style={{
+                      maxWidth: "200px",
+                      maxHeight: "150px",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => window.open(booking.completionPhotoUrl, '_blank')}
+                  />
                 </div>
               )}
               {booking.totalAmount && (
@@ -634,11 +833,7 @@ function BookingCard({ booking, onAction, actionLoading, showActions, formatDate
         {showActions.includes("complete") && (
           <button
             className="btn btn-sm"
-            onClick={() => {
-              if (window.confirm("Mark this job as completed?")) {
-                onAction(booking.id, "complete");
-              }
-            }}
+            onClick={() => onAction(booking.id, "complete")}
             disabled={isLoading}
           >
             {isLoading ? "..." : (

@@ -1,0 +1,316 @@
+/* ============================================================
+   📝 FORM COMPONENT — Single Source of Truth
+   All form, input, textarea, select styles consolidated here
+   =========================================================== */
+
+/* ============================================================
+   BASE FORM ELEMENTS
+   =========================================================== */
+input,
+textarea,
+select,
+.form-input,
+.form-textarea,
+.form-select,
+.unified-form-input,
+.unified-form-textarea,
+.unified-form-select {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-base);
+  font-family: inherit;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1.5px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-base);
+  appearance: none;
+  box-sizing: border-box;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus,
+.unified-form-input:focus,
+.unified-form-textarea:focus,
+.unified-form-select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--brand-primary-light);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled,
+.form-input:disabled,
+.form-textarea:disabled,
+.form-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--bg-secondary);
+}
+
+input::placeholder,
+textarea::placeholder,
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+textarea,
+.form-textarea,
+.unified-form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: var(--line-height-relaxed);
+}
+
+select,
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-lg) center;
+  padding-right: var(--space-4xl);
+}
+
+/* ============================================================
+   FORM GROUP
+   =========================================================== */
+.form-group,
+.form-field,
+.unified-form-group {
+  margin-bottom: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.form-label,
+.unified-form-label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.form-label.required::after,
+.form-label-required::after {
+  content: " *";
+  color: var(--status-error);
+}
+
+.form-error {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--status-error);
+  margin-top: var(--space-xs);
+}
+
+.form-help {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+}
+
+/* ============================================================
+   INPUT GROUP (with icons)
+   =========================================================== */
+.input-group {
+  position: relative;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 48px 14px 44px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-subtle);
+  background: var(--bg-soft);
+  font-size: 14px;
+  line-height: 1.4;
+  outline: none;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+}
+
+.input-group input:focus {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(11, 92, 40, 0.1);
+  outline: none !important;
+}
+
+.input-group input:focus ~ .input-icon {
+  color: var(--primary);
+}
+
+.input-group input:focus + label {
+  color: var(--primary);
+}
+
+.input-group input::placeholder {
+  opacity: 0;
+}
+
+.input-group .input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--text-soft);
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.input-group label {
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 4px;
+  color: var(--text-soft);
+  font-size: 14px;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  background: var(--bg-soft);
+}
+
+.input-group input:not(:placeholder-shown) + label,
+.input-group input:focus + label {
+  top: 0;
+  font-size: 12px;
+  color: var(--primary);
+  background: var(--bg-soft);
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  width: 20px;
+  height: 20px;
+}
+
+.password-toggle:hover {
+  color: var(--text-main);
+  background: rgba(148, 163, 184, 0.1);
+}
+
+/* Auth modal inputs */
+.auth-modal-input {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-sm-legacy);
+  background: var(--bg);
+  font-size: 15px;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.auth-modal-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.auth-modal-input-icon {
+  position: absolute;
+  left: 16px;
+  color: var(--text-soft);
+  pointer-events: none;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================
+   CHECKBOX & RADIO
+   =========================================================== */
+.form-checkbox,
+.form-radio {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.form-checkbox-label,
+.form-radio-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+}
+
+/* ============================================================
+   INPUT GROUP VARIANTS
+   =========================================================== */
+.input-group-inline {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.input-group-inline .form-input,
+.input-group-inline .form-select {
+  flex: 1;
+}
+
+.input-group-prepend,
+.input-group-append {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-lg);
+  background: var(--bg-primary);
+  border: 1.5px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.input-group-prepend {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.input-group-append {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: none;
+}
+
+.input-group-inline .form-input:not(:first-child) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.input-group-inline .form-input:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+

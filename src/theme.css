@@ -1,16 +1,17 @@
 /* ============================================================
-   🌿 GLOBAL VARIABLES — LIGHT + DARK MODE
+   🌿 GLOBAL VARIABLES — LIGHT MODE
    Using Neutral Green Palette
 =============================================================== */
 :root {
-  --bg: #f9f8f6;
-  --bg-soft: #ffffff;
-  --border-subtle: #eae7e0;
-  --primary: #0b5c28;
-  --primary-hover: #094b21;
-  --primary-soft: #e8ede4;
-  --text-main: #1b1b1b;
-  --text-soft: #6b7280;
+  /* Use unified color system - mapped from unified-color-system.css */
+  --bg: var(--bg-primary, #ffffff);
+  --bg-soft: var(--bg-secondary, #f8fafc);
+  --border-subtle: var(--border-primary, #e2e8f0);
+  --primary: var(--brand-primary, #0b5c28);
+  --primary-hover: var(--brand-primary-hover, #094a20);
+  --primary-soft: var(--brand-primary-light, rgba(11, 92, 40, 0.1));
+  --text-main: var(--text-primary, #0f172a);
+  --text-soft: var(--text-secondary, #64748b);
   
   /* Card gradient color palette */
   --fern: #588157;
@@ -38,157 +39,6 @@
   --font-sans: "Inter", "Poppins", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ==============================
-   🌚 DARK THEME — Premium Grey UI
-=============================== */
-:root.dark-theme {
-  --bg: #1a1f1c;
-  --bg-soft: #242a26;
-  --border-subtle: #2d3530;
-  --text-main: #e8ede4;
-  --text-soft: #a3b18a;
-  --primary-soft: rgba(11, 92, 40, 0.2);
-  
-  /* Dark theme card gradient adjustments */
-  --fern: #6b9b6a;
-  --hunter-green: #5a7a5f;
-  --pine-teal: #4a6a55;
-  --pine-teal-2: #445a4f;
-  --granite: #556a5f;
-  --granite-2: #667a6f;
-  --deep-teal: #778a7f;
-}
-
-/* Fix all cards/panels in dark mode */
-:root.dark-theme .card,
-:root.dark-theme .auth-card,
-:root.dark-theme .pricing-card,
-:root.dark-theme .booking-panel,
-:root.dark-theme .content-box,
-:root.dark-theme .shop-card {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-}
-
-/* Fix inputs for dark mode */
-:root.dark-theme input,
-:root.dark-theme textarea,
-:root.dark-theme select {
-  background: #2a2a2a !important;
-  color: #fff !important;
-  border: 1px solid #3a3a3a !important;
-}
-
-:root.dark-theme input::placeholder,
-:root.dark-theme textarea::placeholder {
-  color: #888 !important;
-}
-
-/* Dark mode adjustments for search bar */
-:root.dark-theme .home-search-wrapper {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-}
-
-:root.dark-theme .home-search-input {
-  color: var(--text-main) !important;
-  background: transparent !important;
-}
-
-:root.dark-theme .home-search-input::placeholder {
-  color: var(--text-soft) !important;
-}
-
-:root.dark-theme .home-search-popular-btn {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-  color: var(--text-main) !important;
-}
-
-:root.dark-theme .home-search-popular-btn:hover {
-  background: var(--primary-soft) !important;
-  border-color: var(--primary) !important;
-  color: var(--primary) !important;
-}
-
-/* Dark mode for contact page cards */
-:root.dark-theme .contact-form-card,
-:root.dark-theme .contact-info-card {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-}
-
-:root.dark-theme .contact-input,
-:root.dark-theme .contact-textarea {
-  background: #2a2a2a !important;
-  border-color: var(--border-subtle) !important;
-  color: var(--text-main) !important;
-}
-
-:root.dark-theme .contact-input:focus,
-:root.dark-theme .contact-textarea:focus {
-  border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px var(--primary-soft) !important;
-}
-
-/* Dark mode for review cards */
-:root.dark-theme .home-review-card {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-}
-
-/* Dark mode for feature cards */
-:root.dark-theme .home-feature-card {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-}
-
-/* Dark mode for post a chore card */
-:root.dark-theme .svc-custom-chore-card {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-}
-
-:root.dark-theme .svc-custom-cta {
-  background: var(--bg) !important;
-  border-color: var(--border-subtle) !important;
-  color: var(--text-main) !important;
-}
-
-:root.dark-theme .svc-custom-cta:hover {
-  background: var(--primary) !important;
-  color: white !important;
-  border-color: var(--primary) !important;
-}
-
-/* Dark mode for service cards */
-:root.dark-theme .svc-card {
-  background: var(--bg-soft) !important;
-  border-color: var(--border-subtle) !important;
-  border-radius: var(--radius-lg) !important;
-}
-
-:root.dark-theme .svc-card-reveal {
-  background: var(--bg-soft) !important;
-  border-radius: var(--radius-lg) !important;
-}
-
-/* Dark mode text colors for reveal card content */
-:root.dark-theme .svc-card-reveal .svc-card-title {
-  color: var(--text-main) !important;
-}
-
-:root.dark-theme .svc-card-reveal .svc-card-desc {
-  color: var(--text-soft) !important;
-}
-
-:root.dark-theme .svc-card-reveal .svc-bullets li {
-  color: var(--text-main) !important;
-}
-
-:root.dark-theme .svc-card-reveal .svc-bullets li svg {
-  color: var(--primary) !important;
-}
 
 /* ============================================================
    🔧 RESET
@@ -227,17 +77,19 @@ html {
 }
 
 body {
-  background: var(--bg);
-  color: var(--text-main);
+  background: var(--bg-primary, var(--bg)) !important;
+  color: var(--text-primary, var(--text-main));
   font-family: var(--font-sans);
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  transition: background 0.25s ease, color 0.25s ease;
+  transition: background-color var(--transition-base, 200ms ease), color var(--transition-base, 200ms ease);
   overflow-x: hidden;
   width: 100%;
   max-width: 100%;
   position: relative;
+  margin: 0;
+  padding: 0;
 }
 
 #root {
@@ -426,18 +278,6 @@ img {
   align-items: center;
 }
 
-/* DARK MODE TOGGLE */
-.dark-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-html:not(.dark-theme) .dark-toggle svg {
-  stroke: var(--primary);
-  fill: var(--primary);
-}
 
 /* USER MENU DROPDOWN */
 .nav-user-menu-wrapper {
@@ -582,10 +422,6 @@ html:not(.dark-theme) .dark-toggle svg {
   flex-shrink: 0;
 }
 
-html.dark-theme .dark-toggle svg {
-  stroke: #e6e6e6;
-  fill: #e6e6e6;
-}
 /* =========================================
    📱 MOBILE LAYOUT — COMPACT BAR + SHEET
 ========================================= */
@@ -709,7 +545,7 @@ html.dark-theme .dark-toggle svg {
   }
 
   .nav-right {
-    gap: 6px;
+    gap: 4px;
   }
 
   .nav-mobile-toggle {
@@ -717,11 +553,72 @@ html.dark-theme .dark-toggle svg {
   }
 
   .brand-logo {
-    height: 30px;
+    height: 28px;
   }
 
   .brand-title {
-    font-size: 18px;
+    font-size: 16px;
+  }
+
+  /* Hide username and chevron on mobile - show only avatar */
+  .nav-user-name {
+    display: none;
+  }
+
+  .nav-user-chevron {
+    display: none;
+  }
+
+  .nav-user-button {
+    padding: 6px;
+    min-width: 36px;
+    justify-content: center;
+  }
+
+  /* Make avatar slightly larger on mobile for better tap target */
+  .nav-user-avatar,
+  .nav-user-avatar-placeholder {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Adjust icon button sizes for mobile */
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Ensure cart badge is visible on mobile */
+  .cart-badge {
+    font-size: 10px;
+    min-width: 18px;
+    height: 18px;
+    padding: 2px 4px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .nav {
+    padding: 8px 10px;
+    height: 56px;
+  }
+
+  .brand-logo {
+    height: 26px;
+  }
+
+  .brand-title {
+    font-size: 15px;
+  }
+
+  .nav-right {
+    gap: 3px;
   }
 }
 
@@ -1419,11 +1316,6 @@ p {
   border: 1px solid var(--border-subtle);
 }
 
-/* Dark theme image fix */
-:root.dark-theme .shop-img {
-  background: #2a2a2a;
-  border-color: #333;
-}
 
 /* --------------------------
    TITLE + PRICE ROW
@@ -1495,15 +1387,6 @@ p {
   opacity: 1;
 }
 
-/* DARK MODE CARD FIXES */
-:root.dark-theme .shop-card {
-  background: var(--bg-soft);
-  border-color: var(--border-subtle);
-}
-
-:root.dark-theme .shop-img-wrapper {
-  background: #2a2a2a;
-}
 
 /* ============================================================
    🛒 CART PAGE — Modern Ecommerce Cart Design
@@ -4443,8 +4326,15 @@ p {
 .contact-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin: 60px 0;
+  gap: var(--space-xl);
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .contact-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
 }
 
 /* Contact Form */
@@ -5236,13 +5126,16 @@ p {
   background: var(--primary-soft);
   border-radius: var(--radius-xl);
   width: 100%;
-  max-width: 600px;
+  max-width: 560px;
+  min-height: 560px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
   border: 1px solid rgba(11, 92, 40, 0.1);
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideUp {
@@ -6381,6 +6274,19 @@ p {
   z-index: 10000;
   padding: 20px;
   animation: fadeIn 0.2s ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 100vh;
+}
+
+.auth-modal-overlay::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+.auth-modal-overlay::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
 }
 
 @keyframes fadeIn {
@@ -6397,11 +6303,26 @@ p {
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 440px;
-  max-height: 90vh;
+  max-height: calc(100vh - 40px);
   overflow-y: auto;
   position: relative;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
+  margin: auto 0;
+  flex-shrink: 0;
+  min-height: fit-content;
+}
+
+@media (max-width: 768px) {
+  .auth-modal-overlay {
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+  
+  .auth-modal-container {
+    max-height: calc(100vh - 40px);
+    margin-top: 0;
+  }
 }
 
 @keyframes slideUp {
@@ -6515,15 +6436,18 @@ p {
 
 .auth-modal-input-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   color: var(--text-soft);
   pointer-events: none;
   z-index: 1;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }
 
 .auth-modal-input {
   width: 100%;
-  padding: 14px 14px 14px 44px;
+  padding: 14px 16px 14px 48px;
   border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--bg);
@@ -6613,11 +6537,24 @@ p {
 }
 
 /* Responsive */
+@media (max-width: 768px) {
+  .auth-modal-overlay {
+    align-items: flex-start;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  
+  .auth-modal-container {
+    max-height: calc(100vh - 40px);
+    margin-top: 0;
+  }
+}
+
 @media (max-width: 480px) {
   .auth-modal-container {
     max-width: 100%;
     border-radius: 16px 16px 0 0;
-    max-height: 95vh;
+    max-height: calc(100vh - 20px);
   }
 
   .auth-modal-content {
@@ -6674,5 +6611,3 @@ p {
     padding: 10px;
   }
 }
-
-

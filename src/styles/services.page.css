@@ -15,15 +15,23 @@
 
 /* Page */
 .svc-shell {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px 48px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /* Hero */
 .svc-hero {
   text-align: center;
-  padding: 18px 0 10px;
+  padding: 32px 40px 40px;
+  background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .svc-hero {
+    padding: 24px 24px 30px;
+  }
 }
 
 .svc-hero .shop-header {
@@ -97,6 +105,22 @@
   color: var(--cb-muted);
   font-size: 13px;
   margin-top: 8px;
+}
+
+/* Grid Container */
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px;
+  padding: 40px 0 80px;
+}
+
+@media (max-width: 768px) {
+  .svc-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 32px 0 60px;
+  }
 }
 
 /* Groups */
@@ -381,7 +405,14 @@
 ================================ */
 .svc-custom-chore-section {
   margin-top: 60px;
-  padding: 0 16px;
+  padding: 60px 0;
+  background: var(--bg-secondary, #f8fafc);
+}
+
+@media (max-width: 768px) {
+  .svc-custom-chore-section {
+    padding: 40px 0;
+  }
 }
 
 .svc-custom-chore-card {

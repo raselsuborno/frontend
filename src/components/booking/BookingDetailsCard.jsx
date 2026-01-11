@@ -1,282 +1,191 @@
-import React, { useEffect } from "react";
-
-const SERVICES_WITH_FREQUENCY = [
-  "Snow",
-  "Cleaning",
-  "Airbnb",
-  "Laundry",
-  "Lawn",
-  "Maid",
-];
+/**
+ * BookingDetailsCard (Step 2) - FINAL ARCHITECTURE
+ * 
+ * This component is now fully schema-driven using bookingBlocks.
+ * It receives a normalized ServiceConfig and renders blocks in order.
+ * 
+ * No legacy compatibility logic exists here - all normalization happens upstream.
+ */
+import React, { useEffect, useMemo } from "react";
+import { normalizeServiceToConfig, BookingBlockType } from "./serviceConfig.js";
+import BookingBlockRenderer from "./BookingBlockRenderer.jsx";
 
 export default function BookingDetailsCard({
-  serviceConfig,
+  service, // Raw service data from backend
   details,
   setDetails,
   onBack,
   onNext,
 }) {
-  const { subServices = [], title, extrasType, id } = serviceConfig;
-  const { subService, frequency, extras } = details;
+  // Normalize service data ONCE into clean config
+  const serviceConfig = useMemo(() => {
+    try {
+      return normalizeServiceToConfig(service);
+    } catch (error) {
+      console.error('[BookingDetailsCard] Error normalizing service:', error);
+      return null;
+    }
+  }, [service]);
 
-  /* =========================
-     AUTO SELECT FIRST SUBSERVICE
-  ========================= */
+  // Initialize details.blocks if it doesn't exist
   useEffect(() => {
-    if (!subService && subServices.length) {
+    if (!details.blocks) {
       setDetails((prev) => ({
         ...prev,
-        subService: subServices[0],
+        blocks: {},
       }));
     }
-  }, [subService, subServices, setDetails]);
+  }, [details.blocks, setDetails]);
 
-  /* =========================
-     HELPERS
-  ========================= */
-  const update = (patch) =>
-    setDetails((prev) => ({ ...prev, ...patch }));
+  // Auto-select first sub-service if available
+  useEffect(() => {
+    if (!serviceConfig) return;
 
-  const updateExtras = (patch) =>
-    setDetails((prev) => ({
-      ...prev,
-      extras: { ...prev.extras, ...patch },
-    }));
+    const subServiceBlock = serviceConfig.bookingBlocks.find(
+      (b) => b.type === BookingBlockType.SUB_SERVICE
+    );
 
-  /* =========================
-     SERVICE-SPECIFIC EXTRAS
-  ========================= */
-  const renderExtras = () => {
-    switch (extrasType) {
-      case "homeSize":
-        return (
-          <div className="details-section">
-            <div className="details-label">Home size</div>
-            <div className="details-options">
-              {[
-                "Apartment (1–2 rooms)",
-                "Small Home (2–3 rooms)",
-                "Medium Home (3–4 rooms)",
-                "Large Home (4+ rooms)",
-              ].map((opt) => (
-                <div
-                  key={opt}
-                  className={`details-option ${
-                    extras.homeSize === opt ? "active" : ""
-                  }`}
-                  onClick={() => updateExtras({ homeSize: opt })}
-                >
-                  {opt}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      case "laundryUnits":
-        return (
-          <>
-            <div className="details-section">
-              <div className="details-label">Laundry volume</div>
-              <div className="details-pills">
-                {["1–2 loads", "3–4 loads", "5+ loads"].map((opt) => (
-                  <div
-                    key={opt}
-                    className={`details-pill ${
-                      extras.laundryUnits === opt ? "active" : ""
-                    }`}
-                    onClick={() => updateExtras({ laundryUnits: opt })}
-                  >
-                    {opt}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="details-section">
-              <div className="details-label">Folding</div>
-              <div className="details-pills">
-                {["Folded", "No Folding"].map((opt) => (
-                  <div
-                    key={opt}
-                    className={`details-pill ${
-                      extras.laundryFold === opt ? "active" : ""
-                    }`}
-                    onClick={() => updateExtras({ laundryFold: opt })}
-                  >
-                    {opt}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        );
-
-      case "handymanJob":
-        return (
-          <div className="details-section">
-            <div className="details-label">Job type</div>
-            <div className="details-pills">
-              {[
-                "Furniture assembly",
-                "Mounting / TV",
-                "Repairs",
-                "Other small jobs",
-              ].map((opt) => (
-                <div
-                  key={opt}
-                  className={`details-pill ${
-                    extras.handymanJobType === opt ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    updateExtras({ handymanJobType: opt })
-                  }
-                >
-                  {opt}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      case "snowOptions":
-        return (
-          <>
-            <div className="details-section">
-              <div className="details-label">Property type</div>
-              <div className="details-pills">
-                {["House driveway", "Parking pad", "Small lot"].map((opt) => (
-                  <div
-                    key={opt}
-                    className={`details-pill ${
-                      extras.snowPropertyType === opt ? "active" : ""
-                    }`}
-                    onClick={() =>
-                      updateExtras({ snowPropertyType: opt })
-                    }
-                  >
-                    {opt}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="details-section">
-              <div className="details-label">Include walkways?</div>
-              <div className="details-pills">
-                {["Yes", "No"].map((opt) => (
-                  <div
-                    key={opt}
-                    className={`details-pill ${
-                      extras.snowIncludeWalkways === (opt === "Yes")
-                        ? "active"
-                        : ""
-                    }`}
-                    onClick={() =>
-                      updateExtras({
-                        snowIncludeWalkways: opt === "Yes",
-                      })
-                    }
-                  >
-                    {opt}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        );
-
-      case "autoType":
-        return (
-          <div className="details-section">
-            <div className="details-label">Vehicle type</div>
-            <div className="details-pills">
-              {["Car", "SUV", "Truck / Van"].map((opt) => (
-                <div
-                  key={opt}
-                  className={`details-pill ${
-                    extras.autoVehicleType === opt ? "active" : ""
-                  }`}
-                  onClick={() =>
-                    updateExtras({ autoVehicleType: opt })
-                  }
-                >
-                  {opt}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
+    if (
+      subServiceBlock &&
+      subServiceBlock.options &&
+      subServiceBlock.options.length > 0 &&
+      !details.blocks?.[BookingBlockType.SUB_SERVICE]
+    ) {
+      setDetails((prev) => ({
+        ...prev,
+        blocks: {
+          ...(prev.blocks || {}),
+          [BookingBlockType.SUB_SERVICE]: subServiceBlock.options[0],
+        },
+        // Also maintain legacy format for backward compatibility with other steps
+        subService: subServiceBlock.options[0],
+      }));
     }
+  }, [serviceConfig, details.blocks, setDetails]);
+
+  // Handle block value changes
+  const handleBlockChange = (blockType, value) => {
+    setDetails((prev) => {
+      const newBlocks = {
+        ...(prev.blocks || {}),
+        [blockType]: value,
+      };
+
+      // Also update legacy format for backward compatibility
+      const legacyUpdates = {};
+
+      if (blockType === BookingBlockType.SUB_SERVICE) {
+        legacyUpdates.subService = value;
+      } else if (blockType === BookingBlockType.FREQUENCY) {
+        legacyUpdates.frequency = value;
+      } else if (blockType === BookingBlockType.SIMPLE_NOTE) {
+        legacyUpdates.extraNotes = value;
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          extraNotes: value,
+        };
+      } else if (blockType === BookingBlockType.HOME_SIZE) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          homeSize: value,
+        };
+      } else if (blockType === BookingBlockType.LAUNDRY_UNITS) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          laundryUnits: value,
+        };
+      } else if (blockType === BookingBlockType.HANDYMAN_JOB_TYPE) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          handymanJobType: value,
+        };
+      } else if (blockType === BookingBlockType.SNOW_OPTIONS) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          snowPropertyType: value.propertyType,
+          snowIncludeWalkways: value.includeWalkways,
+        };
+      } else if (blockType === BookingBlockType.VEHICLE_TYPE) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          autoVehicleType: value,
+        };
+      } else if (blockType === BookingBlockType.JOB_DESCRIPTION) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          jobDescription: value,
+        };
+      } else if (blockType === BookingBlockType.PHOTO_UPLOAD) {
+        legacyUpdates.extras = {
+          ...(prev.extras || {}),
+          photos: value,
+        };
+      }
+
+      return {
+        ...prev,
+        blocks: newBlocks,
+        ...legacyUpdates,
+      };
+    });
   };
 
-  const canProceed = Boolean(subService);
+  // Validate required blocks
+  const canProceed = useMemo(() => {
+    if (!serviceConfig) return false;
 
-  /* =========================
-     RENDER
-  ========================= */
+    return serviceConfig.bookingBlocks.every((block) => {
+      if (!block.required) return true;
+
+      const value = details.blocks?.[block.type];
+      
+      if (block.type === BookingBlockType.SNOW_OPTIONS) {
+        return value?.propertyType;
+      }
+
+      if (block.type === BookingBlockType.PHOTO_UPLOAD) {
+        return Array.isArray(value) && value.length > 0;
+      }
+
+      return Boolean(value);
+    });
+  }, [serviceConfig, details.blocks]);
+
+  // Error state
+  if (!serviceConfig) {
+    return (
+      <div className="booking-card">
+        <h2 className="details-title">Service not found</h2>
+        <p>Please go back and select a service.</p>
+        <div className="service-footer">
+          <button className="btn-secondary" onClick={onBack}>
+            Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render service config
   return (
     <div className="booking-card">
-      <h2 className="details-title">{title} details</h2>
+      <h2 className="details-title">{serviceConfig.title} details</h2>
 
-      {/* SERVICE TYPE */}
-      <div className="details-section">
-        <div className="details-label">Service type</div>
-        <div className="details-options">
-          {subServices.map((s) => (
-            <div
-              key={s}
-              className={`details-option ${
-                subService === s ? "active" : ""
-              }`}
-              onClick={() => update({ subService: s })}
-            >
-              {s}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Render all booking blocks in order */}
+      {serviceConfig.bookingBlocks.map((block, index) => {
+        const blockValue = details.blocks?.[block.type];
+        return (
+          <BookingBlockRenderer
+            key={`${block.type}-${index}`}
+            block={block}
+            value={blockValue}
+            onChange={(value) => handleBlockChange(block.type, value)}
+            serviceSlug={serviceConfig.slug}
+          />
+        );
+      })}
 
-      {/* FREQUENCY (SELECT SERVICES ONLY) */}
-      {SERVICES_WITH_FREQUENCY.includes(id) && (
-        <div className="details-section">
-          <div className="details-label">How often?</div>
-          <div className="details-pills">
-            {["One-Time", "Weekly", "Bi-weekly", "Monthly"].map((f) => (
-              <div
-                key={f}
-                className={`details-pill ${
-                  frequency === f ? "active" : ""
-                }`}
-                onClick={() => update({ frequency: f })}
-              >
-                {f}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* SERVICE-SPECIFIC EXTRAS */}
-      {renderExtras()}
-
-      {/* ✅ ADDITIONAL NOTES — FOR ALL SERVICES */}
-      <div className="details-section">
-        <div className="details-label">Additional notes (optional)</div>
-        <textarea
-          className="details-textarea"
-          placeholder="Access notes, issues, pets, special requests, etc."
-          value={extras.extraNotes || ""}
-          onChange={(e) =>
-            updateExtras({ extraNotes: e.target.value })
-          }
-        />
-      </div>
-
-      {/* ACTIONS */}
+      {/* Actions */}
       <div className="service-footer">
         <button className="btn-secondary" onClick={onBack}>
           Back

@@ -99,8 +99,9 @@ export function CartPage() {
 
   return (
     <PageWrapper>
-      <div className="layout">
+      <div className="cart-page-wrapper">
         <section className="section cart-page fade-in-up">
+          <div className="page-content-container">
           <div className="cart-header fade-in-up fade-in-delay-sm">
             <Link to="/shop" className="cart-back-link">
               <ArrowLeft size={18} />
@@ -203,6 +204,7 @@ export function CartPage() {
               </div>
             </div>
           )}
+          </div>
         </section>
       </div>
     </PageWrapper>

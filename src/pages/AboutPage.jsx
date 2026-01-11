@@ -1,7 +1,10 @@
 // src/pages/AboutPage.jsx
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
+import { Container, Section, Card, CardContent, Button } from "../components/ui";
+import "../styles/unified-page-layout.css";
 import { 
   Heart, 
   Users, 
@@ -11,8 +14,10 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
-  CheckCircle
+  CheckCircle,
+  ArrowRight
 } from "lucide-react";
+import { WorkerCTACard } from "../components/WorkerCTACard.jsx";
 
 export function AboutPage() {
   const navigate = useNavigate();
@@ -63,189 +68,263 @@ export function AboutPage() {
 
   return (
     <PageWrapper>
-      <div className="about-page">
+      <div className="unified-page">
         {/* ========== HERO SECTION ========== */}
-        <section className="about-hero fade-in-up">
-          <h1 className="about-hero-title">Helping you reclaim your time</h1>
-          <p className="about-hero-subtitle">
-            Life's too short to spend it on chores. ChorEscape connects you with 
-            trusted professionals who handle the tasks you don't have time for.
-          </p>
-          <div className="home-hero-badge">
-            <Sparkles size={14} />
-            <span>Trusted by 50,000+ users across Saskatchewan</span>
+        <motion.header 
+          className="unified-hero"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <div className="unified-hero-content">
+            <motion.div 
+              className="unified-hero-badge"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <Sparkles size={14} />
+              <span>Fresh to Saskatchewan • Committed to quality</span>
+            </motion.div>
+            <motion.h1 
+              className="unified-hero-title"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              Helping you reclaim your time
+            </motion.h1>
+            <motion.p 
+              className="unified-hero-subtitle"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              Life's too short to spend it on chores. ChorEscape connects you with 
+              trusted professionals who handle the tasks you don't have time for.
+            </motion.p>
           </div>
-        </section>
+        </motion.header>
 
-        {/* ========== OUR STORY ========== */}
-        <section className="about-section fade-in-up fade-in-delay-sm">
-          <div className="about-story-card">
-            <div className="about-story-header">
-              <Sparkles size={24} className="about-story-icon" />
-              <h2 className="about-story-title">Our Story</h2>
-            </div>
-            <div className="about-story-content">
-              <p>
-                We started ChorEscape because we believe everyone deserves more time 
-                for what matters. Time with family. Time for hobbies. Time to simply relax.
-              </p>
-              <p>
-                What began as a simple idea — connecting busy people with reliable help — 
-                has grown into a community of thousands who trust us with their homes and their time.
-              </p>
-              <p>
-                Today, we're proud to serve 50,000+ customers across the country, helping 
-                them get their time back, one chore at a time.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== WHAT WE STAND FOR ========== */}
-        <section className="about-section fade-in-up fade-in-delay-md">
-          <div className="home-section-header">
-            <h2 className="home-section-title">What We Stand For</h2>
-          </div>
-
-          <div className="home-features-grid">
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <Heart size={24} />
+      {/* ========== OUR STORY ========== */}
+      <Section size="sm">
+        <Container>
+          <Card>
+            <CardContent className="py-8">
+              <div className="flex items-center gap-3 mb-6">
+                <Sparkles size={24} className="text-[var(--ce-primary)]" />
+                <h2 className="text-2xl font-semibold">Our Story</h2>
               </div>
-              <h3 className="home-feature-title">Customer First</h3>
-              <p className="home-feature-desc">
-                Your time and satisfaction are our top priorities
-              </p>
-            </div>
-
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <Users size={24} />
+              <div className="space-y-4 text-[var(--ce-muted)]">
+                <p>
+                  We started ChorEscape because we believe everyone deserves more time 
+                  for what matters. Time with family. Time for hobbies. Time to simply relax.
+                </p>
+                <p>
+                  What began as a simple idea — connecting busy people with reliable help — 
+                  has grown into a community of thousands who trust us with their homes and their time.
+                </p>
+                <p>
+                  Today, we're proud to serve 50,000+ customers across the country, helping 
+                  them get their time back, one chore at a time.
+                </p>
               </div>
-              <h3 className="home-feature-title">Trusted Professionals</h3>
-              <p className="home-feature-desc">
-                Every service provider is vetted and verified
-              </p>
-            </div>
+            </CardContent>
+          </Card>
+        </Container>
+      </Section>
 
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <Target size={24} />
-              </div>
-              <h3 className="home-feature-title">Simple & Fast</h3>
-              <p className="home-feature-desc">
-                Book quality services in under 60 seconds
-              </p>
-            </div>
-
-            <div className="home-feature-card">
-              <div className="home-feature-icon">
-                <Award size={24} />
-              </div>
-              <h3 className="home-feature-title">Quality Guaranteed</h3>
-              <p className="home-feature-desc">
-                Not satisfied? We'll make it right, no questions asked
-              </p>
-            </div>
+      {/* ========== WHAT WE STAND FOR ========== */}
+      <Section size="sm">
+        <Container>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">What We Stand For</h2>
           </div>
-        </section>
-
-        {/* ========== STATISTICS ========== */}
-        <section className="home-stats-section fade-in-up fade-in-delay-lg">
-          <div className="home-stats-grid">
-            <div className="home-stat-card">
-              <div className="home-stat-value">50K+</div>
-              <div className="home-stat-label">Happy Customers</div>
-            </div>
-            <div className="home-stat-card">
-              <div className="home-stat-value">98%</div>
-              <div className="home-stat-label">Satisfaction Rate</div>
-            </div>
-            <div className="home-stat-card">
-              <div className="home-stat-value">150+</div>
-              <div className="home-stat-label">Cities Served</div>
-            </div>
-            <div className="home-stat-card">
-              <div className="home-stat-value">24/7</div>
-              <div className="home-stat-label">Support</div>
-            </div>
-          </div>
-        </section>
-
-        {/* ========== HEAR FROM OUR CUSTOMERS ========== */}
-        <section className="about-section fade-in-up fade-in-delay-lg">
-          <div className="home-section-header">
-            <h2 className="home-section-title">Hear From Our Customers</h2>
-          </div>
-
-          <div className="about-review-container">
-            <div className="about-review-card">
-              <div className="about-review-quote-icon">"</div>
-              <div className="about-review-stars">
-                {[...Array(reviews[currentReview].rating)].map((_, i) => (
-                  <Star key={i} size={20} fill="currentColor" />
-                ))}
-              </div>
-              <p className="about-review-quote">{reviews[currentReview].quote}</p>
-              <div className="about-review-tag">{reviews[currentReview].tag}</div>
-              <div className="about-review-author">
-                <div className="about-review-avatar">
-                  <div className="about-review-avatar-initial">{reviews[currentReview].avatar}</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--ce-primary-soft)] flex items-center justify-center">
+                  <Heart size={24} className="text-[var(--ce-primary)]" />
                 </div>
-                <div className="about-review-author-info">
-                  <div className="about-review-author-name">
-                    <strong>{reviews[currentReview].name}</strong>
-                    <CheckCircle size={14} className="about-review-verified" />
+                <h3 className="text-xl font-semibold mb-2">Customer First</h3>
+                <p className="text-[var(--ce-muted)]">
+                  Your time and satisfaction are our top priorities
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--ce-primary-soft)] flex items-center justify-center">
+                  <Users size={24} className="text-[var(--ce-primary)]" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Trusted Professionals</h3>
+                <p className="text-[var(--ce-muted)]">
+                  Every service provider is vetted and verified
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--ce-primary-soft)] flex items-center justify-center">
+                  <Target size={24} className="text-[var(--ce-primary)]" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Simple & Fast</h3>
+                <p className="text-[var(--ce-muted)]">
+                  Book quality services in under 60 seconds
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--ce-primary-soft)] flex items-center justify-center">
+                  <Award size={24} className="text-[var(--ce-primary)]" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Quality Guaranteed</h3>
+                <p className="text-[var(--ce-muted)]">
+                  Not satisfied? We'll make it right, no questions asked
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ========== STATISTICS ========== */}
+      <Section size="sm">
+        <Container>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="text-4xl font-bold text-[var(--ce-primary)] mb-2">50K+</div>
+                <div className="text-sm text-[var(--ce-muted)]">Happy Customers</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="text-4xl font-bold text-[var(--ce-primary)] mb-2">98%</div>
+                <div className="text-sm text-[var(--ce-muted)]">Satisfaction Rate</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="text-4xl font-bold text-[var(--ce-primary)] mb-2">150+</div>
+                <div className="text-sm text-[var(--ce-muted)]">Cities Served</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="text-center py-8">
+                <div className="text-4xl font-bold text-[var(--ce-primary)] mb-2">24/7</div>
+                <div className="text-sm text-[var(--ce-muted)]">Support</div>
+              </CardContent>
+            </Card>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ========== HEAR FROM OUR CUSTOMERS ========== */}
+      <Section size="sm">
+        <Container>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Hear From Our Customers</h2>
+          </div>
+          <Card>
+            <CardContent className="py-12">
+              <div className="max-w-3xl mx-auto">
+                <div className="text-6xl text-[var(--ce-primary-soft)] mb-4">"</div>
+                <div className="flex gap-1 justify-center mb-6">
+                  {[...Array(reviews[currentReview].rating)].map((_, i) => (
+                    <Star key={i} size={20} fill="#FFB800" color="#FFB800" />
+                  ))}
+                </div>
+                <p className="text-lg text-center text-[var(--ce-muted)] mb-6">
+                  {reviews[currentReview].quote}
+                </p>
+                <div className="text-center mb-6">
+                  <span className="inline-block px-3 py-1 bg-[var(--ce-primary-soft)] text-[var(--ce-primary)] rounded-full text-sm font-medium">
+                    {reviews[currentReview].tag}
+                  </span>
+                </div>
+                <div className="flex items-center justify-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[var(--ce-primary-soft)] flex items-center justify-center text-[var(--ce-primary)] font-semibold">
+                    {reviews[currentReview].avatar}
                   </div>
-                  <div className="about-review-author-title">{reviews[currentReview].title}</div>
+                  <div className="text-left">
+                    <div className="font-semibold flex items-center gap-2">
+                      {reviews[currentReview].name}
+                      <CheckCircle size={14} className="text-[var(--ce-primary)]" />
+                    </div>
+                    <div className="text-sm text-[var(--ce-muted)]">{reviews[currentReview].title}</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="about-review-navigation">
-              <button 
-                className="about-review-nav-btn" 
-                onClick={prevReview}
-                aria-label="Previous review"
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <div className="about-review-dots">
-                {reviews.map((_, idx) => (
-                  <button
-                    key={idx}
-                    className={`about-review-dot ${idx === currentReview ? "active" : ""}`}
-                    onClick={() => setCurrentReview(idx)}
-                    aria-label={`Go to review ${idx + 1}`}
-                  />
-                ))}
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <button 
+                  className="w-10 h-10 rounded-full border border-[var(--ce-border)] flex items-center justify-center hover:bg-[var(--ce-primary-soft)] transition-colors"
+                  onClick={prevReview}
+                  aria-label="Previous review"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <div className="flex gap-2">
+                  {reviews.map((_, idx) => (
+                    <button
+                      key={idx}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        idx === currentReview 
+                          ? "bg-[var(--ce-primary)]" 
+                          : "bg-[var(--ce-border)]"
+                      }`}
+                      onClick={() => setCurrentReview(idx)}
+                      aria-label={`Go to review ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+                <button 
+                  className="w-10 h-10 rounded-full border border-[var(--ce-border)] flex items-center justify-center hover:bg-[var(--ce-primary-soft)] transition-colors"
+                  onClick={nextReview}
+                  aria-label="Next review"
+                >
+                  <ChevronRight size={20} />
+                </button>
               </div>
-              <button 
-                className="about-review-nav-btn" 
-                onClick={nextReview}
-                aria-label="Next review"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
-          </div>
-        </section>
+            </CardContent>
+          </Card>
+        </Container>
+      </Section>
 
-        {/* ========== CTA SECTION ========== */}
-        <section className="home-cta-section fade-in-up fade-in-delay-lg">
-          <div className="home-cta-content">
-            <h2 className="home-cta-title">Ready to get started?</h2>
-            <p className="home-cta-subtitle">
+      {/* ========== CTA SECTION ========== */}
+      <Section>
+        <Container>
+          <div className="text-center max-w-2xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to get started?</h2>
+            <p className="text-lg text-[var(--ce-muted)] mb-8">
               Join thousands who've already reclaimed their time
             </p>
-            <button 
-              className="btn home-cta-btn"
+            <Button 
+              variant="primary" 
+              size="lg"
               onClick={() => navigate("/pricing-booking")}
             >
               Book your first service
-            </button>
+              <ArrowRight size={18} />
+            </Button>
           </div>
-        </section>
+        </Container>
+      </Section>
+
+      {/* Worker CTA - Growth Section */}
+      <Section size="sm">
+        <Container>
+          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
+            <WorkerCTACard variant="default" />
+          </div>
+        </Container>
+      </Section>
+
       </div>
     </PageWrapper>
   );

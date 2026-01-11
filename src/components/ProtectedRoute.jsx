@@ -2,12 +2,13 @@ import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { Loader2 } from "lucide-react";
+import { NotAuthorized } from "./ui/NotAuthorized.jsx";
 
 export function ProtectedRoute({ children, allowedRoles = [], requireAuth = true }) {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, session } = useAuth();
   const location = useLocation();
 
-  // Show spinner while loading
+  // Show spinner while loading - wait for auth context to finish loading session
   if (loading) {
     return (
       <div style={{
@@ -18,21 +19,22 @@ export function ProtectedRoute({ children, allowedRoles = [], requireAuth = true
         flexDirection: "column",
         gap: "16px"
       }}>
-        <Loader2 className="animate-spin" size={48} style={{ color: "#3b82f6" }} />
-        <p style={{ color: "#6b7280" }}>Loading...</p>
+        <Loader2 className="animate-spin" size={48} style={{ color: "var(--ce-primary)" }} />
+        <p style={{ color: "var(--ce-muted)" }}>Loading...</p>
       </div>
     );
   }
 
-  // If auth required but not logged in
-  if (requireAuth && !user) {
+  // If auth required but not logged in - only redirect if loading is complete AND no session/user
+  // This ensures we don't redirect while Supabase is still loading the session on reload
+  if (requireAuth && !loading && !session && !user) {
     const pathname = location.pathname;
     let message = "Please log in to continue";
     
     if (pathname.startsWith("/admin")) {
-      message = "Admin login for ChorEscape";
+      message = "Admin login required";
     } else if (pathname.startsWith("/worker")) {
-      message = "Worker login for ChorEscape";
+      message = "Worker login required";
     }
 
     return (
@@ -54,8 +56,13 @@ export function ProtectedRoute({ children, allowedRoles = [], requireAuth = true
       if (location.pathname.startsWith("/worker") && normalizedRole === 'CUSTOMER') {
         return children;
       }
-      // For /admin, always redirect to dashboard if not admin
-      return <Navigate to="/dashboard" replace />;
+      // Show "Not Authorized" page instead of redirecting
+      return (
+        <NotAuthorized 
+          role={normalizedRole} 
+          requiredRole={normalizedAllowedRoles.join(" or ")}
+        />
+      );
     }
   }
 

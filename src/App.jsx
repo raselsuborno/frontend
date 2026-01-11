@@ -28,6 +28,15 @@ import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { ProfileEditPage } from "./pages/ProfileEditPage.jsx";
 import { WorkerApplicationPage } from "./pages/WorkerApplicationPage.jsx";
 
+// Legal Pages
+import { 
+  LegalDisclaimerPage, 
+  PrivacyPolicyPage, 
+  TermsOfServicePage, 
+  CookiePolicyPage,
+  BookingTermsPage
+} from "./pages/LegalPage.jsx";
+
 // Auth
 import { AuthPage } from "./pages/AuthPage.jsx";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage.jsx";
@@ -66,6 +75,13 @@ function AppContent() {
           <Route path="/shop" element={<ShopPage />} />
         <Route path="/post-chore" element={<PostChorePage />} />
         <Route path="/my-chores" element={<MyChoresPage />} />
+        
+          {/* Legal Pages */}
+          <Route path="/legal/disclaimer" element={<LegalDisclaimerPage />} />
+          <Route path="/legal/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/legal/terms" element={<TermsOfServicePage />} />
+          <Route path="/legal/booking-terms" element={<BookingTermsPage />} />
+          <Route path="/legal/cookies" element={<CookiePolicyPage />} />
         
           {/* Admin & Worker Portals */}
           <Route 

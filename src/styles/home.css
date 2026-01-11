@@ -1,7 +1,21 @@
 /* =========================================
-   CHORESCAPE HOME — FIVERR-STYLE MINIMAL
+   CHORESCAPE HOME — MODERN MINIMAL DESIGN
    Brand green: #0b5c28
 ========================================= */
+
+/* ========== REVIEWS SECTION ========== */
+.home-reviews-section {
+  padding: 80px 0;
+  background: var(--bg-primary, var(--bg, #ffffff));
+  margin-top: 60px;
+}
+
+@media (max-width: 768px) {
+  .home-reviews-section {
+    padding: 60px 0;
+    margin-top: 40px;
+  }
+}
 
 .home-shell {
   margin-top: 40px;
@@ -380,7 +394,7 @@
 .home-suggestions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 22px;
+  gap: 32px;
 }
 
 .home-suggestion-card {
@@ -543,14 +557,34 @@
 }
 
 .home-modal-card {
-  width: min(420px, 94%);
+  width: min(560px, 94%);
+  max-height: 90vh;
+  min-height: 560px;
   background: var(--primary-soft);
   border-radius: var(--radius-xl);
   border: 1px solid rgba(11, 92, 40, 0.1);
   box-shadow: 0 2px 12px rgba(11, 92, 40, 0.08);
-  padding: 24px 20px 20px;
+  padding: 32px 28px 28px;
   position: relative;
   animation: fadeIn 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .home-modal-card {
+    width: min(480px, 94%);
+    min-height: 480px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-modal-card {
+    width: 94%;
+    min-height: auto;
+    max-height: 85vh;
+  }
 }
 
 .home-modal-close {
