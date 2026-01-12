@@ -10,6 +10,7 @@ import "../styles/unified-page-layout.css";
 import { IMAGES } from "../components/serviceImages";
 import toast from "react-hot-toast";
 import apiClient from "../lib/api.js";
+import { extractArrayData } from "../utils/apiHelpers.js";
 
 import {
   Sparkles,
@@ -50,7 +51,8 @@ export function ServicesPage() {
         setLoading(true);
         const type = isResidential ? "RESIDENTIAL" : "CORPORATE";
         const response = await apiClient.get(`/public/services?type=${type}`);
-        setServices(response.data || []);
+        const servicesData = extractArrayData(response.data);
+        setServices(servicesData);
       } catch (error) {
         console.error("Failed to fetch services:", error);
         toast.error("Failed to load services. Please try again later.");

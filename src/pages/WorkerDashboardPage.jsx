@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import apiClient from "../lib/api.js";
+import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import {
@@ -63,7 +64,10 @@ export function WorkerDashboardPage() {
   const loadBookings = async () => {
     try {
       const res = await apiClient.get("/api/worker/bookings");
-      setBookings(res.data.bookings || []);
+      const bookingsData = res.data?.bookings
+        ? extractArrayData(res.data.bookings)
+        : extractArrayData(res.data);
+      setBookings(bookingsData);
       setGrouped(res.data.grouped || {
         assigned: [],
         accepted: [],
@@ -89,7 +93,8 @@ export function WorkerDashboardPage() {
   const loadDocuments = async () => {
     try {
       const res = await apiClient.get("/api/worker/documents");
-      setDocuments(res.data || []);
+      const documentsData = extractArrayData(res.data);
+      setDocuments(documentsData);
     } catch (err) {
       console.error("Load documents error:", err);
     }

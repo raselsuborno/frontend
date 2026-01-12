@@ -5,6 +5,7 @@ import { PageWrapper } from "../components/page-wrapper.jsx";
 import toast from "react-hot-toast";
 import { ShoppingBag, Plus, Minus, Sparkles } from "lucide-react";
 import apiClient from "../lib/api.js";
+import { extractArrayData } from "../utils/apiHelpers.js";
 import "../styles/unified-page-layout.css";
 
 export function ShopPage() {
@@ -27,8 +28,10 @@ export function ShopPage() {
         apiClient.get("/api/shop/products"),
         apiClient.get("/api/shop/categories").catch(() => ({ data: [] })), // Fallback if not available
       ]);
-      setProducts(productsRes.data || []);
-      setCategories(categoriesRes.data || []);
+      const productsData = extractArrayData(productsRes.data);
+      const categoriesData = extractArrayData(categoriesRes.data);
+      setProducts(productsData);
+      setCategories(categoriesData);
     } catch (err) {
       console.error("Load products error:", err);
       toast.error("Failed to load products");

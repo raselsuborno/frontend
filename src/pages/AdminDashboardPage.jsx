@@ -1,5 +1,6 @@
 import React, { useEffect, useState, lazy, Suspense, useMemo, useRef } from "react";
 import apiClient from "../lib/api.js";
+import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import * as LucideIcons from "lucide-react";
@@ -77,8 +78,15 @@ export function AdminDashboardPage() {
       ]);
 
       setStats(statsRes.data);
-      setBookings(bookingsRes.data.bookings || []);
-      setWorkers(workersRes.data || []);
+      
+      // Handle nested bookings structure: { bookings: [...] } or direct array
+      const bookingsData = bookingsRes.data?.bookings 
+        ? extractArrayData(bookingsRes.data.bookings)
+        : extractArrayData(bookingsRes.data);
+      setBookings(bookingsData);
+      
+      const workersData = extractArrayData(workersRes.data);
+      setWorkers(workersData);
 
       // Load remaining data in separate batch
       const [usersRes, contactRes, applicationsRes] = await Promise.all([
@@ -91,16 +99,19 @@ export function AdminDashboardPage() {
       ]);
 
       console.log("[Admin] Users response:", usersRes.data);
-      // Handle response format: {users: [...]}
-      if (usersRes.data?.users) {
-        setUsers(usersRes.data.users);
-      } else if (Array.isArray(usersRes.data)) {
-        setUsers(usersRes.data);
-      } else {
-        setUsers([]);
-      }
-      setContactMessages(contactRes.data.messages || []);
-      setWorkerApplications(Array.isArray(applicationsRes.data) ? applicationsRes.data : []);
+      // Handle response format: {users: [...]} or direct array or Supabase format
+      const usersData = usersRes.data?.users 
+        ? extractArrayData(usersRes.data.users)
+        : extractArrayData(usersRes.data);
+      setUsers(usersData);
+      
+      const messagesData = contactRes.data?.messages
+        ? extractArrayData(contactRes.data.messages)
+        : extractArrayData(contactRes.data);
+      setContactMessages(messagesData);
+      
+      const applicationsData = extractArrayData(applicationsRes.data);
+      setWorkerApplications(applicationsData);
     } catch (err) {
       console.error("Admin dashboard error:", err);
       toast.error(err.response?.data?.message || "Failed to load admin dashboard");
@@ -120,7 +131,10 @@ export function AdminDashboardPage() {
         try {
           const res = await apiClient.get("/api/admin/quotes");
           console.log("[Admin] Quotes loaded:", res.data);
-          setQuotes(res.data.quotes || []);
+          const quotesData = res.data?.quotes 
+            ? extractArrayData(res.data.quotes)
+            : extractArrayData(res.data);
+          setQuotes(quotesData);
         } catch (err) {
           console.error("[Admin] Failed to load quotes:", err);
           toast.error(err.response?.data?.message || "Failed to load quotes");
@@ -130,7 +144,10 @@ export function AdminDashboardPage() {
         try {
           const res = await apiClient.get("/api/admin/chores");
           console.log("[Admin] Chores loaded:", res.data);
-          setChores(res.data.chores || []);
+          const choresData = res.data?.chores
+            ? extractArrayData(res.data.chores)
+            : extractArrayData(res.data);
+          setChores(choresData);
         } catch (err) {
           console.error("[Admin] Failed to load chores:", err);
           toast.error(err.response?.data?.message || "Failed to load chores");
@@ -140,7 +157,10 @@ export function AdminDashboardPage() {
         try {
           const res = await apiClient.get("/api/admin/orders");
           console.log("[Admin] Orders loaded:", res.data);
-          setOrders(res.data.orders || []);
+          const ordersData = res.data?.orders
+            ? extractArrayData(res.data.orders)
+            : extractArrayData(res.data);
+          setOrders(ordersData);
         } catch (err) {
           console.error("[Admin] Failed to load orders:", err);
           toast.error(err.response?.data?.message || "Failed to load orders");
@@ -425,7 +445,10 @@ export function AdminDashboardPage() {
                 onRefresh={async () => {
                   try {
                     const res = await apiClient.get("/api/admin/quotes");
-                    setQuotes(res.data.quotes || []);
+                    const quotesData = res.data?.quotes 
+                      ? extractArrayData(res.data.quotes)
+                      : extractArrayData(res.data);
+                    setQuotes(quotesData);
                   } catch (err) {
                     console.error("Failed to refresh quotes:", err);
                   }
@@ -439,7 +462,10 @@ export function AdminDashboardPage() {
                 onRefresh={async () => {
                   try {
                     const res = await apiClient.get("/api/admin/chores");
-                    setChores(res.data.chores || []);
+                    const choresData = res.data?.chores
+                      ? extractArrayData(res.data.chores)
+                      : extractArrayData(res.data);
+                    setChores(choresData);
                   } catch (err) {
                     console.error("Failed to refresh chores:", err);
                   }
@@ -453,7 +479,10 @@ export function AdminDashboardPage() {
                 onRefresh={async () => {
                   try {
                     const res = await apiClient.get("/api/admin/orders");
-                    setOrders(res.data.orders || []);
+                    const ordersData = res.data?.orders
+                      ? extractArrayData(res.data.orders)
+                      : extractArrayData(res.data);
+                    setOrders(ordersData);
                   } catch (err) {
                     console.error("Failed to refresh orders:", err);
                   }

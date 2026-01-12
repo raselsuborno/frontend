@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import apiClient from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
+import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import "../styles/dashboard-modern.css";
 import {
@@ -141,9 +142,11 @@ export function DashboardPage() {
           confirmPassword: "",
         }));
 
-        setBookings(bookingRes.data || []);
-        setChores(choresRes.data || []);
-        const quotesData = quotesRes.data || [];
+        const bookingsData = extractArrayData(bookingRes.data);
+        const choresData = extractArrayData(choresRes.data);
+        const quotesData = extractArrayData(quotesRes.data);
+        setBookings(bookingsData);
+        setChores(choresData);
         setQuotes(quotesData);
         setError(null);
       } catch (err) {
@@ -566,7 +569,10 @@ export function DashboardPage() {
                     const token = localStorage.getItem("token");
                     if (token) {
                       apiClient.get("/api/bookings/mine")
-                        .then((res) => setBookings(res.data || []))
+                        .then((res) => {
+                          const bookingsData = extractArrayData(res.data);
+                          setBookings(bookingsData);
+                        })
                         .catch((err) => console.error("Failed to refresh bookings:", err));
                     }
                   }}
@@ -611,7 +617,8 @@ export function DashboardPage() {
                   onRefresh={async () => {
                     try {
                       const res = await apiClient.get("/api/chores");
-                      setChores(res.data || []);
+                      const choresData = extractArrayData(res.data);
+                      setChores(choresData);
                     } catch (err) {
                       console.error("Failed to refresh chores:", err);
                     }
@@ -633,7 +640,8 @@ export function DashboardPage() {
                   onRefresh={async () => {
                     try {
                       const res = await apiClient.get("/api/quotes/mine");
-                      setQuotes(res.data || []);
+                      const quotesData = extractArrayData(res.data);
+                      setQuotes(quotesData);
                     } catch (err) {
                       console.error("Failed to refresh quotes:", err);
                     }
