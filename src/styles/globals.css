@@ -29,6 +29,13 @@ body {
   overflow-x: hidden;
 }
 
+/* Dark mode styles */
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root {
+  background-color: var(--ce-bg) !important;
+  color: var(--ce-text) !important;
+}
+
 /* Hide scrollbars globally */
 html {
   scrollbar-width: none; /* Firefox */

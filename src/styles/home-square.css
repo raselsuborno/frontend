@@ -281,7 +281,9 @@
   justify-content: center;
   padding: 0;
   border-radius: 16px;
-  animation: float 6s ease-in-out infinite;
+  /* Hardware acceleration for smooth parallax */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 @media (min-width: 768px) {
@@ -296,19 +298,27 @@
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .square-hero-image:hover img {
-  transform: scale(1.05);
+  transform: scale(1.03) translateZ(0);
 }
 
-/* ========== REVIEWS SECTION - Edge to Edge Scroll ========== */
+/* ========== REVIEWS SECTION - Edge to Edge Scroll with Smart Visibility ========== */
 .square-reviews {
   background: var(--bg-primary, #ffffff);
   padding: 60px 0;
   overflow: hidden;
+  /* Hardware acceleration for smooth scrolling */
+  transform: translateZ(0);
+  will-change: scroll-position;
+  position: relative;
 }
+
 
 .square-reviews-scroll {
   display: flex;
@@ -467,13 +477,18 @@
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s ease;
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .square-card:hover {
   border-color: #0b5c28;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px) translateZ(0);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
 }
 
 .square-card-image {
@@ -486,11 +501,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .square-card:hover .square-card-image img {
-  transform: scale(1.05);
+  transform: scale(1.06) translateZ(0);
 }
 
 .square-card-content {
@@ -652,7 +670,12 @@
   border-radius: 20px;
   padding: 40px 32px;
   text-align: center;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -675,7 +698,7 @@
 .square-benefit-card:hover {
   border-color: #0b5c28;
   box-shadow: 0 12px 40px rgba(11, 92, 40, 0.12);
-  transform: translateY(-8px);
+  transform: translateY(-6px) translateZ(0);
   background: linear-gradient(180deg, #ffffff 0%, rgba(11, 92, 40, 0.02) 100%);
 }
 
@@ -839,7 +862,12 @@
   border: 1px solid #e5e7eb;
   border-radius: 20px;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Hardware acceleration */
+  transform: translateZ(0);
+  will-change: transform;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
@@ -862,7 +890,7 @@
 .square-worldwide-card:hover {
   border-color: #0b5c28;
   box-shadow: 0 12px 40px rgba(11, 92, 40, 0.15);
-  transform: translateY(-8px);
+  transform: translateY(-6px) translateZ(0);
 }
 
 .square-worldwide-card:hover::before {
@@ -1150,39 +1178,448 @@
 }
 
 @media (max-width: 768px) {
+  /* ========== MOBILE-OPTIMIZED SPACING ========== */
   .square-section {
-    padding: 80px 0;
-  }
-
-  .square-grid-3 {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-  
-  .square-steps-container {
-    gap: 24px;
+    padding: 64px 0;
   }
 
   .square-container {
-    padding: 0 24px;
+    padding: 0 20px;
   }
 
-  .square-hero-content {
-    padding: 60px 24px;
+  /* ========== HERO - MOBILE OPTIMIZED ========== */
+  .square-hero {
+    padding: 24px 0 48px;
+  }
+
+  .square-hero-grid {
+    gap: 32px;
+  }
+
+  .square-hero-badge {
+    font-size: 12px;
+    padding: 6px 14px;
+    margin-bottom: 20px;
+  }
+
+  .square-hero-title {
+    font-size: clamp(2rem, 8vw, 2.5rem);
+    margin-bottom: 16px;
+    line-height: 1.15;
+  }
+
+  .square-hero-description {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    color: #475569;
+  }
+
+  .square-hero-actions {
+    margin-bottom: 32px;
+    gap: 12px;
+  }
+
+  .square-btn-primary {
+    padding: 14px 24px;
+    font-size: 15px;
+    min-height: 48px; /* Touch target */
+    width: 100%;
+    justify-content: center;
+  }
+
+  .square-hero-image {
+    height: 280px;
+    border-radius: 12px;
+  }
+
+  .square-hero-trust {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .square-trust-stars {
+    gap: 3px;
+  }
+
+  .square-trust-label {
+    font-size: 13px;
+  }
+
+  .square-trust-text {
+    font-size: 13px;
+  }
+
+  /* ========== SECTION HEADERS - MOBILE ========== */
+  .square-section-header {
+    margin-bottom: 48px;
+    padding: 0 4px;
+  }
+
+  .square-section-title {
+    font-size: clamp(2rem, 7vw, 2.5rem);
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+
+  .square-section-subtitle {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #64748b;
+  }
+
+  /* ========== GRIDS - MOBILE ========== */
+  .square-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .square-steps-container {
+    gap: 40px;
+  }
+
+  /* ========== CARDS - MOBILE OPTIMIZED ========== */
+  .square-card {
+    border-radius: 16px;
+  }
+
+  .square-card-image {
+    height: 180px;
+  }
+
+  .square-card-content {
+    padding: 20px;
+  }
+
+  .square-card-title {
+    font-size: 17px;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .square-card-subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
+    color: #64748b;
+  }
+
+  .square-card-cta {
+    font-size: 14px;
+    padding: 8px 0;
+    min-height: 44px; /* Touch target */
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* ========== STEPS - MOBILE ========== */
+  .square-step-card {
+    padding: 0 8px;
+  }
+
+  .square-step-indicator {
+    margin-bottom: 24px;
+  }
+
+  .square-step-number {
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
+    border-radius: 16px;
+  }
+
+  .square-step-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    border-radius: 16px;
+  }
+
+  .square-step-title {
+    font-size: 19px;
+    margin-bottom: 10px;
+  }
+
+  .square-step-description {
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 100%;
+  }
+
+  /* ========== BENEFITS - MOBILE ========== */
+  .square-benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .square-benefit-card {
+    padding: 28px 20px;
+    border-radius: 16px;
+  }
+
+  .square-benefit-icon-wrapper {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+    border-radius: 18px;
+  }
+
+  .square-benefit-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+
+  .square-benefit-description {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* ========== REVIEWS - MOBILE ========== */
+  .square-reviews {
+    padding: 48px 0;
+  }
+
+  .square-review-card {
+    width: 280px;
+    min-height: 240px;
+    max-height: 240px;
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .square-review-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .square-review-name {
+    font-size: 14px;
+  }
+
+  .square-review-time {
+    font-size: 11px;
+  }
+
+  .square-review-text {
+    font-size: 13px;
+    -webkit-line-clamp: 3;
+  }
+
+  /* ========== CTA - MOBILE ========== */
+  .square-cta-section {
+    padding: 64px 0;
   }
 
   .square-cta-card {
-    padding: 60px 32px;
+    padding: 48px 24px;
+    border-radius: 20px;
+  }
+
+  .square-cta-title {
+    font-size: clamp(1.875rem, 7vw, 2.25rem);
+    margin-bottom: 12px;
+  }
+
+  .square-cta-subtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .square-cta-card .square-btn-primary {
+    width: 100%;
+    padding: 16px 28px;
+    font-size: 16px;
+    min-height: 52px;
+  }
+
+  /* ========== WORLDWIDE - MOBILE ========== */
+  .square-worldwide-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .square-worldwide-map-container {
+    height: 200px;
+  }
+
+  .square-worldwide-card-content {
+    padding: 24px 20px;
+  }
+
+  .square-worldwide-title {
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .square-worldwide-location {
+    font-size: 13px;
+  }
+
+  .square-worldwide-description {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .square-worldwide-stats {
+    gap: 12px;
+    padding-top: 12px;
+    margin-top: 8px;
+  }
+
+  .square-worldwide-stat-value {
+    font-size: 18px;
+  }
+
+  .square-worldwide-stat-label {
+    font-size: 10px;
+  }
+
+  .square-worldwide-badge {
+    top: 12px;
+    right: 12px;
+    padding: 6px 12px;
+    border-radius: 10px;
+  }
+
+  .square-worldwide-flag {
+    font-size: 18px;
+  }
+
+  .square-worldwide-badge-text {
+    font-size: 11px;
+  }
+
+  /* ========== PARTNERS - MOBILE ========== */
+  .square-partners-grid {
+    gap: 32px;
+    margin-top: 32px;
+  }
+
+  .square-partner-logo {
+    font-size: 24px;
+  }
+
+  /* ========== FINAL CTA - MOBILE ========== */
+  .square-final-cta-title {
+    font-size: clamp(1.875rem, 7vw, 2.25rem);
+    margin-bottom: 12px;
+  }
+
+  .square-final-cta-subtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .square-final-cta .square-btn-primary {
+    width: 100%;
+    padding: 16px 28px;
+    font-size: 16px;
+    min-height: 52px;
+  }
+}
+
+/* Extra small mobile optimization */
+@media (max-width: 480px) {
+  .square-container {
+    padding: 0 16px;
+  }
+
+  .square-hero {
+    padding: 20px 0 40px;
+  }
+
+  .square-hero-title {
+    font-size: clamp(1.75rem, 9vw, 2.25rem);
+  }
+
+  .square-section {
+    padding: 56px 0;
   }
 
   .square-section-header {
-    margin-bottom: 60px;
+    margin-bottom: 40px;
+  }
+
+  .square-card-image {
+    height: 160px;
+  }
+
+  .square-card-content {
+    padding: 18px;
+  }
+
+  .square-cta-card {
+    padding: 40px 20px;
+  }
+
+  .square-step-number {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  .square-step-icon-wrapper {
+    width: 56px;
+    height: 56px;
+  }
+
+  .square-benefit-icon-wrapper {
+    width: 64px;
+    height: 64px;
+  }
+
+  /* Improve review scrolling on small screens */
+  .square-reviews-scroll {
+    gap: 16px;
   }
 
   .square-review-card {
     width: 260px;
-    min-height: 260px;
-    max-height: 260px;
+    min-height: 220px;
+    max-height: 220px;
+  }
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  .square-hero-image {
+    animation: none; /* Disable float animation on mobile for better performance */
+  }
+
+  /* Improve touch targets */
+  .square-card,
+  .square-step-card,
+  .square-benefit-card,
+  .square-worldwide-card {
+    -webkit-tap-highlight-color: rgba(11, 92, 40, 0.1);
+    tap-highlight-color: rgba(11, 92, 40, 0.1);
+  }
+
+  /* Better scrolling performance */
+  .square-reviews {
+    -webkit-overflow-scrolling: touch;
+    will-change: scroll-position;
+  }
+
+  /* Optimize images */
+  .square-card-image img,
+  .square-hero-image img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    .square-reviews-scroll {
+      animation: none;
+    }
+    
+    .square-hero-image {
+      animation: none;
+    }
   }
 }
 

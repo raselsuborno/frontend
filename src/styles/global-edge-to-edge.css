@@ -10,6 +10,14 @@
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Dark mode for layout */
+html[data-theme="dark"] .layout {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* Override any max-width constraints on page wrappers */

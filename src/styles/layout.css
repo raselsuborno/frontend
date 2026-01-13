@@ -7,6 +7,15 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Dark mode styles */
+html[data-theme="dark"] .page-wrapper,
+html[data-theme="dark"] .layout {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
 }
 
 /* ========== CONTAINERS ========== */

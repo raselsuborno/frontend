@@ -184,7 +184,7 @@ export function AuthModal({ isOpen, onClose }) {
                   <input
                     className="auth-modal-input"
                     type="email"
-                    placeholder="Mail address"
+                    placeholder="Email address"
                     value={form.email}
                     onChange={(e) => setField("email", e.target.value)}
                     required

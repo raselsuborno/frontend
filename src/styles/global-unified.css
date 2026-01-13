@@ -94,6 +94,14 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Dark mode styles */
+html[data-theme="dark"] body,
+html[data-theme="dark"] #root,
+html[data-theme="dark"] .page-wrapper {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
 /* =========================================
    PAGE TOP PADDING (FIX NAVBAR OVERLAP)
 ========================================= */

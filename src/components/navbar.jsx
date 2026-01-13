@@ -98,7 +98,7 @@ export function Navbar() {
         {/* LEFT SECTION */}
         <div className="nav-left">
           <div className="brand" onClick={() => navigate("/")}>
-            <div className="brand-logo"></div>
+            <img src={logo} alt="ChorEscape" className="brand-logo" />
             <span className="brand-title">ChorEscape</span>
           </div>
         </div>
@@ -219,6 +219,14 @@ export function Navbar() {
           </div>
         )}
 
+        {/* Cart - Moved to left of login button */}
+        <div className="icon-btn cart-icon-wrapper nav-desktop-only">
+          <Link to="/cart">
+            <ShoppingBag size={20} style={{ color: "var(--primary)" }} />
+          </Link>
+          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+        </div>
+
         {!loading && !user && (
           <button
             onClick={() => setAuthModalOpen(true)}
@@ -231,14 +239,6 @@ export function Navbar() {
         {loading && (
           <div className="nav-loading">Loading...</div>
         )}
-
-        {/* Cart - Hidden on mobile, shown in mobile menu */}
-        <div className="icon-btn cart-icon-wrapper nav-desktop-only">
-          <Link to="/cart">
-            <ShoppingBag size={20} style={{ color: "var(--primary)" }} />
-          </Link>
-          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-        </div>
 
         {/* Mobile hamburger */}
         <button
