@@ -7,8 +7,14 @@ import { supabase } from "./supabase";
  * Uses Supabase session as SINGLE SOURCE OF TRUTH for authentication.
  * Always gets the current session from Supabase (never localStorage).
  */
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!apiBaseUrl) {
+  console.warn('⚠️ VITE_API_BASE_URL is not set. API calls may fail.');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: apiBaseUrl || '/api',
 });
 
 api.interceptors.request.use(async (config) => {
