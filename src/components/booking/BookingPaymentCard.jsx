@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreditCard, Wallet, CheckCircle } from "lucide-react";
-import apiClient from "../../lib/api.js";
+import api from "../../lib/api.js";
 import toast from "react-hot-toast";
 
 export default function BookingPaymentCard({
@@ -36,7 +36,7 @@ export default function BookingPaymentCard({
         ...details,
       };
 
-      const response = await apiClient.post("/api/bookings", bookingData);
+      const response = await api.post("bookings", bookingData);
       toast.success("Booking created successfully!");
       
       if (onComplete) {
@@ -46,7 +46,7 @@ export default function BookingPaymentCard({
       }
     } catch (error) {
       console.error("Booking creation error:", error);
-      toast.error(error.response?.data?.message || "Failed to create booking");
+      toast.error(error.message || error.data?.message || "Failed to create booking");
     } finally {
       setProcessing(false);
     }

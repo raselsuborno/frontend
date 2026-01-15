@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import toast from "react-hot-toast";
 import { ShoppingBag, Plus, Minus, Sparkles } from "lucide-react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { extractArrayData } from "../utils/apiHelpers.js";
 import "../styles/unified-page-layout.css";
 
@@ -25,8 +25,8 @@ export function ShopPage() {
     setLoading(true);
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        apiClient.get("/api/shop/products"),
-        apiClient.get("/api/shop/categories").catch(() => ({ data: [] })), // Fallback if not available
+        api.get("shop/products"),
+        api.get("shop/categories").catch(() => ({ data: [] })), // Fallback if not available
       ]);
       const productsData = extractArrayData(productsRes.data);
       const categoriesData = extractArrayData(categoriesRes.data);

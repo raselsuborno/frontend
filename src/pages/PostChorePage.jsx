@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { Plus, Sparkles, FileText, DollarSign, Tag, ArrowRight } from "lucide-react";
@@ -27,15 +27,12 @@ export function PostChorePage() {
 
     setLoading(true);
     try {
-      const response = await apiClient.post(
-        "/api/chores",
-        {
-          title: title.trim(),
-          category,
-          description: description.trim() || null,
-          budget: budget ? Number(budget) : null,
-        }
-      );
+      await api.post("chores", {
+        title: title.trim(),
+        category,
+        description: description.trim() || null,
+        budget: budget ? Number(budget) : null,
+      });
 
       toast.success("Chore posted successfully! We'll review it and send you a quote soon.");
       
@@ -52,7 +49,7 @@ export function PostChorePage() {
     } catch (err) {
       console.error("Post chore error:", err);
       toast.error(
-        err.response?.data?.message || "Failed to post chore. Please try again."
+        err.message || err.data?.message || "Failed to post chore. Please try again."
       );
     } finally {
       setLoading(false);

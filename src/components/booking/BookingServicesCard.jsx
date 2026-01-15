@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import * as LucideIcons from "lucide-react";
-import apiClient from "../../lib/api.js";
+import api from "../../lib/api.js";
 import { Sparkles } from "lucide-react";
 
 // Common icons for services
@@ -19,7 +19,7 @@ export default function BookingServicesCard({ selected, onSelect, onNext }) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await apiClient.get("/public/services?type=RESIDENTIAL");
+        const response = await api.get("public/services?type=RESIDENTIAL");
         setServices(response.data || []);
       } catch (error) {
         console.error("Failed to fetch services:", error);

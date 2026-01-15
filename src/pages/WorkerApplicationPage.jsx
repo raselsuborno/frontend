@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import {
@@ -51,12 +51,12 @@ export function WorkerApplicationPage() {
     }
 
     try {
-      const response = await apiClient.post("/api/worker/apply", form);
-      toast.success(response.data.message || "Application submitted successfully! You can log in and track your application status.");
+      const response = await api.post("worker/apply", form);
+      toast.success(response.data?.message || "Application submitted successfully! You can log in and track your application status.");
       navigate("/auth");
     } catch (err) {
       console.error("Application error:", err);
-      toast.error(err.response?.data?.message || "Failed to submit application. Please try again.");
+      toast.error(err.message || err.data?.message || "Failed to submit application. Please try again.");
     } finally {
       setLoading(false);
     }

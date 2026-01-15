@@ -12,7 +12,7 @@ import BookingReviewCard from "./BookingReviewCard";
 import BookingPaymentCard from "./BookingPaymentCard";
 
 import "./booking.layout.css";
-import apiClient from "../../lib/api.js";
+import api from "../../lib/api.js";
 
 export default function BookingLayout() {
   const TOTAL_STEPS = 6;
@@ -54,8 +54,8 @@ export default function BookingLayout() {
       // Fetch service data from backend
       const fetchService = async () => {
         try {
-          const response = await apiClient.get(`/public/services?type=RESIDENTIAL`);
-          const found = response.data.find(
+          const response = await api.get(`public/services?type=RESIDENTIAL`);
+          const found = (response.data || []).find(
             (s) => s.id === preselectedId || s.slug === preselectedId
           );
           if (found) {
@@ -84,7 +84,7 @@ export default function BookingLayout() {
     try {
       // Fetch full service data with options if we have an id or slug
       if (svc.id || svc.slug) {
-        const response = await apiClient.get(`/public/services/${svc.id || svc.slug}`);
+        const response = await api.get(`public/services/${svc.id || svc.slug}`);
         setServiceData(response.data);
       }
     } catch (error) {

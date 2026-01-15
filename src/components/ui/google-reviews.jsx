@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight, ExternalLink, CheckCircle } from 'lucide-react';
-import apiClient from '../../lib/api.js';
+import api from '../../lib/api.js';
 import '../globe.css';
 
 const GoogleReviews = () => {
@@ -78,7 +78,7 @@ const GoogleReviews = () => {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get('/api/public/reviews');
+        const response = await api.get('public/reviews');
         if (response.data) {
           setReviews(response.data.reviews || []);
           setAverageRating(response.data.averageRating || 4.9);

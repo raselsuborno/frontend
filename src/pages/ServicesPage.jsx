@@ -9,7 +9,7 @@ import "../styles/services.page.css";
 import "../styles/unified-page-layout.css";
 import { IMAGES } from "../components/serviceImages";
 import toast from "react-hot-toast";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { extractArrayData } from "../utils/apiHelpers.js";
 
 import {
@@ -50,9 +50,9 @@ export function ServicesPage() {
       try {
         setLoading(true);
         const type = isResidential ? "RESIDENTIAL" : "CORPORATE";
-        const response = await apiClient.get(`/public/services?type=${type}`);
+        const response = await api.get(`public/services?type=${type}`);
         const servicesData = extractArrayData(response.data);
-        setServices(servicesData);
+        setServices(servicesData || []);
       } catch (error) {
         console.error("Failed to fetch services:", error);
         toast.error("Failed to load services. Please try again later.");

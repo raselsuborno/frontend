@@ -9,8 +9,14 @@ import { supabase } from "./supabase";
  */
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
+// Validate API base URL - should NOT be Supabase URL
 if (!apiBaseUrl) {
   console.warn('⚠️ VITE_API_BASE_URL is not set. API calls may fail.');
+  console.warn('   Set VITE_API_BASE_URL to your backend API URL (not Supabase URL)');
+} else if (apiBaseUrl.includes('supabase.co')) {
+  console.error('❌ ERROR: VITE_API_BASE_URL is set to Supabase URL, but it should be your backend API URL!');
+  console.error('   Current value:', apiBaseUrl);
+  console.error('   Set VITE_API_BASE_URL to your backend API URL (e.g., https://your-api.vercel.app)');
 }
 
 const api = axios.create({

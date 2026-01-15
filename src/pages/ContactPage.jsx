@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { PageWrapper } from "../components/page-wrapper.jsx";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import "../styles/unified-page-layout.css";
 import { 
   Send, 
@@ -58,14 +58,14 @@ export function ContactPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await apiClient.post("/api/contact", {
+      const response = await api.post("contact", {
         name: formData.name.trim(),
         email: formData.email.trim(),
         subject: formData.subject.trim(),
         message: formData.message.trim(),
       });
 
-      toast.success(response.data.message || "Thanks for reaching out! We'll reply soon.");
+      toast.success(response.data?.message || "Thanks for reaching out! We'll reply soon.");
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       console.error("Contact form error:", error);

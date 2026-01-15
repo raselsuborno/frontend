@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
@@ -63,7 +63,7 @@ export function WorkerDashboardPage() {
 
   const loadBookings = async () => {
     try {
-      const res = await apiClient.get("/api/worker/bookings");
+      const res = await api.get("worker/bookings");
       const bookingsData = res.data?.bookings
         ? extractArrayData(res.data.bookings)
         : extractArrayData(res.data);
@@ -84,7 +84,7 @@ export function WorkerDashboardPage() {
       });
     } catch (err) {
       console.error("Load bookings error:", err);
-      toast.error(err.response?.data?.message || "Failed to load bookings");
+      toast.error(err.message || err.data?.message || "Failed to load bookings");
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export function WorkerDashboardPage() {
 
   const loadDocuments = async () => {
     try {
-      const res = await apiClient.get("/api/worker/documents");
+      const res = await api.get("worker/documents");
       const documentsData = extractArrayData(res.data);
       setDocuments(documentsData);
     } catch (err) {
@@ -105,7 +105,7 @@ export function WorkerDashboardPage() {
       const email = profile?.email || user?.email;
       if (!email) return;
       
-      const res = await apiClient.get(`/api/worker-applications?email=${email}`);
+      const res = await api.get(`/api/worker-applications?email=${email}`);
       if (res.data) {
         setApplication(res.data);
       }
@@ -123,7 +123,7 @@ export function WorkerDashboardPage() {
       // For now, use a placeholder URL
       const fileUrl = URL.createObjectURL(file);
 
-      await apiClient.post("/api/worker/documents", {
+      await api.post("worker/documents", {
         type,
         fileUrl,
       });
@@ -132,7 +132,7 @@ export function WorkerDashboardPage() {
       loadDocuments();
     } catch (err) {
       console.error("Upload error:", err);
-      toast.error(err.response?.data?.message || "Failed to upload document");
+      toast.error(err.message || err.data?.message || "Failed to upload document");
     } finally {
       setUploadingDoc(null);
     }
@@ -141,7 +141,7 @@ export function WorkerDashboardPage() {
   const handleAction = async (bookingId, action, additionalData = {}) => {
     setActionLoading(bookingId);
     try {
-      await apiClient.patch(`/api/worker/bookings/${bookingId}/${action}`, additionalData);
+      await api.patch(`/api/worker/bookings/${bookingId}/${action}`, additionalData);
       toast.success(`Booking ${action}ed successfully!`);
       loadBookings();
       // Reset completion modal state
@@ -152,7 +152,7 @@ export function WorkerDashboardPage() {
       }
     } catch (err) {
       console.error(`${action} booking error:`, err);
-      toast.error(err.response?.data?.message || `Failed to ${action} booking`);
+      toast.error(err.message || err.data?.message || `Failed to ${action} booking`);
     } finally {
       setActionLoading(null);
     }

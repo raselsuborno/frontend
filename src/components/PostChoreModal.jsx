@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, ArrowRight, Plus, FileText, Tag, DollarSign, MapPin, User, Mail, Phone } from "lucide-react";
 import toast from "react-hot-toast";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { useNavigate } from "react-router-dom";
 
 export function PostChoreModal({ isOpen, onClose }) {
@@ -40,7 +40,7 @@ export function PostChoreModal({ isOpen, onClose }) {
 
   const loadUserProfile = async () => {
     try {
-      const response = await apiClient.get("/api/profile/me");
+      const response = await api.get("profile/me");
       setUserProfile(response.data);
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -140,7 +140,7 @@ export function PostChoreModal({ isOpen, onClose }) {
         }
       }
 
-      await apiClient.post("/api/chores", payload);
+      await api.post("chores", payload);
 
       toast.success(
         isLoggedIn
@@ -158,7 +158,7 @@ export function PostChoreModal({ isOpen, onClose }) {
       }
     } catch (err) {
       console.error("Post chore error:", err);
-      toast.error(err.response?.data?.message || "Failed to post chore. Please try again.");
+      toast.error(err.message || err.data?.message || "Failed to post chore. Please try again.");
     } finally {
       setLoading(false);
     }

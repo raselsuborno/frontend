@@ -1,5 +1,5 @@
 import { useState } from "react";
-import apiClient from "../../lib/api.js";
+import api from "../../lib/api.js";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -25,13 +25,13 @@ export default function CorporateReviewCard({ service, details, onBack }) {
         ].filter(Boolean).join("\n") || null,
       };
 
-      await apiClient.post("/api/quotes", quoteData);
+      await api.post("quotes", quoteData);
       
       toast.success("Quote request submitted successfully! 🎉");
       navigate("/");
     } catch (err) {
       console.error("Quote error:", err);
-      toast.error(err.response?.data?.message || "Failed to submit quote request. Please try again.");
+      toast.error(err.message || err.data?.message || "Failed to submit quote request. Please try again.");
     } finally {
       setLoading(false);
     }

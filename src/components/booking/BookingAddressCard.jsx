@@ -1,6 +1,6 @@
 // src/components/booking/BookingAddressCard.jsx
 import React, { useEffect, useState } from "react";
-import apiClient from "../../lib/api.js";
+import api from "../../lib/api.js";
 
 export default function BookingAddressCard({
   details,
@@ -39,8 +39,8 @@ export default function BookingAddressCard({
     const loadAddresses = async () => {
       try {
         // Try to load saved addresses first
-        const addressesResponse = await apiClient.get("/api/addresses");
-        const savedAddresses = addressesResponse.data;
+        const addressesResponse = await api.get("addresses");
+        const savedAddresses = addressesResponse.data || [];
 
         if (savedAddresses && savedAddresses.length > 0) {
           // Convert saved addresses to booking format
@@ -60,8 +60,8 @@ export default function BookingAddressCard({
 
           // Get profile email for addresses
           try {
-            const profileResponse = await apiClient.get("/api/profile/me");
-            const email = profileResponse.data.email || "";
+            const profileResponse = await api.get("profile/me");
+            const email = profileResponse.data?.email || "";
             convertedAddresses.forEach((addr) => {
               addr.email = email;
             });
@@ -81,8 +81,8 @@ export default function BookingAddressCard({
           }));
         } else {
           // Fallback to profile address if no saved addresses
-          const profileResponse = await apiClient.get("/api/profile/me");
-          const profile = profileResponse.data;
+          const profileResponse = await api.get("profile/me");
+          const profile = profileResponse.data || {};
 
           if (profile.street || profile.city) {
             const profileAddress = {

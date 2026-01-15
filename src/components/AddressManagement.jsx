@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import toast from "react-hot-toast";
 import { Plus, Edit, Trash2, MapPin, Star, X, Check } from "lucide-react";
 
@@ -28,8 +28,8 @@ export function AddressManagement({ onAddressSelect }) {
   const loadAddresses = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get("/api/addresses");
-      setAddresses(response.data);
+      const response = await api.get("addresses");
+      setAddresses(response.data || []);
     } catch (error) {
       console.error("Failed to load addresses:", error);
       toast.error("Failed to load addresses");
@@ -48,10 +48,10 @@ export function AddressManagement({ onAddressSelect }) {
 
     try {
       if (editingId) {
-        await apiClient.put(`/api/addresses/${editingId}`, formData);
+        await api.put(`addresses/${editingId}`, formData);
         toast.success("Address updated successfully");
       } else {
-        await apiClient.post("/api/addresses", formData);
+        await api.post("addresses", formData);
         toast.success("Address added successfully");
       }
       setShowAddForm(false);
@@ -60,7 +60,7 @@ export function AddressManagement({ onAddressSelect }) {
       loadAddresses();
     } catch (error) {
       console.error("Failed to save address:", error);
-      toast.error(error.response?.data?.message || "Failed to save address");
+      toast.error(error.message || error.data?.message || "Failed to save address");
     }
   };
 
@@ -87,18 +87,18 @@ export function AddressManagement({ onAddressSelect }) {
     }
 
     try {
-      await apiClient.delete(`/api/addresses/${id}`);
+      await api.delete(`addresses/${id}`);
       toast.success("Address deleted successfully");
       loadAddresses();
     } catch (error) {
       console.error("Failed to delete address:", error);
-      toast.error("Failed to delete address");
+      toast.error(error.message || "Failed to delete address");
     }
   };
 
   const handleSetDefault = async (id) => {
     try {
-      await apiClient.post(`/api/addresses/${id}/set-default`);
+      await api.post(`addresses/${id}/set-default`);
       toast.success("Default address updated");
       loadAddresses();
     } catch (error) {

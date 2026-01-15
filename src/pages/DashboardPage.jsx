@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { extractArrayData } from "../utils/apiHelpers.js";
@@ -101,13 +101,13 @@ export function DashboardPage() {
         console.log("[Dashboard] Fetching profile and bookings...");
         
         // Add timeout to prevent hanging forever
-        const profilePromise = apiClient.get("/api/profile/me");
-        const bookingsPromise = apiClient.get("/api/bookings/mine");
-        const choresPromise = apiClient.get("/api/chores").catch(err => {
+        const profilePromise = api.get("profile/me");
+        const bookingsPromise = api.get("bookings/mine");
+        const choresPromise = api.get("chores").catch(err => {
           console.warn("[Dashboard] Failed to load chores:", err);
           return { data: [] }; // Return empty array on error
         });
-        const quotesPromise = apiClient.get("/api/quotes/mine").catch(err => {
+        const quotesPromise = api.get("quotes/mine").catch(err => {
           console.warn("[Dashboard] Failed to load quotes:", err);
           return { data: [] }; // Return empty array on error
         });
@@ -151,7 +151,7 @@ export function DashboardPage() {
         setError(null);
       } catch (err) {
         console.error("[Dashboard] ❌ Load error:", err);
-        setError(err.response?.data?.message || err.message || "Failed to load dashboard. Please refresh the page.");
+        setError(err.message || err.data?.message || err.message || "Failed to load dashboard. Please refresh the page.");
         // Don't set user to null - show error but keep UI functional if user was previously loaded
       } finally {
         setLoading(false);
@@ -275,8 +275,8 @@ export function DashboardPage() {
       // Note: Password update would need a separate endpoint in Supabase
       // if (form.newPassword) payload.newPassword = form.newPassword;
 
-      const { data: updated } = await apiClient.put(
-        "/api/profile",
+      const { data: updated } = await api.put(
+        "profile",
         payload
       );
 
@@ -298,7 +298,7 @@ export function DashboardPage() {
       toast.success("Profile updated successfully!");
     } catch (err) {
       console.error("Profile update error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Could not update profile";
+      const errorMessage = err.message || err.data?.message || err.message || "Could not update profile";
       toast.error(errorMessage);
     }
   };
@@ -568,7 +568,7 @@ export function DashboardPage() {
                     // Refresh bookings
                     const token = localStorage.getItem("token");
                     if (token) {
-                      apiClient.get("/api/bookings/mine")
+                      api.get("bookings/mine")
                         .then((res) => {
                           const bookingsData = extractArrayData(res.data);
                           setBookings(bookingsData);
@@ -616,7 +616,7 @@ export function DashboardPage() {
                   chores={chores} 
                   onRefresh={async () => {
                     try {
-                      const res = await apiClient.get("/api/chores");
+                      const res = await api.get("chores");
                       const choresData = extractArrayData(res.data);
                       setChores(choresData);
                     } catch (err) {
@@ -639,7 +639,7 @@ export function DashboardPage() {
                   quotes={quotes} 
                   onRefresh={async () => {
                     try {
-                      const res = await apiClient.get("/api/quotes/mine");
+                      const res = await api.get("quotes/mine");
                       const quotesData = extractArrayData(res.data);
                       setQuotes(quotesData);
                     } catch (err) {
@@ -875,12 +875,12 @@ function DashboardOrders({ bookings, onRefresh }) {
 
     setCancellingId(bookingId);
     try {
-      await apiClient.delete(`/api/bookings/${bookingId}`);
+      await api.delete(`bookings/${bookingId}`);
       toast.success("Booking cancelled successfully");
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Cancel booking error:", err);
-      toast.error(err.response?.data?.message || "Failed to cancel booking");
+      toast.error(err.message || err.data?.message || "Failed to cancel booking");
     } finally {
       setCancellingId(null);
     }
@@ -893,7 +893,7 @@ function DashboardOrders({ bookings, onRefresh }) {
 
     setRebookingId(booking.id);
     try {
-      await apiClient.post(`/api/bookings/${booking.id}/rebook`, {
+      await api.post(`bookings/${booking.id}/rebook`, {
         date: booking.date, // Use same date by default, user can edit
         timeSlot: booking.timeSlot,
       });
@@ -901,7 +901,7 @@ function DashboardOrders({ bookings, onRefresh }) {
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Rebook error:", err);
-      toast.error(err.response?.data?.message || "Failed to rebook");
+      toast.error(err.message || err.data?.message || "Failed to rebook");
     } finally {
       setRebookingId(null);
     }
@@ -1456,8 +1456,8 @@ function DashboardAddresses({ addresses, primaryAddress }) {
         country: newAddress.country || "Canada",
       };
 
-      await apiClient.put(
-        "/api/profile",
+      await api.put(
+        "profile",
         payload
       );
 
@@ -2217,13 +2217,13 @@ function DashboardChores({ chores, onRefresh }) {
                           style={{ padding: "6px 12px", fontSize: "13px", flex: 1 }}
                           onClick={async () => {
                             try {
-                              await apiClient.put(`/api/chores/${chore.id}`, editForm);
+                              await api.put(`chores/${chore.id}`, editForm);
                               toast.success("Chore updated successfully!");
                               setEditingId(null);
                               setEditForm({});
                               onRefresh();
                             } catch (err) {
-                              toast.error(err.response?.data?.message || "Failed to update chore");
+                              toast.error(err.message || err.data?.message || "Failed to update chore");
                             }
                           }}
                         >
@@ -2297,11 +2297,11 @@ function DashboardChores({ chores, onRefresh }) {
                           if (window.confirm("Are you sure you want to delete this chore?")) {
                             setDeletingId(chore.id);
                             try {
-                              await apiClient.delete(`/api/chores/${chore.id}`);
+                              await api.delete(`chores/${chore.id}`);
                               toast.success("Chore deleted successfully!");
                               onRefresh();
                             } catch (err) {
-                              toast.error(err.response?.data?.message || "Failed to delete chore");
+                              toast.error(err.message || err.data?.message || "Failed to delete chore");
                             } finally {
                               setDeletingId(null);
                             }

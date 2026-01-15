@@ -1,5 +1,5 @@
 import React, { useEffect, useState, lazy, Suspense, useMemo, useRef } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
@@ -55,7 +55,7 @@ export function AdminDashboardPage() {
     try {
       // Load in batches to avoid overwhelming the API
       const [statsRes, bookingsRes, workersRes] = await Promise.all([
-        apiClient.get("/api/admin/stats").catch((err) => {
+        api.get("admin/stats").catch((err) => {
           console.error("[Admin] Failed to load stats:", err);
           toast.error("Failed to load dashboard stats");
           // Return default stats structure to prevent crashes
@@ -67,11 +67,11 @@ export function AdminDashboardPage() {
             }
           };
         }),
-        apiClient.get("/api/admin/bookings").catch((err) => {
+        api.get("admin/bookings").catch((err) => {
           console.error("[Admin] Failed to load bookings:", err);
           return { data: { bookings: [] } };
         }),
-        apiClient.get("/api/admin/workers").catch((err) => {
+        api.get("admin/workers").catch((err) => {
           console.error("[Admin] Failed to load workers:", err);
           return { data: [] };
         }),
@@ -90,12 +90,12 @@ export function AdminDashboardPage() {
 
       // Load remaining data in separate batch
       const [usersRes, contactRes, applicationsRes] = await Promise.all([
-        apiClient.get("/api/admin/users?pageSize=100").catch((err) => {
+        api.get("admin/users?pageSize=100").catch((err) => {
           console.error("[Admin] Failed to load users:", err);
           return { data: { users: [] } };
         }),
-        apiClient.get("/api/admin/contact").catch(() => ({ data: { messages: [] } })),
-        apiClient.get("/api/admin/worker-applications").catch(() => ({ data: [] })),
+        api.get("admin/contact").catch(() => ({ data: { messages: [] } })),
+        api.get("admin/worker-applications").catch(() => ({ data: [] })),
       ]);
 
       console.log("[Admin] Users response:", usersRes.data);
@@ -114,7 +114,7 @@ export function AdminDashboardPage() {
       setWorkerApplications(applicationsData);
     } catch (err) {
       console.error("Admin dashboard error:", err);
-      toast.error(err.response?.data?.message || "Failed to load admin dashboard");
+      toast.error(err.message || err.data?.message || "Failed to load admin dashboard");
     } finally {
       setLoading(false);
     }
@@ -129,7 +129,7 @@ export function AdminDashboardPage() {
     const loadTabData = async () => {
       if (activeTab === "quotes") {
         try {
-          const res = await apiClient.get("/api/admin/quotes");
+          const res = await api.get("admin/quotes");
           console.log("[Admin] Quotes loaded:", res.data);
           const quotesData = res.data?.quotes 
             ? extractArrayData(res.data.quotes)
@@ -137,12 +137,12 @@ export function AdminDashboardPage() {
           setQuotes(quotesData);
         } catch (err) {
           console.error("[Admin] Failed to load quotes:", err);
-          toast.error(err.response?.data?.message || "Failed to load quotes");
+          toast.error(err.message || err.data?.message || "Failed to load quotes");
         }
       }
       if (activeTab === "chores") {
         try {
-          const res = await apiClient.get("/api/admin/chores");
+          const res = await api.get("admin/chores");
           console.log("[Admin] Chores loaded:", res.data);
           const choresData = res.data?.chores
             ? extractArrayData(res.data.chores)
@@ -150,12 +150,12 @@ export function AdminDashboardPage() {
           setChores(choresData);
         } catch (err) {
           console.error("[Admin] Failed to load chores:", err);
-          toast.error(err.response?.data?.message || "Failed to load chores");
+          toast.error(err.message || err.data?.message || "Failed to load chores");
         }
       }
       if (activeTab === "orders") {
         try {
-          const res = await apiClient.get("/api/admin/orders");
+          const res = await api.get("admin/orders");
           console.log("[Admin] Orders loaded:", res.data);
           const ordersData = res.data?.orders
             ? extractArrayData(res.data.orders)
@@ -163,7 +163,7 @@ export function AdminDashboardPage() {
           setOrders(ordersData);
         } catch (err) {
           console.error("[Admin] Failed to load orders:", err);
-          toast.error(err.response?.data?.message || "Failed to load orders");
+          toast.error(err.message || err.data?.message || "Failed to load orders");
         }
       }
     };
@@ -174,14 +174,14 @@ export function AdminDashboardPage() {
   const assignWorker = async (bookingId, workerId) => {
     setAssigningWorker(bookingId);
     try {
-      await apiClient.patch(`/api/admin/bookings/${bookingId}/assign`, {
+      await api.patch(`/api/admin/bookings/${bookingId}/assign`, {
         workerId,
       });
       toast.success("Worker assigned successfully!");
       loadData();
     } catch (err) {
       console.error("Assign worker error:", err);
-      toast.error(err.response?.data?.message || "Failed to assign worker");
+      toast.error(err.message || err.data?.message || "Failed to assign worker");
     } finally {
       setAssigningWorker(null);
     }
@@ -189,12 +189,12 @@ export function AdminDashboardPage() {
 
   const unassignWorker = async (bookingId) => {
     try {
-      await apiClient.patch(`/api/admin/bookings/${bookingId}/unassign`);
+      await api.patch(`/api/admin/bookings/${bookingId}/unassign`);
       toast.success("Worker unassigned successfully!");
       loadData();
     } catch (err) {
       console.error("Unassign worker error:", err);
-      toast.error(err.response?.data?.message || "Failed to unassign worker");
+      toast.error(err.message || err.data?.message || "Failed to unassign worker");
     }
   };
 
@@ -444,7 +444,7 @@ export function AdminDashboardPage() {
                 quotes={quotes}
                 onRefresh={async () => {
                   try {
-                    const res = await apiClient.get("/api/admin/quotes");
+                    const res = await api.get("admin/quotes");
                     const quotesData = res.data?.quotes 
                       ? extractArrayData(res.data.quotes)
                       : extractArrayData(res.data);
@@ -461,7 +461,7 @@ export function AdminDashboardPage() {
                 chores={chores}
                 onRefresh={async () => {
                   try {
-                    const res = await apiClient.get("/api/admin/chores");
+                    const res = await api.get("admin/chores");
                     const choresData = res.data?.chores
                       ? extractArrayData(res.data.chores)
                       : extractArrayData(res.data);
@@ -478,7 +478,7 @@ export function AdminDashboardPage() {
                 orders={orders}
                 onRefresh={async () => {
                   try {
-                    const res = await apiClient.get("/api/admin/orders");
+                    const res = await api.get("admin/orders");
                     const ordersData = res.data?.orders
                       ? extractArrayData(res.data.orders)
                       : extractArrayData(res.data);
@@ -907,11 +907,11 @@ function ServicesTab() {
 
   const loadServices = async () => {
     try {
-      const res = await apiClient.get("/api/admin/services");
+      const res = await api.get("admin/services");
       setServices(res.data);
     } catch (err) {
       console.error("Load services error:", err);
-      toast.error(err.response?.data?.message || "Failed to load services");
+      toast.error(err.message || err.data?.message || "Failed to load services");
     } finally {
       setLoading(false);
     }
@@ -998,17 +998,17 @@ function ServicesTab() {
       };
 
       if (editingService) {
-        await apiClient.patch(`/api/admin/services/${editingService.id}`, payload);
+        await api.patch(`/api/admin/services/${editingService.id}`, payload);
         toast.success("Service updated successfully!");
       } else {
-        await apiClient.post("/api/admin/services", payload);
+        await api.post("admin/services", payload);
         toast.success("Service created successfully!");
       }
       resetForm();
       loadServices();
     } catch (err) {
       console.error("Create/Update service error:", err);
-      toast.error(err.response?.data?.message || "Failed to save service");
+      toast.error(err.message || err.data?.message || "Failed to save service");
     } finally {
       setCreating(false);
     }
@@ -1017,25 +1017,25 @@ function ServicesTab() {
   const handleDelete = async (service) => {
     if (!confirm(`Are you sure you want to delete "${service.name}"?`)) return;
     try {
-      await apiClient.delete(`/api/admin/services/${service.id}`);
+      await api.delete(`/api/admin/services/${service.id}`);
       toast.success("Service deleted successfully!");
       loadServices();
     } catch (err) {
       console.error("Delete service error:", err);
-      toast.error(err.response?.data?.message || "Failed to delete service");
+      toast.error(err.message || err.data?.message || "Failed to delete service");
     }
   };
 
   const handleToggleActive = async (service) => {
     try {
-      await apiClient.patch(`/api/admin/services/${service.id}`, {
+      await api.patch(`/api/admin/services/${service.id}`, {
         isActive: !service.isActive,
       });
       toast.success(`Service ${!service.isActive ? "activated" : "deactivated"}`);
       loadServices();
     } catch (err) {
       console.error("Toggle service error:", err);
-      toast.error(err.response?.data?.message || "Failed to update service");
+      toast.error(err.message || err.data?.message || "Failed to update service");
     }
   };
 
@@ -1737,14 +1737,14 @@ function ShopTab() {
     setLoading(true);
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        apiClient.get("/api/admin/shop/products"),
-        apiClient.get("/api/admin/shop/categories"),
+        api.get("admin/shop/products"),
+        api.get("admin/shop/categories"),
       ]);
       setProducts(productsRes.data || []);
       setCategories(categoriesRes.data || []);
     } catch (err) {
       console.error("Load shop data error:", err);
-      toast.error(err.response?.data?.message || "Failed to load shop data");
+      toast.error(err.message || err.data?.message || "Failed to load shop data");
     } finally {
       setLoading(false);
     }
@@ -1817,13 +1817,13 @@ function ShopTab() {
 
     setCreating(true);
     try {
-      await apiClient.post("/api/admin/shop/products", productForm);
+      await api.post("admin/shop/products", productForm);
       toast.success("Product created successfully!");
       resetForms();
       loadData();
     } catch (err) {
       console.error("Create product error:", err);
-      toast.error(err.response?.data?.message || "Failed to create product");
+      toast.error(err.message || err.data?.message || "Failed to create product");
     } finally {
       setCreating(false);
     }
@@ -1837,13 +1837,13 @@ function ShopTab() {
 
     setCreating(true);
     try {
-      await apiClient.post("/api/admin/shop/categories", categoryForm);
+      await api.post("admin/shop/categories", categoryForm);
       toast.success("Category created successfully!");
       resetForms();
       loadData();
     } catch (err) {
       console.error("Create category error:", err);
-      toast.error(err.response?.data?.message || "Failed to create category");
+      toast.error(err.message || err.data?.message || "Failed to create category");
     } finally {
       setCreating(false);
     }
@@ -1884,13 +1884,13 @@ function ShopTab() {
     if (!editingItem) return;
     setCreating(true);
     try {
-      await apiClient.patch(`/api/admin/shop/products/${editingItem.id}`, productForm);
+      await api.patch(`/api/admin/shop/products/${editingItem.id}`, productForm);
       toast.success("Product updated successfully!");
       resetForms();
       loadData();
     } catch (err) {
       console.error("Update product error:", err);
-      toast.error(err.response?.data?.message || "Failed to update product");
+      toast.error(err.message || err.data?.message || "Failed to update product");
     } finally {
       setCreating(false);
     }
@@ -1900,13 +1900,13 @@ function ShopTab() {
     if (!editingItem) return;
     setCreating(true);
     try {
-      await apiClient.patch(`/api/admin/shop/categories/${editingItem.id}`, categoryForm);
+      await api.patch(`/api/admin/shop/categories/${editingItem.id}`, categoryForm);
       toast.success("Category updated successfully!");
       resetForms();
       loadData();
     } catch (err) {
       console.error("Update category error:", err);
-      toast.error(err.response?.data?.message || "Failed to update category");
+      toast.error(err.message || err.data?.message || "Failed to update category");
     } finally {
       setCreating(false);
     }
@@ -1916,12 +1916,12 @@ function ShopTab() {
     if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
 
     try {
-      await apiClient.delete(`/api/admin/shop/${type}/${item.id}`);
+      await api.delete(`/api/admin/shop/${type}/${item.id}`);
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
       loadData();
     } catch (err) {
       console.error(`Delete ${type} error:`, err);
-      toast.error(err.response?.data?.message || `Failed to delete ${type}`);
+      toast.error(err.message || err.data?.message || `Failed to delete ${type}`);
     }
   };
 
@@ -2439,12 +2439,12 @@ function UsersTab({ users, onRefresh }) {
     if (!selectedUser) return;
     setUpdating(true);
     try {
-      await apiClient.patch(`/api/admin/users/${selectedUser.id}`, editForm);
+      await api.patch(`/api/admin/users/${selectedUser.id}`, editForm);
       toast.success("User updated successfully");
       setSelectedUser(null);
       if (onRefresh) onRefresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update user");
+      toast.error(err.message || err.data?.message || "Failed to update user");
     } finally {
       setUpdating(false);
     }
@@ -2601,24 +2601,24 @@ function AnalyticsTab() {
     setLoading(true);
     try {
       const [overviewRes, bookingsRes, revenueRes, workersRes, servicesRes] = await Promise.all([
-        apiClient.get("/api/admin/analytics/overview").catch((err) => {
+        api.get("admin/analytics/overview").catch((err) => {
           console.error("[Analytics] Failed to load overview:", err);
           toast.error("Failed to load overview analytics");
           return { data: null };
         }),
-        apiClient.get("/api/admin/analytics/bookings").catch((err) => {
+        api.get("admin/analytics/bookings").catch((err) => {
           console.error("[Analytics] Failed to load bookings analytics:", err);
           return { data: null };
         }),
-        apiClient.get("/api/admin/analytics/revenue").catch((err) => {
+        api.get("admin/analytics/revenue").catch((err) => {
           console.error("[Analytics] Failed to load revenue analytics:", err);
           return { data: null };
         }),
-        apiClient.get("/api/admin/analytics/workers").catch((err) => {
+        api.get("admin/analytics/workers").catch((err) => {
           console.error("[Analytics] Failed to load workers analytics:", err);
           return { data: null };
         }),
-        apiClient.get("/api/admin/analytics/services").catch((err) => {
+        api.get("admin/analytics/services").catch((err) => {
           console.error("[Analytics] Failed to load services analytics:", err);
           return { data: null };
         }),
@@ -2631,7 +2631,7 @@ function AnalyticsTab() {
       if (servicesRes.data) setServices(servicesRes.data);
     } catch (err) {
       console.error("Load analytics error:", err);
-      toast.error(err.response?.data?.message || "Failed to load analytics");
+      toast.error(err.message || err.data?.message || "Failed to load analytics");
     } finally {
       setLoading(false);
     }
@@ -2937,13 +2937,13 @@ function WorkerApplicationsTab({ applications, onRefresh }) {
 
     setApproving(applicationId);
     try {
-      await apiClient.post(`/api/admin/worker-applications/${applicationId}/approve`);
+      await api.post(`/api/admin/worker-applications/${applicationId}/approve`);
       toast.success("Application approved!");
       setSelectedApp(null);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Approve error:", err);
-      toast.error(err.response?.data?.message || "Failed to approve application");
+      toast.error(err.message || err.data?.message || "Failed to approve application");
     } finally {
       setApproving(null);
     }
@@ -2956,13 +2956,13 @@ function WorkerApplicationsTab({ applications, onRefresh }) {
 
     setRejecting(applicationId);
     try {
-      await apiClient.post(`/api/admin/worker-applications/${applicationId}/reject`);
+      await api.post(`/api/admin/worker-applications/${applicationId}/reject`);
       toast.success("Application rejected.");
       setSelectedApp(null);
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Reject error:", err);
-      toast.error(err.response?.data?.message || "Failed to reject application");
+      toast.error(err.message || err.data?.message || "Failed to reject application");
     } finally {
       setRejecting(null);
     }
@@ -3162,11 +3162,11 @@ function QuotesTab({ quotes, onRefresh }) {
   const updateStatus = async (id, status) => {
     setUpdating(id);
     try {
-      await apiClient.patch(`/api/admin/quotes/${id}/status`, { status });
+      await api.patch(`/api/admin/quotes/${id}/status`, { status });
       toast.success("Quote status updated");
       if (onRefresh) onRefresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update quote");
+      toast.error(err.message || err.data?.message || "Failed to update quote");
     } finally {
       setUpdating(null);
     }
@@ -3175,12 +3175,12 @@ function QuotesTab({ quotes, onRefresh }) {
   const deleteQuote = async (id) => {
     if (!confirm("Are you sure you want to delete this quote?")) return;
     try {
-      await apiClient.delete(`/api/admin/quotes/${id}`);
+      await api.delete(`/api/admin/quotes/${id}`);
       toast.success("Quote deleted");
       if (onRefresh) onRefresh();
       if (selectedQuote?.id === id) setSelectedQuote(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete quote");
+      toast.error(err.message || err.data?.message || "Failed to delete quote");
     }
   };
 
@@ -3342,11 +3342,11 @@ function ChoresTab({ chores, onRefresh }) {
   const updateStatus = async (id, status) => {
     setUpdating(id);
     try {
-      await apiClient.patch(`/api/admin/chores/${id}/status`, { status });
+      await api.patch(`/api/admin/chores/${id}/status`, { status });
       toast.success("Chore status updated");
       onRefresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update chore");
+      toast.error(err.message || err.data?.message || "Failed to update chore");
     } finally {
       setUpdating(null);
     }
@@ -3355,11 +3355,11 @@ function ChoresTab({ chores, onRefresh }) {
   const deleteChore = async (id) => {
     if (!confirm("Are you sure you want to delete this chore?")) return;
     try {
-      await apiClient.delete(`/api/admin/chores/${id}`);
+      await api.delete(`/api/admin/chores/${id}`);
       toast.success("Chore deleted");
       onRefresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete chore");
+      toast.error(err.message || err.data?.message || "Failed to delete chore");
     }
   };
 
@@ -3471,11 +3471,11 @@ function OrdersTab({ orders, onRefresh }) {
   const updateStatus = async (id, status) => {
     setUpdating(id);
     try {
-      await apiClient.patch(`/api/admin/orders/${id}/status`, { status });
+      await api.patch(`/api/admin/orders/${id}/status`, { status });
       toast.success("Order status updated");
       onRefresh();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to update order");
+      toast.error(err.message || err.data?.message || "Failed to update order");
     } finally {
       setUpdating(null);
     }
@@ -3590,12 +3590,12 @@ function ContactMessagesTab({ messages, onRefresh }) {
   const updateStatus = async (messageId, newStatus) => {
     setUpdatingStatus(messageId);
     try {
-      await apiClient.put(`/api/contact/${messageId}/status`, { status: newStatus });
+      await api.put(`/api/contact/${messageId}/status`, { status: newStatus });
       toast.success("Message status updated");
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Update status error:", err);
-      toast.error(err.response?.data?.message || "Failed to update status");
+      toast.error(err.message || err.data?.message || "Failed to update status");
     } finally {
       setUpdatingStatus(null);
     }
@@ -3606,7 +3606,7 @@ function ContactMessagesTab({ messages, onRefresh }) {
       return;
     }
     try {
-      await apiClient.delete(`/api/contact/${messageId}`);
+      await api.delete(`/api/contact/${messageId}`);
       toast.success("Message deleted");
       if (onRefresh) onRefresh();
       if (selectedMessage?.id === messageId) {
@@ -3614,7 +3614,7 @@ function ContactMessagesTab({ messages, onRefresh }) {
       }
     } catch (err) {
       console.error("Delete error:", err);
-      toast.error(err.response?.data?.message || "Failed to delete message");
+      toast.error(err.message || err.data?.message || "Failed to delete message");
     }
   };
 

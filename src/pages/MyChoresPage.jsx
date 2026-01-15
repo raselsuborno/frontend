@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import { PageWrapper } from "../components/page-wrapper.jsx";
@@ -19,9 +19,9 @@ export function MyChoresPage() {
     }
 
     try {
-      const response = await apiClient.get("/api/chores");
+      const response = await api.get("chores");
       const choresData = extractArrayData(response.data);
-      setChores(choresData);
+      setChores(choresData || []);
     } catch (err) {
       console.error("My chores error:", err);
       toast.error("Failed to load your chores.");

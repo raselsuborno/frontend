@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { PageWrapper } from "../components/page-wrapper.jsx";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import toast from "react-hot-toast";
 import { Trash2, ShoppingBag, Plus, Minus, ArrowLeft } from "lucide-react";
 
@@ -80,8 +80,8 @@ export function CartPage() {
         quantity: item.quantity
       }));
 
-      await apiClient.post(
-        "/api/shop/orders",
+      await api.post(
+        "shop/orders",
         { items: orderItems }
       );
 
@@ -93,7 +93,7 @@ export function CartPage() {
       navigate("/dashboard");
     } catch (err) {
       console.error("Checkout error:", err);
-      toast.error(err.response?.data?.message || "Failed to place order. Please try again.");
+      toast.error(err.message || err.data?.message || "Failed to place order. Please try again.");
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import toast from "react-hot-toast";
 import {
   X,
@@ -70,7 +70,7 @@ export function BookingDetailModal({ booking, isOpen, onClose, onUpdate }) {
 
     setLoading(true);
     try {
-      await apiClient.post(`/api/bookings/${booking.id}/reschedule`, {
+      await api.post(`bookings/${booking.id}/reschedule`, {
         date: newDate,
         timeSlot: newTimeSlot,
       });
@@ -80,7 +80,7 @@ export function BookingDetailModal({ booking, isOpen, onClose, onUpdate }) {
       onClose();
     } catch (err) {
       console.error("Reschedule error:", err);
-      toast.error(err.response?.data?.message || "Failed to reschedule booking");
+      toast.error(err.message || err.data?.message || "Failed to reschedule booking");
     } finally {
       setLoading(false);
     }
@@ -93,13 +93,13 @@ export function BookingDetailModal({ booking, isOpen, onClose, onUpdate }) {
 
     setLoading(true);
     try {
-      await apiClient.delete(`/api/bookings/${booking.id}`);
+      await api.delete(`bookings/${booking.id}`);
       toast.success("Booking cancelled successfully");
       if (onUpdate) onUpdate();
       onClose();
     } catch (err) {
       console.error("Cancel error:", err);
-      toast.error(err.response?.data?.message || "Failed to cancel booking");
+      toast.error(err.message || err.data?.message || "Failed to cancel booking");
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,7 @@ export function BookingDetailModal({ booking, isOpen, onClose, onUpdate }) {
 
     setLoading(true);
     try {
-      await apiClient.post(`/api/bookings/${booking.id}/rebook`, {
+      await api.post(`bookings/${booking.id}/rebook`, {
         date: booking.date,
         timeSlot: booking.timeSlot,
       });
@@ -121,7 +121,7 @@ export function BookingDetailModal({ booking, isOpen, onClose, onUpdate }) {
       onClose();
     } catch (err) {
       console.error("Rebook error:", err);
-      toast.error(err.response?.data?.message || "Failed to rebook");
+      toast.error(err.message || err.data?.message || "Failed to rebook");
     } finally {
       setLoading(false);
     }
@@ -130,12 +130,12 @@ export function BookingDetailModal({ booking, isOpen, onClose, onUpdate }) {
   const handleToggleFavorite = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.post(`/api/bookings/${booking.id}/favorite`);
-      toast.success(response.data.message || (booking.isFavorite ? "Removed from favorites" : "Added to favorites"));
+      const response = await api.post(`bookings/${booking.id}/favorite`);
+      toast.success(response.data?.message || (booking.isFavorite ? "Removed from favorites" : "Added to favorites"));
       if (onUpdate) onUpdate();
     } catch (err) {
       console.error("Toggle favorite error:", err);
-      toast.error(err.response?.data?.message || "Failed to update favorite status");
+      toast.error(err.message || err.data?.message || "Failed to update favorite status");
     } finally {
       setLoading(false);
     }

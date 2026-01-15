@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import toast from "react-hot-toast";
 import "../styles/unified-page-layout.css";
@@ -69,7 +69,7 @@ export function CareersPage() {
     setLoading(true);
 
     try {
-      await apiClient.post("/api/careers", { 
+      await api.post("careers", { 
         ...form, 
         jobTitle: selectedJob,
         resumeUrl: form.resume 
@@ -78,7 +78,7 @@ export function CareersPage() {
       setForm({ name: "", email: "", resume: "", message: "" });
       setSelectedJob(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to submit application. Please try again.");
+      toast.error(err.message || err.data?.message || "Failed to submit application. Please try again.");
     } finally {
       setLoading(false);
     }

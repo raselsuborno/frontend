@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import apiClient from "../lib/api.js";
+import api from "../lib/api.js";
 import { supabase } from "../lib/supabase.js";
 
 /**
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const response = await apiClient.get("/api/profile/me");
+      const response = await api.get("profile/me");
       setProfile(response.data);
     } catch (error) {
       console.error("[AuthContext] Error loading profile:", error);
