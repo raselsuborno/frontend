@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../lib/api.js";
+import apiClient from "../lib/api.js";
 
 export function ProfileEditPage() {
   const [user, setUser] = useState(null);
@@ -9,9 +9,9 @@ export function ProfileEditPage() {
   useEffect(() => {
     if (!token) return;
 
-    api
-      .get("profile")
-      .then((res) => setUser(res.data?.user || res.data))
+    apiClient
+      .get("/api/profile")
+      .then((res) => setUser(res.data.user))
       .catch(() => setMsg("⚠️ Could not load profile"));
   }, [token]);
 
@@ -25,7 +25,7 @@ export function ProfileEditPage() {
     setMsg("");
 
     try {
-      await api.put("profile", user);
+      await apiClient.put("/api/profile", user);
       setMsg("✅ Profile updated successfully!");
     } catch {
       setMsg("❌ Failed to update profile. Please try again later.");

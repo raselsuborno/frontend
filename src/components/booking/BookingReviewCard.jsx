@@ -1,7 +1,7 @@
 // src/components/booking/BookingReviewCard.jsx
 import { useState } from "react";
 import { Pencil } from "lucide-react";
-import api from "../../lib/api.js";
+import apiClient from "../../lib/api.js";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
@@ -69,23 +69,30 @@ export default function BookingReviewCard({
         paymentStatus: "pending",
       };
 
+      let response;
       if (isAuthenticated) {
         // Logged-in user booking
-        await api.post("bookings", bookingData);
+        response = await apiClient.post(
+          "/api/bookings",
+          bookingData
+        );
       } else {
         // Guest booking
         bookingData.guestName = address.fullName || "";
         bookingData.guestEmail = address.email || "";
         bookingData.guestPhone = address.phone || "";
         
-        await api.post("bookings/guest", bookingData);
+        response = await apiClient.post(
+          "/api/bookings/guest",
+          bookingData
+        );
       }
 
       toast.success("Booking submitted successfully! 🎉");
       navigate("/dashboard");
     } catch (err) {
       console.error("Booking error:", err);
-      toast.error(err.message || err.data?.message || "Failed to submit booking. Please try again.");
+      toast.error(err.response?.data?.message || "Failed to submit booking. Please try again.");
     } finally {
       setLoading(false);
     }
