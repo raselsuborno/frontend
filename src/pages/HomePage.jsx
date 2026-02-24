@@ -1,8 +1,7 @@
 // src/pages/HomePage.jsx - Redesigned with smooth, performant animations
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { PostChoreModal } from "../components/PostChoreModal.jsx";
 import CountryMap from "../components/CountryMap.jsx";
@@ -68,52 +67,6 @@ export function HomePage() {
   const navigate = useNavigate();
   const [postChoreModalOpen, setPostChoreModalOpen] = useState(false);
   const isMobile = useIsMobile();
-  
-  // Refs for scroll animations
-  const heroImageRef = useRef(null);
-  const reviewSectionRef = useRef(null);
-  const reviewSectionInView = useInView(reviewSectionRef, { 
-    once: true, 
-    amount: 0.15,
-    margin: "-50px"
-  });
-  const { scrollYProgress } = useScroll();
-  
-  // Review section visibility state - hide only when at top viewing hero
-  // On mobile: always visible (no animation)
-  const [showReviews, setShowReviews] = useState(isMobile);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  
-  // Subtle parallax for hero image (desktop only)
-  const heroY = !isMobile 
-    ? useTransform(scrollYProgress, [0, 0.3], [0, -80])
-    : 0;
-
-  // Smart review section visibility - appears immediately when scrolling down
-  // Desktop only: hide when at top viewing hero
-  useEffect(() => {
-    // On mobile, always show (no animation needed)
-    if (isMobile) {
-      setShowReviews(true);
-      return;
-    }
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      const threshold = 50; // Very low threshold - appears immediately on scroll
-
-      // Hide when at top (viewing hero), show when scrolled down
-      setShowReviews(currentScrollY > threshold);
-
-      setLastScrollY(currentScrollY);
-    };
-
-    // Check initial scroll position
-    handleScroll();
-    
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [isMobile]);
 
   const reviews = [
     { name: "Johnny Ho", time: "2 days ago", text: "The cleaners from Call the Cleaners were very professional, polite and timely. They left no spot left uncleaned, especially the bathroom and kitchen." },
@@ -145,17 +98,6 @@ export function HomePage() {
 
   const handleServiceClick = (service) => {
     navigate("/pricing-booking", { state: { service } });
-  };
-
-  // Reusable scroll reveal hook
-  const useScrollReveal = (threshold = 0.1) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { 
-      once: true, 
-      amount: threshold,
-      margin: "-50px"
-    });
-    return [ref, isInView];
   };
 
   return (
@@ -228,12 +170,10 @@ export function HomePage() {
                 </motion.div>
               </motion.div>
               <motion.div 
-                ref={heroImageRef}
                 className="square-hero-image"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                style={{ y: heroY }}
               >
                 <img 
                   src="https://images.unsplash.com/photo-1763026227930-ec2c91d4e7f2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjbGVhbmluZyUyMHNlcnZpY2UlMjBwcm9mZXNzaW9uYWx8ZW58MXx8fHwxNzY4MDQ0Mjg4fDA&ixlib=rb-4.1.0&q=80&w=1080"
@@ -244,23 +184,12 @@ export function HomePage() {
           </div>
         </section>
 
-        {/* Reviews Section - Hidden when viewing hero, visible when scrolled */}
+        {/* Reviews Section */}
         <motion.section 
-          ref={reviewSectionRef}
           className="square-reviews"
-          initial="hidden"
-          animate={
-            // Mobile: animate when in view (showReviews is always true on mobile)
-            // Desktop: only animate if scrolled down AND in view
-            (isMobile ? reviewSectionInView : (showReviews && reviewSectionInView)) 
-              ? "visible" 
-              : "hidden"
-          }
+          initial="visible"
+          animate="visible"
           variants={staggerContainer}
-          style={{
-            visibility: showReviews || isMobile ? 'visible' : 'hidden',
-            pointerEvents: showReviews || isMobile ? 'auto' : 'none'
-          }}
         >
           <div className="square-container">
             {/* Review Section Header - Match "Need ideas?" style */}
@@ -304,20 +233,27 @@ export function HomePage() {
               </p>
             </motion.div>
             
-            <motion.div 
-              className="square-grid-3"
-              variants={staggerContainer}
-            >
-              {popularTasks.map((task, idx) => (
-                <TaskCard
-                  key={idx}
-                  task={task}
-                  idx={idx}
-                  onClick={() => handleServiceClick(task.title)}
-                  isMobile={isMobile}
-                />
-              ))}
-            </motion.div>
+            {isMobile ? (
+              <MobileTaskCarousel
+                tasks={popularTasks}
+                onTaskClick={handleServiceClick}
+              />
+            ) : (
+              <motion.div 
+                className="square-grid-3"
+                variants={staggerContainer}
+              >
+                {popularTasks.map((task, idx) => (
+                  <TaskCard
+                    key={idx}
+                    task={task}
+                    idx={idx}
+                    onClick={() => handleServiceClick(task.title)}
+                    isMobile={isMobile}
+                  />
+                ))}
+              </motion.div>
+            )}
           </div>
         </SectionReveal>
 
@@ -433,12 +369,10 @@ export function HomePage() {
         {/* Worker CTA */}
         <SectionReveal className="square-section">
           <div className="square-container">
-            <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-              <WorkerCTACard variant="default" />
-            </div>
+            <WorkerCTACard variant="default" />
           </div>
         </SectionReveal>
-
+      
         {/* Worldwide Section */}
         <SectionReveal className="square-section">
           <div className="square-container">
@@ -472,38 +406,7 @@ export function HomePage() {
           </div>
         </SectionReveal>
 
-        {/* Partners */}
-        <SectionReveal className="square-section square-section-alt">
-          <div className="square-container">
-            <motion.div 
-              className="square-section-header"
-              variants={fadeInUp}
-            >
-              <p className="square-partners-label">Growing with local businesses</p>
-              <p className="square-section-subtitle">
-                Building partnerships with Saskatchewan organizations
-              </p>
-            </motion.div>
-            
-            <motion.div 
-              className="square-partners-grid"
-              variants={staggerContainer}
-            >
-              {partners.map((partner, idx) => (
-                <motion.div
-                  key={idx}
-                  className="square-partner-logo"
-                  variants={fadeInScale}
-                  whileHover={{ scale: 1.1, y: -5 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  {partner.logo}
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </SectionReveal>
-
+        {/* Partners section removed as requested */}
         {/* Final CTA */}
         <SectionReveal className="square-section">
           <div className="square-container">
@@ -547,19 +450,11 @@ export function HomePage() {
 
 // Optimized Section Reveal Component
 function SectionReveal({ children, className, variant }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { 
-    once: true, 
-    amount: 0.15,
-    margin: "-50px"
-  });
-
   return (
     <motion.section
-      ref={ref}
       className={`${className} ${variant === 'alt' ? 'square-section-alt' : ''}`}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={staggerContainer}
     >
       {children}
@@ -569,15 +464,11 @@ function SectionReveal({ children, className, variant }) {
 
 // Optimized Task Card
 function TaskCard({ task, idx, onClick, isMobile }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-
   return (
     <motion.div
-      ref={ref}
       className="square-card"
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={fadeInScale}
       transition={{ delay: idx * 0.05 }}
     >
@@ -599,15 +490,11 @@ function TaskCard({ task, idx, onClick, isMobile }) {
 
 // Optimized Step Card
 function StepCard({ step, Icon, idx, isMobile }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-
   return (
     <motion.div
-      ref={ref}
       className="square-step-card"
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={fadeInUp}
       transition={{ delay: idx * 0.1 }}
     >
@@ -630,15 +517,11 @@ function StepCard({ step, Icon, idx, isMobile }) {
 
 // Optimized Benefit Card
 function BenefitCard({ benefit, Icon, idx, isMobile }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-
   return (
     <motion.div
-      ref={ref}
       className="square-benefit-card"
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={fadeInScale}
       transition={{ delay: idx * 0.08 }}
       whileHover={!isMobile ? { y: -8, transition: { duration: 0.2 } } : {}}
@@ -654,15 +537,11 @@ function BenefitCard({ benefit, Icon, idx, isMobile }) {
 
 // Optimized Worldwide Card
 function WorldwideCard({ country, idx, isMobile }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-
   return (
     <motion.div
-      ref={ref}
       className={`square-worldwide-card ${country.featured ? 'square-worldwide-card-featured' : ''}`}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={fadeInScale}
       transition={{ delay: idx * 0.1 }}
       whileHover={!isMobile ? { y: -8, transition: { duration: 0.2 } } : {}}
@@ -699,15 +578,11 @@ function WorldwideCard({ country, idx, isMobile }) {
 
 // Optimized Review Card
 function ReviewCard({ review, idx, isMobile }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
-
   return (
     <motion.div
-      ref={ref}
       className="square-review-card"
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={fadeInScale}
       transition={{ delay: (idx % 7) * 0.05 }}
       whileHover={!isMobile ? { 
@@ -734,5 +609,66 @@ function ReviewCard({ review, idx, isMobile }) {
         <p className="square-review-text">{review.text}</p>
       </div>
     </motion.div>
+  );
+}
+
+// Mobile-only carousel for popular tasks
+function MobileTaskCarousel({ tasks, onTaskClick }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartXRef = useRef(null);
+
+  useEffect(() => {
+    if (!tasks || tasks.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % tasks.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [tasks]);
+
+  const handleTouchStart = (e) => {
+    touchStartXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartXRef.current == null) return;
+    const diff = e.changedTouches[0].clientX - touchStartXRef.current;
+    const threshold = 40;
+    if (Math.abs(diff) > threshold) {
+      setCurrentIndex((prev) => {
+        if (diff < 0) {
+          return (prev + 1) % tasks.length;
+        }
+        return (prev - 1 + tasks.length) % tasks.length;
+      });
+    }
+    touchStartXRef.current = null;
+  };
+
+  const currentTask = tasks[currentIndex];
+
+  return (
+    <div
+      className="square-mobile-task-carousel"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <TaskCard
+        task={currentTask}
+        idx={currentIndex}
+        onClick={() => onTaskClick(currentTask.title)}
+        isMobile={true}
+      />
+      <div className="square-mobile-task-dots">
+        {tasks.map((_, idx) => (
+          <span
+            key={idx}
+            className={
+              "square-mobile-task-dot" +
+              (idx === currentIndex ? " square-mobile-task-dot-active" : "")
+            }
+          />
+        ))}
+      </div>
+    </div>
   );
 }

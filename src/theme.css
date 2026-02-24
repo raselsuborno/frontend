@@ -776,8 +776,14 @@ img {
 
 @media (max-width: 768px) {
   .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     padding: 8px 16px;
     height: 64px;
+    border-radius: 0;
+    z-index: 1100; /* Above page content and bottom nav */
   }
 
   .nav-center {
@@ -799,24 +805,14 @@ img {
     width: 32px;
   }
 
-  /* Show login button on mobile with matched height */
+  /* Show login button on mobile with matched height to logo (40px) */
   .nav-right .btn.btn-primary.nav-pill.nav-pill-desktop {
     display: inline-flex !important;
-    height: 32px;
-    min-height: 32px;
-    padding: 6px 14px;
-    font-size: 13px;
+    height: 40px;
+    min-height: 40px;
+    padding: 8px 16px;
+    font-size: 14px;
     align-items: center;
-  }
-
-  .nav-mobile-toggle {
-    display: inline-flex;
-    height: 32px;
-    width: 32px;
-    min-width: 32px;
-    min-height: 32px;
-    align-items: center;
-    justify-content: center;
   }
 
   .brand {
@@ -848,6 +844,13 @@ img {
   .nav-user-avatar-placeholder {
     width: 28px;
     height: 28px;
+  }
+
+  /* On mobile, never hide navbar on scroll */
+  .nav-hidden {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
   }
 
   /* Adjust icon button sizes for mobile */
@@ -4922,6 +4925,13 @@ p {
   width: 100%;
 }
 
+/* Hide footer on mobile to avoid double navigation (we use bottom nav there) */
+@media (max-width: 768px) {
+  .modern-footer {
+    display: none !important;
+  }
+}
+
 .footer-container {
   max-width: 1180px;
   margin: 0 auto;
@@ -6945,4 +6955,37 @@ input.auth-modal-input {
   .globe-wrap {
     padding: 10px;
   }
+}
+
+/* ============================================================
+   🧊 GLOBAL ANIMATION KILL-SWITCH (MOBILE + DESKTOP)
+   Disable ALL animations & transitions across the app
+   (Framer Motion, CSS transitions, keyframes, scroll behavior)
+=============================================================== */
+
+/* Apply everywhere, all viewports */
+*,
+*::before,
+*::after {
+  animation: none !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
+
+/* Extra safety for common motion containers (Framer Motion, etc.) */
+[data-motion],
+[data-framer-motion],
+.motion-div,
+.motion-main,
+.motion-aside,
+.motion-section,
+.motion-header {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  opacity: 1 !important;
 }

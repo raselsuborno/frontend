@@ -252,6 +252,10 @@
 .service-tile span {
   font-weight: 500;
   line-height: 1.2;
+  color: var(--text-main, #0f172a);
+  text-align: center;
+  display: block;
+  width: 100%;
 }
 .booking-main:not(.shrink) .service-grid {
   grid-template-columns: repeat(4, 1fr);
@@ -345,8 +349,10 @@
 .services-footer,
 .service-footer {
   display: flex;
+  flex-direction: row;
   gap: 12px;
   margin-top: 20px;
+  align-items: center;
 }
 
 .btn-primary {
@@ -1056,11 +1062,43 @@
   }
 
   .review-actions {
-    flex-direction: column;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px;
+    background: var(--bg-primary, #ffffff);
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-primary, #e2e8f0);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0 !important;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .review-actions > button {
-    width: 100%;
+    flex: 1 !important;
+    height: 48px !important;
+    font-size: 16px !important;
+    min-height: 48px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Add padding to review card for sticky buttons */
+  .review-card {
+    padding-bottom: 90px !important;
   }
 }
 /* =========================================================
@@ -1146,17 +1184,49 @@
     font-size: 13px;
   }
 
-  /* Footer buttons stack */
+  /* Footer buttons - sticky at bottom, same line on mobile */
   .service-footer,
   .services-footer {
-    flex-direction: column;
-    gap: 10px;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px;
+    background: var(--bg-primary, #ffffff);
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-primary, #e2e8f0);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0 !important;
+  }
+
+  /* Add padding to booking content to account for sticky buttons */
+  .booking-main,
+  .booking-card,
+  .booking-layout {
+    padding-bottom: 90px !important;
   }
 
   .btn-primary,
   .btn-secondary {
-    height: 46px;
-    font-size: 14px;
+    flex: 1 !important;
+    height: 48px !important;
+    font-size: 16px !important;
+    min-height: 48px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    border-radius: var(--radius-lg, 12px) !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
   }
 
   /* ===============================
@@ -1275,13 +1345,34 @@
   }
 
   .review-actions {
-    flex-direction: column;
-    gap: 10px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    background: var(--bg-primary, #ffffff);
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border-primary, #e2e8f0);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .review-actions > button {
+    flex: 1;
     height: 48px;
-    font-size: 14px;
+    font-size: 16px;
+    min-height: 48px;
+    font-weight: 600;
+    margin: 0;
+    border-radius: var(--radius-lg, 12px);
   }
 }
 /* =========================================================

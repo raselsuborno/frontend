@@ -1,0 +1,334 @@
+/* ============================================================
+   📱 SIMPLIFIED DASHBOARD - MOBILE-FIRST DESIGN
+   Clean, simple, app-like interface
+   NOTE: All styles are scoped to .dash-shell to avoid affecting other pages
+=============================================================== */
+
+/* Ensure auth page is not affected */
+.auth-wrapper,
+.flip-card,
+.auth-card {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* ========== MOBILE: HIDE SIDEBAR, SHOW BOTTOM NAV ========== */
+/* Only apply to dashboard pages - scope to .dash-shell */
+@media (max-width: 768px) {
+  .dash-shell .dash-sidebar {
+    display: none !important;
+  }
+
+  /* Hide mobile menu toggle on mobile since we use bottom nav */
+  .dash-shell .dash-mobile-menu-toggle {
+    display: none !important;
+  }
+
+  .dash-shell .dash-sidebar-overlay {
+    display: none !important;
+  }
+
+  .dash-shell .dash-layout {
+    grid-template-columns: 1fr !important;
+    gap: 0;
+    padding: 0;
+  }
+
+  .dash-shell {
+    padding: 16px 0 100px 0 !important; /* Space for bottom nav - increased for better spacing */
+    min-height: auto;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .dash-shell.section {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .dash-shell .dash-main {
+    width: 100% !important;
+    padding: 0 16px !important;
+    min-height: auto;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .dash-shell .dash-main-inner {
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: auto;
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    gap: 24px !important;
+  }
+
+  .dash-shell .dash-card,
+  .dash-shell .dash-stat-card,
+  .dash-shell .dash-section {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Ensure overview-specific elements are visible */
+  .dash-shell .dash-stat-grid {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .dash-shell .dash-two-col {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .dash-shell .dash-hero-row {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .dash-shell .dash-chip {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .dash-shell .dash-list {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .dash-shell .dash-list-item-enhanced {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .dash-shell .next-block {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Ensure stat cards are visible */
+  .dash-shell .dash-stat-card {
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Override fade-in animations on mobile to ensure content shows immediately */
+  .dash-shell .fade-in-up,
+  .dash-shell .fade-in-delay-sm,
+  .dash-shell .fade-in-delay-md {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+/* ========== PROFILE SUB-TABS ========== */
+.profile-sub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.profile-sub-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.profile-sub-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--dash-bg-soft, #f8fafc);
+  border: 1px solid var(--dash-border, #e2e8f0);
+  border-radius: var(--dash-radius, 12px);
+  color: var(--dash-text-soft, #64748b);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+.profile-sub-tab:active {
+  transform: scale(0.98);
+}
+
+.profile-sub-tab.active {
+  background: var(--dash-primary, #0b5c28);
+  color: #ffffff;
+  border-color: var(--dash-primary, #0b5c28);
+}
+
+.profile-sub-tab svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Mobile: Stack sub-tabs vertically or make them smaller */
+@media (max-width: 768px) {
+  .profile-sub-tabs {
+    flex-direction: row;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .profile-sub-tab {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+
+  .profile-sub-tab svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* ========== SIMPLIFIED DESKTOP LAYOUT ========== */
+@media (min-width: 769px) {
+  .dash-layout {
+    max-width: 1200px;
+    gap: 24px;
+    grid-template-columns: 1fr !important; /* Single-column layout */
+  }
+
+  /* Hide left dashboard sidebar on desktop as well */
+  .dash-sidebar {
+    display: none !important;
+  }
+
+  .dash-nav-item {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+/* ========== SIMPLIFIED CARDS ========== */
+.dash-card,
+.dash-stat-card {
+  border-radius: var(--dash-radius, 16px);
+  padding: 20px;
+  background: var(--dash-bg-card, #ffffff);
+  border: 1px solid var(--dash-border, #e2e8f0);
+  box-shadow: var(--dash-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+@media (max-width: 768px) {
+  .dash-card,
+  .dash-stat-card {
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+}
+
+/* ========== SIMPLIFIED STATS GRID ========== */
+.dash-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .dash-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* ========== SIMPLIFIED SECTIONS ========== */
+.dash-section {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .dash-section {
+    margin-bottom: 16px;
+  }
+}
+
+/* ========== INBOX MOBILE LAYOUT ========== */
+@media (max-width: 768px) {
+  .inbox-page {
+    gap: 16px !important;
+  }
+
+  .inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .inbox-badge {
+    padding: 4px 10px;
+    border-radius: 9999px;
+    background: var(--status-error, #E74C3C);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .inbox-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .inbox-card {
+    border-radius: 16px;
+    border: 1px solid var(--dash-border, #e2e8f0);
+    background: #f8fafc;
+    padding: 14px 12px;
+    margin-bottom: 10px;
+  }
+
+  .inbox-card:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* ========== REMOVE COMPLEX ANIMATIONS ON MOBILE ========== */
+@media (max-width: 768px) {
+  .dash-stat-card::before,
+  .dash-stat-card::after {
+    display: none;
+  }
+
+  .dash-stat-card {
+    transition: none;
+  }
+
+  .dash-stat-card:hover {
+    transform: none;
+  }
+}

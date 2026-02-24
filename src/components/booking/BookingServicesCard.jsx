@@ -19,8 +19,10 @@ export default function BookingServicesCard({ selected, onSelect, onNext }) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await apiClient.get("/public/services?type=RESIDENTIAL");
-        setServices(response.data || []);
+        const response = await apiClient.get("/api/public/services?type=RESIDENTIAL");
+        // Handle both response.data.data and response.data formats
+        const servicesData = response.data?.data || response.data || [];
+        setServices(servicesData);
       } catch (error) {
         console.error("Failed to fetch services:", error);
         setServices([]);
@@ -79,6 +81,8 @@ export default function BookingServicesCard({ selected, onSelect, onNext }) {
           services.map((service) => {
             const Icon = getIcon(service.iconName);
             const active = selected?.id === service.id || selected?.slug === service.slug;
+            // Handle both 'title' and 'name' properties from API
+            const serviceTitle = service.title || service.name || 'Service';
 
             return (
               <button
@@ -90,7 +94,7 @@ export default function BookingServicesCard({ selected, onSelect, onNext }) {
                 <div className="service-icon">
                   <Icon size={18} />
                 </div>
-                <span>{service.title}</span>
+                <span>{serviceTitle}</span>
               </button>
             );
           })

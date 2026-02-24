@@ -50,7 +50,7 @@ export function ServicesPage() {
       try {
         setLoading(true);
         const type = isResidential ? "RESIDENTIAL" : "CORPORATE";
-        const response = await apiClient.get(`/public/services?type=${type}`);
+        const response = await apiClient.get(`/api/public/services?type=${type}`);
         const servicesData = extractArrayData(response.data);
         setServices(servicesData);
       } catch (error) {

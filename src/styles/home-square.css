@@ -126,7 +126,7 @@
 }
 
 .square-section {
-  padding: 120px 0;
+  padding: 80px 0;
   background: var(--bg-primary, #ffffff);
 }
 
@@ -137,7 +137,7 @@
 /* ========== HERO SECTION - Edge to Edge ========== */
 .square-hero {
   background: var(--bg-primary, #ffffff);
-  padding: 80px 0;
+  padding: 56px 0;
 }
 
 .square-hero-grid {
@@ -172,18 +172,18 @@
 
 .square-hero-badge {
   display: inline-block;
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
   background: #f3f4f6;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 999px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
 
 .square-hero-title {
-  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-size: clamp(2.2rem, 4.5vw, 3.1rem);
   font-weight: 700;
   line-height: 1.2;
   color: #000000;
@@ -192,7 +192,7 @@
 }
 
 .square-hero-description {
-  font-size: clamp(1rem, 1.25vw, 1.125rem);
+  font-size: 0.98rem;
   line-height: 1.6;
   color: #6b7280;
   margin: 0 0 32px 0;
@@ -201,8 +201,8 @@
 
 .square-hero-actions {
   display: flex;
-  gap: 16px;
-  margin-bottom: 40px;
+  gap: 12px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
 }
 
@@ -210,7 +210,7 @@
   background: #0b5c28;
   color: white;
   border: none;
-  padding: 14px 28px;
+  padding: 12px 24px;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
@@ -310,8 +310,8 @@
 
 /* ========== REVIEWS SECTION - Edge to Edge Scroll with Smart Visibility ========== */
 .square-reviews {
-  background: var(--bg-primary, #ffffff);
-  padding: 60px 0;
+  background: var(--bg-secondary, #f8fafc);
+  padding: 40px 0;
   overflow: hidden;
   /* Hardware acceleration for smooth scrolling */
   transform: translateZ(0);
@@ -342,12 +342,11 @@
 
 .square-review-card {
   background: var(--bg-primary, #ffffff);
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 24px;
-  width: 280px;
-  min-height: 280px;
-  max-height: 280px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  width: 260px;
+  min-height: 240px;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -355,10 +354,33 @@
   transition: all 0.2s ease;
 }
 
+/* Mobile carousel for "Need ideas?" section */
+.square-mobile-task-carousel {
+  width: 100%;
+}
+
+.square-mobile-task-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.square-mobile-task-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #e5e7eb;
+}
+
+.square-mobile-task-dot-active {
+  background: #0b5c28;
+}
+
 .square-review-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  border-color: #0b5c28;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  transform: translateY(-3px);
 }
 
 .square-review-header {
@@ -812,20 +834,20 @@
 
 /* ========== CTA SECTION ========== */
 .square-cta-section {
-  padding: 120px 0;
+  padding: 72px 0;
   background: var(--bg-primary, #ffffff);
 }
 
 .square-cta-card {
   background: linear-gradient(135deg, #0b5c28, #094721);
   border-radius: 16px;
-  padding: 80px 64px;
+  padding: 56px 40px;
   text-align: center;
   color: white;
 }
 
 .square-cta-title {
-  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-size: clamp(2.1rem, 3.4vw, 2.8rem);
   font-weight: 600;
   margin: 0 0 16px 0;
   color: white;
@@ -833,8 +855,8 @@
 }
 
 .square-cta-subtitle {
-  font-size: 1.25rem;
-  margin: 0 0 40px 0;
+  font-size: 1.05rem;
+  margin: 0 0 28px 0;
   color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
 }
@@ -1178,6 +1200,21 @@
 }
 
 @media (max-width: 768px) {
+  .square-reviews {
+    padding: 32px 0;
+  }
+
+  .square-reviews-scroll {
+    animation-duration: 70s;
+    gap: 16px;
+  }
+
+  .square-review-card {
+    width: 220px;
+    min-height: 220px;
+    padding: 18px;
+  }
+
   /* ========== MOBILE-OPTIMIZED SPACING ========== */
   .square-section {
     padding: 64px 0;

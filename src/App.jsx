@@ -7,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { Navbar } from "./components/navbar.jsx";
 import { Footer } from "./components/footer.jsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.jsx";
+import { DashboardBottomNav } from "./components/DashboardBottomNav.jsx";
 
 
 // Pages
@@ -54,7 +55,16 @@ function AppContent() {
     location.pathname.startsWith("/reset-password");
   
   // Show navbar on admin/worker pages but with limited nav items
-  const isAdminOrWorkerPage = location.pathname.startsWith("/admin") || location.pathname.startsWith("/worker");
+  const isAdminOrWorkerPage =
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/worker");
+
+  // Hide mobile bottom nav on auth/admin/worker pages
+  const hideBottomNav =
+    location.pathname === "/auth" ||
+    location.pathname.startsWith("/reset-password") ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname.startsWith("/worker");
 
   return (
     <AuthProvider>
@@ -122,6 +132,9 @@ function AppContent() {
           />
           <Route path="/profile/edit" element={<ProfileEditPage />} />
         </Routes>
+
+        {/* Global mobile bottom navigation (app-like) */}
+        {!hideBottomNav && <DashboardBottomNav />}
       </div>
 
       {/* ======= MODERN FOOTER ======= */}

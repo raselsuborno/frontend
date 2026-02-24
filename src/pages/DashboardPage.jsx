@@ -1,13 +1,15 @@
 // src/pages/DashboardPage.jsx
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import apiClient from "../lib/api.js";
 import { PageWrapper } from "../components/page-wrapper.jsx";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { extractArrayData } from "../utils/apiHelpers.js";
 import toast from "react-hot-toast";
 import "../styles/dashboard-modern.css";
+import "../styles/dashboard-simplified.css";
+import "../styles/dashboard-overview-redesign.css";
 import {
   LayoutDashboard,
   Calendar,
@@ -42,6 +44,7 @@ import {
   Save,
   Trash2,
   Quote,
+  ArrowRight,
 } from "lucide-react";
 import { BookingDetailModal } from "../components/BookingDetailModal.jsx";
 import { AddressManagement } from "../components/AddressManagement.jsx";
@@ -54,12 +57,23 @@ import { Tooltip } from "../components/ui/Tooltip.jsx";
 
 export function DashboardPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: authUser, profile, session, loading: authLoading } = useAuth();
   const [user, setUser] = useState(null); // Profile data from API
   const [bookings, setBookings] = useState([]);
   const [chores, setChores] = useState([]);
   const [quotes, setQuotes] = useState([]);
-  const [activeTab, setActiveTab] = useState("overview");
+
+  // Initial tab can be driven by navigation state (used by bottom nav)
+  const initialTabFromState =
+    location.state?.tab === "inbox"
+      ? "inbox"
+      : location.state?.tab === "profile"
+      ? "profile"
+      : "overview";
+
+  const [activeTab, setActiveTab] = useState(initialTabFromState);
+  const [profileSubTab, setProfileSubTab] = useState("details"); // For profile section sub-tabs
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -338,19 +352,40 @@ export function DashboardPage() {
   }
 
   // ========== ERROR ==========
-  // Show error only if user is loaded but there was an error fetching data
-  if (error && user) {
+  // Show error if there's an error (regardless of user state)
+  if (error && !loading) {
     return (
       <PageWrapper>
         <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
           <h2>Error Loading Dashboard</h2>
-          <p style={{ color: "var(--error)", margin: "20px 0" }}>{error}</p>
+          <p style={{ color: "var(--error, #dc2626)", margin: "20px 0" }}>{error}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="btn"
             style={{ marginTop: "20px" }}
           >
             Refresh Page
+          </button>
+        </section>
+      </PageWrapper>
+    );
+  }
+
+  // If no user and not loading, show error
+  if (!user && !loading && !authLoading) {
+    return (
+      <PageWrapper>
+        <section className="section" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <h2>Unable to Load Dashboard</h2>
+          <p style={{ color: "var(--text-soft, #64748b)", margin: "20px 0" }}>
+            Please log in to view your dashboard.
+          </p>
+          <button 
+            onClick={() => navigate("/auth")} 
+            className="btn"
+            style={{ marginTop: "20px" }}
+          >
+            Go to Login
           </button>
         </section>
       </PageWrapper>
@@ -433,57 +468,7 @@ export function DashboardPage() {
                 <span>Bookings & Orders</span>
               </motion.button>
 
-              <motion.button
-                className={`dash-nav-item ${
-                  activeTab === "billing" ? "is-active" : ""
-                }`}
-                onClick={() => setActiveTab("billing")}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                <CreditCard size={20} />
-                <span>Billing</span>
-              </motion.button>
-
-              <motion.button
-                className={`dash-nav-item ${
-                  activeTab === "addresses" ? "is-active" : ""
-                }`}
-                onClick={() => setActiveTab("addresses")}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                <MapPin size={20} />
-                <span>Addresses</span>
-              </motion.button>
-
-              <motion.button
-                className={`dash-nav-item ${
-                  activeTab === "chores" ? "is-active" : ""
-                }`}
-                onClick={() => setActiveTab("chores")}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ClipboardList size={20} />
-                <span>My Chores</span>
-              </motion.button>
-
-              <motion.button
-                className={`dash-nav-item ${
-                  activeTab === "quotes" ? "is-active" : ""
-                }`}
-                onClick={() => setActiveTab("quotes")}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Quote size={20} />
-                <span>Quote Requests</span>
-              </motion.button>
+              {/* Billing, Addresses, Chores, Quotes are now in Profile sub-tabs */}
 
               <motion.button
                 className={`dash-nav-item ${
@@ -529,6 +514,8 @@ export function DashboardPage() {
                 transition={{ duration: 0.3 }}
               >
                 <DashboardOverview
+                  user={user}
+                  form={form}
                   firstName={firstName}
                   stats={{ totalBookings, completed, upcoming, totalHours }}
                   nextBooking={nextBooking}
@@ -580,75 +567,7 @@ export function DashboardPage() {
               </motion.div>
             )}
 
-            {activeTab === "billing" && (
-              <motion.div
-                key="billing"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <DashboardBilling bookings={bookings} user={user} />
-              </motion.div>
-            )}
-
-            {activeTab === "addresses" && (
-              <motion.div
-                key="addresses"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <AddressManagement />
-              </motion.div>
-            )}
-
-            {activeTab === "chores" && (
-              <motion.div
-                key="chores"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <DashboardChores 
-                  chores={chores} 
-                  onRefresh={async () => {
-                    try {
-                      const res = await apiClient.get("/api/chores");
-                      const choresData = extractArrayData(res.data);
-                      setChores(choresData);
-                    } catch (err) {
-                      console.error("Failed to refresh chores:", err);
-                    }
-                  }}
-                />
-              </motion.div>
-            )}
-
-            {activeTab === "quotes" && (
-              <motion.div
-                key="quotes"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <DashboardQuotes 
-                  quotes={quotes} 
-                  onRefresh={async () => {
-                    try {
-                      const res = await apiClient.get("/api/quotes/mine");
-                      const quotesData = extractArrayData(res.data);
-                      setQuotes(quotesData);
-                    } catch (err) {
-                      console.error("Failed to refresh quotes:", err);
-                    }
-                  }}
-                />
-              </motion.div>
-            )}
+            {/* Billing, Addresses, Chores, Quotes are now in Profile sub-tabs */}
 
             {activeTab === "profile" && (
               <motion.div
@@ -658,11 +577,35 @@ export function DashboardPage() {
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.3 }}
               >
-                <DashboardProfile
+                <DashboardProfileWithTabs
                   form={form}
                   onChange={handleChange}
                   onSave={handleSave}
                   onAvatarChange={handleAvatarChange}
+                  profileSubTab={profileSubTab}
+                  setProfileSubTab={setProfileSubTab}
+                  bookings={bookings}
+                  user={user}
+                  chores={chores}
+                  quotes={quotes}
+                  onRefreshChores={async () => {
+                    try {
+                      const res = await apiClient.get("/api/chores");
+                      const choresData = extractArrayData(res.data);
+                      setChores(choresData);
+                    } catch (err) {
+                      console.error("Failed to refresh chores:", err);
+                    }
+                  }}
+                  onRefreshQuotes={async () => {
+                    try {
+                      const res = await apiClient.get("/api/quotes/mine");
+                      const quotesData = extractArrayData(res.data);
+                      setQuotes(quotesData);
+                    } catch (err) {
+                      console.error("Failed to refresh quotes:", err);
+                    }
+                  }}
                 />
               </motion.div>
             )}
@@ -675,135 +618,200 @@ export function DashboardPage() {
 }
 
 /* ================== OVERVIEW ================== */
-function DashboardOverview({ firstName, stats, nextBooking, recent, allBookings, onFilterChange, onStatClick }) {
+function DashboardOverview({ user, form, firstName, stats, nextBooking, recent, allBookings, onFilterChange, onStatClick }) {
+  const navigate = useNavigate();
+  
+  // Format date like "February 15, 2026"
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      month: "long", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+  };
+
+  // Format date like "Jan 28, 2026"
+  const formatShortDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", { 
+      month: "short", 
+      day: "numeric", 
+      year: "numeric" 
+    });
+  };
+
+  // Get time slot from booking
+  const getTimeSlot = (booking) => {
+    if (booking.timeSlot) {
+      return booking.timeSlot;
+    }
+    // Default to morning if no time slot
+    return "Morning (8-12 PM)";
+  };
+
+  // Get user display name and email
+  const userDisplayName = user?.name || user?.fullName || firstName || "User";
+  const userEmail = user?.email || "";
+  const userAvatar = user?.profilePicUrl || form?.profilePicUrl || null;
+  
+  // Get initials for avatar
+  const getInitials = (name) => {
+    if (!name) return "U";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Calculate booking price (use totalAmount or estimate)
+  const getBookingPrice = (booking) => {
+    if (booking.totalAmount) {
+      return `$${parseFloat(booking.totalAmount).toFixed(0)}`;
+    }
+    // Estimate based on service type
+    return "$60"; // Default
+  };
+
+  // Handle rebook
+  const handleRebook = (booking) => {
+    navigate("/pricing-booking", {
+      state: {
+        preselectedService: booking.serviceId || booking.service?.id,
+      }
+    });
+  };
+
+  // Handle view details
+  const handleViewDetails = (booking) => {
+    // Open booking detail modal or navigate
+    navigate("/dashboard", { state: { bookingId: booking.id } });
+  };
+
   return (
-    <div className="dash-main-inner">
-      <header className="dash-hero-row fade-in-up">
-        <div>
-          <h1 className="dash-title">Dashboard</h1>
-          <p className="muted dash-subtitle">
-            Overview of your bookings and activity.
-          </p>
-        </div>
-
-        <div className="dash-chip">
-          <span className="dash-chip-dot" />
-          <span>New: Bundle home + auto for 10% off</span>
-        </div>
-      </header>
-
-      <div className="dash-stat-grid fade-in-up fade-in-delay-sm">
-        <StatCardLegacy
-          label="Total bookings"
-          value={stats.totalBookings}
-          icon={Calendar}
-          onClick={() => onStatClick && onStatClick("all")}
-          clickable
-          variant="blue"
-        />
-        <StatCardLegacy
-          label="Completed"
-          value={stats.completed}
-          icon={CheckCircle2}
-          onClick={() => onStatClick && onStatClick("completed")}
-          clickable
-          variant="green"
-        />
-        <StatCardLegacy
-          label="Upcoming"
-          value={stats.upcoming}
-          icon={Clock}
-          onClick={() => onStatClick && onStatClick("upcoming")}
-          clickable
-          variant="orange"
-        />
-        <StatCardLegacy
-          label="Hours booked"
-          value={stats.totalHours}
-          icon={Timer}
-          onClick={() => onStatClick && onStatClick("all")}
-          clickable
-          variant="purple"
-        />
-      </div>
-
-      <div className="dash-two-col fade-in-up fade-in-delay-md">
-        <div className="dash-card dash-card-next">
-          <div className="dash-card-header-enhanced">
-            <h3 className="dash-card-title">
-              <Calendar size={20} />
-              Next booking
-            </h3>
-          </div>
-          {!nextBooking && (
-            <EmptyState
-              icon={Calendar}
-              title="No upcoming bookings"
-              description="Book a service to see your next appointment here."
-              action={
-                <button
-                  className="btn btn-primary"
-                  onClick={() => window.location.href = "/pricing-booking"}
-                >
-                  Book Now
-                </button>
-              }
-            />
-          )}
-          {nextBooking && (
-            <div className="next-block">
-              <p className="next-date">
-                {new Date(nextBooking.date).toLocaleString()}
-              </p>
-              <p className="next-service">
-                {nextBooking.service?.name ||
-                  nextBooking.serviceType ||
-                  "Service"}
-              </p>
-              <p className="next-address muted">
-                {nextBooking.addressLine}
-              </p>
-              <p className="next-status-chip">
-                {nextBooking.status || "NEW"}
-              </p>
+    <div className="dash-overview-container">
+      {/* User Profile Section */}
+      <div className="dash-profile-header">
+        <div className="dash-profile-avatar-large">
+          {userAvatar ? (
+            <img src={userAvatar} alt={userDisplayName} />
+          ) : (
+            <div className="dash-profile-avatar-initials">
+              {getInitials(userDisplayName)}
             </div>
           )}
         </div>
-
-        <div className="dash-card dash-card-recent">
-          <div className="dash-card-header-enhanced">
-            <h3 className="dash-card-title">
-              <Clock size={20} />
-              Recent activity
-            </h3>
-          </div>
-          {recent.length === 0 ? (
-            <EmptyState
-              icon={Clock}
-              title="No recent activity"
-              description="Your booking history will appear here."
-            />
-          ) : (
-            <ul className="dash-list">
-              {recent.map((b, idx) => (
-                <li key={b.id} className="dash-list-item-enhanced" style={{ animationDelay: `${idx * 0.05}s` }}>
-                  <div className="dash-list-main">
-                    <span className="dash-list-title">
-                      {b.service?.name ||
-                        b.serviceType ||
-                        "Service"}
-                    </span>
-                    <span className="dash-list-meta">
-                      {new Date(b.date).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="dash-list-sub muted">{b.addressLine}</p>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="dash-profile-info">
+          <h2 className="dash-profile-name">{userDisplayName}</h2>
+          <p className="dash-profile-email">{userEmail}</p>
         </div>
       </div>
+
+      {/* Special Offer Banner */}
+      <div className="dash-special-offer-banner">
+        <div className="dash-special-offer-content">
+          <span className="dash-special-offer-title">
+            Special Offer 🎉
+          </span>
+          <span className="dash-special-offer-text">
+            Bundle home + auto services and save 10%
+          </span>
+        </div>
+      </div>
+
+      {/* Next Booking Card */}
+      <div className="dash-section-title">Next Booking</div>
+      {!nextBooking ? (
+        <div className="dash-card dash-card-next-booking">
+          <div className="dash-card-empty-state">
+            <Calendar size={32} style={{ opacity: 0.3, marginBottom: "12px" }} />
+            <p className="dash-card-empty-text">No upcoming bookings</p>
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate("/pricing-booking")}
+              style={{ marginTop: "16px" }}
+            >
+              Book a Service
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="dash-card dash-card-next-booking">
+          <div className="dash-booking-header">
+            <h3 className="dash-booking-service">
+              {nextBooking.service?.name || nextBooking.serviceType || "House Cleaning"}
+            </h3>
+            <span className="dash-booking-price">
+              {getBookingPrice(nextBooking)}
+            </span>
+          </div>
+          <div className="dash-booking-status-badge">
+            {nextBooking.status === "CONFIRMED" || nextBooking.status === "ACCEPTED" ? "Confirmed" : "Pending"}
+          </div>
+          <div className="dash-booking-details">
+            <div className="dash-booking-detail-item">
+              <Calendar size={16} />
+              <span>{formatDate(nextBooking.date)}</span>
+            </div>
+            <div className="dash-booking-detail-item">
+              <Clock size={16} />
+              <span>{getTimeSlot(nextBooking)}</span>
+            </div>
+            <div className="dash-booking-detail-item">
+              <MapPin size={16} />
+              <span>{nextBooking.addressLine || `${nextBooking.city || ""}, ${nextBooking.province || "SK"}`}</span>
+            </div>
+          </div>
+          <button
+            className="btn btn-view-details"
+            onClick={() => handleViewDetails(nextBooking)}
+          >
+            View Details <ArrowRight size={16} style={{ marginLeft: "8px" }} />
+          </button>
+        </div>
+      )}
+
+      {/* Recent Activity Section */}
+      <div className="dash-section-title">Recent Activity</div>
+      {recent.length === 0 ? (
+        <div className="dash-card dash-card-recent-activity">
+          <div className="dash-card-empty-state">
+            <Clock size={32} style={{ opacity: 0.3, marginBottom: "12px" }} />
+            <p className="dash-card-empty-text">No recent activity. Your booking history will appear here.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="dash-recent-activity-list">
+          {recent.map((booking) => (
+            <div key={booking.id} className="dash-card dash-card-recent-item">
+              <div className="dash-recent-item-main">
+                <div className="dash-recent-item-left">
+                  <h4 className="dash-recent-item-title">
+                    {booking.service?.name || booking.serviceType || "House Cleaning"}
+                  </h4>
+                  <p className="dash-recent-item-date">
+                    {formatShortDate(booking.date)}
+                  </p>
+                </div>
+                <div className="dash-recent-item-right">
+                  <span className="dash-recent-item-price">
+                    {getBookingPrice(booking)}
+                  </span>
+                  <button
+                    className="btn btn-rebook"
+                    onClick={() => handleRebook(booking)}
+                  >
+                    Rebook
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -822,15 +830,22 @@ function DashboardInbox({ recent }) {
             new Date(b.date).toLocaleString(),
         }));
 
+  const newCount = messages.length;
+
   return (
-    <div className="dash-main-inner fade-in-up">
-      <header className="dash-page-header">
+    <div className="dash-main-inner fade-in-up inbox-page">
+      <header className="dash-page-header inbox-header">
         <div>
           <h2 className="dash-title">Inbox</h2>
           <p className="muted dash-subtitle">
             Messages about your bookings and updates.
           </p>
         </div>
+        {newCount > 0 && (
+          <div className="inbox-badge">
+            {newCount} new
+          </div>
+        )}
       </header>
 
       <div className="dash-card fade-in-up fade-in-delay-sm">
@@ -841,9 +856,13 @@ function DashboardInbox({ recent }) {
             description="You'll see booking updates and notifications here."
           />
         ) : (
-          <ul className="dash-list">
+          <ul className="dash-list inbox-list">
             {messages.map((m, idx) => (
-              <li key={m.id} style={{ animationDelay: `${0.1 + idx * 0.05}s` }}>
+              <li
+                key={m.id}
+                className="inbox-card"
+                style={{ animationDelay: `${0.1 + idx * 0.05}s` }}
+              >
                 <div className="dash-list-main">
                   <div className="dash-list-content">
                     <span className="dash-list-title">{m.title}</span>
@@ -1639,6 +1658,82 @@ function DashboardAddresses({ addresses, primaryAddress }) {
 }
 
 /* ================== PROFILE ================== */
+function DashboardProfileWithTabs({ 
+  form, 
+  onChange, 
+  onSave, 
+  onAvatarChange,
+  profileSubTab,
+  setProfileSubTab,
+  bookings,
+  user,
+  chores,
+  quotes,
+  onRefreshChores,
+  onRefreshQuotes,
+}) {
+  return (
+    <div className="dash-main-inner fade-in-up">
+      {/* Profile Sub-Tabs */}
+      <div className="profile-sub-tabs">
+        <button
+          className={`profile-sub-tab ${profileSubTab === "details" ? "active" : ""}`}
+          onClick={() => setProfileSubTab("details")}
+        >
+          <User size={18} />
+          <span>Details</span>
+        </button>
+        <button
+          className={`profile-sub-tab ${profileSubTab === "addresses" ? "active" : ""}`}
+          onClick={() => setProfileSubTab("addresses")}
+        >
+          <MapPin size={18} />
+          <span>Addresses</span>
+        </button>
+        <button
+          className={`profile-sub-tab ${profileSubTab === "billing" ? "active" : ""}`}
+          onClick={() => setProfileSubTab("billing")}
+        >
+          <CreditCard size={18} />
+          <span>Billing</span>
+        </button>
+        <button
+          className={`profile-sub-tab ${profileSubTab === "chores" ? "active" : ""}`}
+          onClick={() => setProfileSubTab("chores")}
+        >
+          <ClipboardList size={18} />
+          <span>Chores</span>
+        </button>
+        <button
+          className={`profile-sub-tab ${profileSubTab === "quotes" ? "active" : ""}`}
+          onClick={() => setProfileSubTab("quotes")}
+        >
+          <Quote size={18} />
+          <span>Quotes</span>
+        </button>
+      </div>
+
+      {/* Sub-Tab Content */}
+      {profileSubTab === "details" && (
+        <DashboardProfile
+          form={form}
+          onChange={onChange}
+          onSave={onSave}
+          onAvatarChange={onAvatarChange}
+        />
+      )}
+      {profileSubTab === "addresses" && <AddressManagement />}
+      {profileSubTab === "billing" && <DashboardBilling bookings={bookings} user={user} />}
+      {profileSubTab === "chores" && (
+        <DashboardChores chores={chores} onRefresh={onRefreshChores} />
+      )}
+      {profileSubTab === "quotes" && (
+        <DashboardQuotes quotes={quotes} onRefresh={onRefreshQuotes} />
+      )}
+    </div>
+  );
+}
+
 function DashboardProfile({ form, onChange, onSave, onAvatarChange }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);

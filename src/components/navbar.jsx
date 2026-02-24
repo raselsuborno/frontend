@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ShoppingBag, User, LogOut, LayoutDashboard, ChevronDown, Shield, Briefcase } from "lucide-react";
+import { User, LogOut, LayoutDashboard, ChevronDown, Shield, Briefcase } from "lucide-react";
 import logo from "../assets/chorebunny.png";
 import { AuthModal } from "./auth-modal";
 import { Tooltip } from "./ui/Tooltip.jsx";
@@ -9,25 +9,13 @@ import { useAuth } from "../contexts/AuthContext.jsx";
 export function Navbar() {
   // Use AuthContext for user, profile, role, loading, and logout
   const { user, profile, role, loading, logout } = useAuth();
-  const [cartCount, setCartCount] = useState(0);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const userMenuRef = useRef(null);
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Load cart on route change
-  useEffect(() => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    setCartCount(cart.length);
-
-    // close mobile menu on navigation
-    setMobileOpen(false);
-  }, [location.pathname]);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -39,29 +27,6 @@ export function Navbar() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  // Handle scroll-based navbar visibility
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      // Always show navbar at the top
-      if (currentScrollY < 10) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down - hide navbar
-        setIsVisible(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolling up - show navbar
-        setIsVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
 
   const handleLogout = async () => {
     try {
@@ -93,7 +58,7 @@ export function Navbar() {
   const isCustomer = role === "CUSTOMER" || !role; // Default to customer if no role
 
   return (
-    <header className={`nav ${isVisible ? 'nav-visible' : 'nav-hidden'}`}>
+  <header className="nav nav-visible">
       <div className="nav-container">
         {/* LEFT SECTION */}
         <div className="nav-left">
@@ -105,25 +70,22 @@ export function Navbar() {
 
         {/* CENTER SECTION – desktop */}
         <nav className="nav-center">
-        <Link className={linkClass("/")} to="/">
-          Home
-        </Link>
-        <Link className={linkClass("/services")} to="/services">
-          Services
-        </Link>
-        <Link className={linkClass("/pricing-booking")} to="/pricing-booking">
-          Book
-        </Link>
-        <Link className={linkClass("/shop")} to="/shop">
-          Shop
-        </Link>
-        <Link className={linkClass("/about")} to="/about">
-          About
-        </Link>
-        <Link className={linkClass("/contact")} to="/contact">
-          Contact
-        </Link>
-      </nav>
+          <Link className={linkClass("/")} to="/">
+            Home
+          </Link>
+          <Link className={linkClass("/services")} to="/services">
+            Services
+          </Link>
+          <Link className={linkClass("/pricing-booking")} to="/pricing-booking">
+            Book
+          </Link>
+          <Link className={linkClass("/about")} to="/about">
+            About
+          </Link>
+          <Link className={linkClass("/contact")} to="/contact">
+            Contact
+          </Link>
+        </nav>
 
       {/* RIGHT SECTION */}
       <div className="nav-right">
@@ -142,8 +104,15 @@ export function Navbar() {
                   <User size={18} />
                 </div>
               )}
-              <span className="nav-user-name">{firstName}</span>
-              <ChevronDown size={16} className="nav-user-chevron" style={{ transition: "transform 0.2s", transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)" }} />
+              <ChevronDown
+                size={14}
+                className="nav-user-chevron"
+                style={{
+                  transition: "transform 0.2s",
+                  transform: userMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  opacity: 0.7,
+                }}
+              />
             </button>
             
             {userMenuOpen && (
@@ -219,14 +188,6 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Cart - Moved to left of login button */}
-        <div className="icon-btn cart-icon-wrapper nav-desktop-only">
-          <Link to="/cart">
-            <ShoppingBag size={20} style={{ color: "var(--primary)" }} />
-          </Link>
-          {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-        </div>
-
         {!loading && !user && (
           <button
             onClick={() => setAuthModalOpen(true)}
@@ -239,87 +200,6 @@ export function Navbar() {
         {loading && (
           <div className="nav-loading">Loading...</div>
         )}
-
-        {/* Mobile hamburger */}
-        <button
-          type="button"
-          className={`nav-mobile-toggle ${mobileOpen ? "is-open" : ""}`}
-          aria-label="Toggle navigation"
-          onClick={() => setMobileOpen((open) => !open)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      </div>
-
-      {/* MOBILE MENU PANEL */}
-      <div className={`nav-mobile ${mobileOpen ? "nav-mobile-open" : ""}`}>
-        <nav className="nav-mobile-links">
-          <Link className={linkClass("/")} to="/">
-            Home
-          </Link>
-          <Link className={linkClass("/services")} to="/services">
-            Services
-          </Link>
-          <Link className={linkClass("/pricing-booking")} to="/pricing-booking">
-            Book
-          </Link>
-          <Link className={linkClass("/shop")} to="/shop">
-            Shop
-          </Link>
-          <Link className={linkClass("/about")} to="/about">
-            About
-          </Link>
-          <Link className={linkClass("/contact")} to="/contact">
-            Contact
-          </Link>
-        </nav>
-
-        {/* Mobile Menu - Cart */}
-        <div className="nav-mobile-tools">
-          {/* Cart in Mobile Menu */}
-          <Link 
-            to="/cart" 
-            className="nav-mobile-tool-item"
-            onClick={() => setMobileOpen(false)}
-          >
-            <ShoppingBag size={20} />
-            <span>Cart</span>
-            {cartCount > 0 && (
-              <span className="nav-mobile-tool-badge">{cartCount}</span>
-            )}
-          </Link>
-        </div>
-
-        <div className="nav-mobile-actions">
-          {user ? (
-            <>
-              <button
-                type="button"
-                className="btn nav-mobile-btn"
-                onClick={() => navigate("/dashboard")}
-              >
-                Go to Dashboard
-              </button>
-              <button
-                type="button"
-                className="btn outline nav-mobile-btn"
-                onClick={handleLogout}
-              >
-                Log out
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="btn nav-mobile-btn"
-              onClick={() => setAuthModalOpen(true)}
-            >
-              Log in / Sign up
-            </button>
-          )}
-        </div>
       </div>
 
       </div>

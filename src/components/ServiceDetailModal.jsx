@@ -208,70 +208,83 @@ export function ServiceDetailModal({ isOpen, service, onClose, onBook, isResiden
           )}
 
           {/* Sub-services */}
-          {service.bullets && service.bullets.length > 0 && (
-            <div style={{ marginBottom: "24px" }}>
-              <h3
-                style={{
-                  fontSize: "18px",
-                  fontWeight: 600,
-                  marginBottom: "12px",
-                  color: "var(--text, #1a1a1a)",
-                }}
-              >
-                What's included:
-              </h3>
-              <ul
-                style={{
-                  listStyle: "none",
-                  padding: 0,
-                  margin: 0,
-                  display: "grid",
-                  gap: "12px",
-                }}
-              >
-                {service.bullets.map((bullet, idx) => (
-                  <li
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "10px",
-                      padding: "10px",
-                      background: "var(--bg-soft, #f8f9fa)",
-                      borderRadius: "10px",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--primary-soft, #eef2ff)";
-                      e.currentTarget.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "var(--bg-soft, #f8f9fa)";
-                      e.currentTarget.style.transform = "translateX(0)";
-                    }}
-                  >
-                    <Check
-                      size={18}
+          {(() => {
+            // Get bullets from service - support both bullets array and options array
+            const bullets = service.bullets && Array.isArray(service.bullets) && service.bullets.length > 0
+              ? service.bullets
+              : (service.options && Array.isArray(service.options) && service.options.length > 0
+                  ? service.options
+                      .filter(opt => opt.isActive !== false)
+                      .map(opt => typeof opt === 'string' ? opt : (opt.name || opt))
+                  : []);
+            
+            if (bullets.length === 0) return null;
+            
+            return (
+              <div style={{ marginBottom: "24px" }}>
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 600,
+                    marginBottom: "12px",
+                    color: "var(--text, #1a1a1a)",
+                  }}
+                >
+                  What's included:
+                </h3>
+                <ul
+                  style={{
+                    listStyle: "none",
+                    padding: 0,
+                    margin: 0,
+                    display: "grid",
+                    gap: "12px",
+                  }}
+                >
+                  {bullets.map((bullet, idx) => (
+                    <li
+                      key={idx}
                       style={{
-                        color: "var(--primary, #6366f1)",
-                        flexShrink: 0,
-                        marginTop: "2px",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "10px",
+                        padding: "10px",
+                        background: "var(--bg-soft, #f8f9fa)",
+                        borderRadius: "10px",
+                        transition: "all 0.2s",
                       }}
-                    />
-                    <span
-                      style={{
-                        fontSize: "14px",
-                        lineHeight: "1.5",
-                        color: "var(--text, #1a1a1a)",
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--primary-soft, #eef2ff)";
+                        e.currentTarget.style.transform = "translateX(4px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "var(--bg-soft, #f8f9fa)";
+                        e.currentTarget.style.transform = "translateX(0)";
                       }}
                     >
-                      {bullet}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+                      <Check
+                        size={18}
+                        style={{
+                          color: "var(--primary, #6366f1)",
+                          flexShrink: 0,
+                          marginTop: "2px",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          lineHeight: "1.5",
+                          color: "var(--text, #1a1a1a)",
+                        }}
+                      >
+                        {typeof bullet === 'string' ? bullet : (bullet.name || bullet)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
 
           {/* CTA Buttons */}
           <div

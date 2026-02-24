@@ -54,14 +54,16 @@ export default function BookingLayout() {
       // Fetch service data from backend
       const fetchService = async () => {
         try {
-          const response = await apiClient.get(`/public/services?type=RESIDENTIAL`);
-          const found = response.data.find(
+          const response = await apiClient.get(`/api/public/services?type=RESIDENTIAL`);
+          const found = (response.data?.data || response.data || []).find(
             (s) => s.id === preselectedId || s.slug === preselectedId
           );
           if (found) {
             setService(found);
             setServiceData(found);
             setStep(2);
+          } else {
+            console.warn("Preselected service not found:", preselectedId);
           }
         } catch (error) {
           console.error("Failed to fetch preselected service:", error);
@@ -84,8 +86,12 @@ export default function BookingLayout() {
     try {
       // Fetch full service data with options if we have an id or slug
       if (svc.id || svc.slug) {
-        const response = await apiClient.get(`/public/services/${svc.id || svc.slug}`);
-        setServiceData(response.data);
+        const response = await apiClient.get(`/api/public/services/${svc.id || svc.slug}`);
+        // Handle both response.data.data and response.data formats
+        const serviceData = response.data?.data || response.data;
+        if (serviceData) {
+          setServiceData(serviceData);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch service details:", error);

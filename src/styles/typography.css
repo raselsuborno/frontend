@@ -2,10 +2,10 @@
    📝 TYPOGRAPHY — Text Styles & Headings
 =============================================================== */
 
-/* ========== HEADINGS ========== */
+/* ========== HEADINGS - "Fresh to Saskatchewan" ==== */
 .heading-1,
 h1 {
-  font-size: var(--font-size-5xl);
+  font-size: var(--font-size-h1, 28px);
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: -0.02em;
@@ -14,8 +14,8 @@ h1 {
 
 .heading-2,
 h2 {
-  font-size: var(--font-size-4xl);
-  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-h2, 20px);
+  font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   letter-spacing: -0.01em;
   color: var(--color-text);
@@ -53,17 +53,29 @@ h6 {
   color: var(--color-text);
 }
 
-/* ========== BODY TEXT ========== */
-.text-base {
-  font-size: var(--font-size-base);
+/* ========== BODY TEXT - "Fresh to Saskatchewan" ==== */
+.text-base,
+.body {
+  font-size: var(--font-size-body, 16px);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-relaxed);
   color: var(--color-text);
 }
 
-.text-lg {
-  font-size: var(--font-size-lg);
+.text-lg,
+.body-senior {
+  font-size: var(--font-size-body-senior, 18px);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-relaxed);
   color: var(--color-text);
+}
+
+.caption,
+.text-caption {
+  font-size: var(--font-size-caption, 13px);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-secondary);
 }
 
 .text-sm {

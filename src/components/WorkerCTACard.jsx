@@ -1,25 +1,12 @@
 // src/components/WorkerCTACard.jsx
 // Subtle, professional CTA component for becoming a worker
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Briefcase, ArrowRight, DollarSign, Clock, Users } from "lucide-react";
-import { useIsMobile } from "../hooks/useIsMobile";
 
 export function WorkerCTACard({ variant = "default", className = "" }) {
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [hasAnimated, setHasAnimated] = useState(false);
-
-  // On mobile: animate once on mount, no scroll tracking
-  useEffect(() => {
-    if (isMobile && !hasAnimated) {
-      const timer = setTimeout(() => {
-        setHasAnimated(true);
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isMobile, hasAnimated]);
 
   const variants = {
     default: {
@@ -43,9 +30,6 @@ export function WorkerCTACard({ variant = "default", className = "" }) {
   const currentVariant = variants[variant] || variants.default;
   const isProminent = variant === "prominent";
 
-  // Determine animation state
-  const shouldAnimate = isMobile ? hasAnimated : true; // Desktop will use whileInView
-
   return (
     <motion.div
       className={`worker-cta-card ${className}`}
@@ -53,18 +37,17 @@ export function WorkerCTACard({ variant = "default", className = "" }) {
         ...currentVariant,
         borderRadius: "16px",
         cursor: "pointer",
+        width: "100%",
       }}
       onClick={() => navigate("/apply/worker")}
       initial={{ opacity: 0, y: 30, scale: 0.96 }}
-      animate={shouldAnimate ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 30, scale: 0.96 }}
-      whileInView={!isMobile ? { opacity: 1, y: 0, scale: 1 } : undefined}
-      viewport={!isMobile ? { once: true, amount: 0.3, margin: "-50px" } : undefined}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
         duration: 0.9,
         ease: [0.16, 1, 0.3, 1], // Smooth, buttery easing
         type: "tween"
       }}
-      whileHover={!isMobile ? { 
+      whileHover={{ 
         scale: 1.02,
         y: -4,
         boxShadow: "0 12px 32px rgba(11, 92, 40, 0.2)",
@@ -72,7 +55,7 @@ export function WorkerCTACard({ variant = "default", className = "" }) {
           duration: 0.3,
           ease: [0.16, 1, 0.3, 1]
         }
-      } : undefined}
+      }}
       whileTap={{ scale: 0.98 }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>

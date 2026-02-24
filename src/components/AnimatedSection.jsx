@@ -1,7 +1,5 @@
 // src/components/AnimatedSection.jsx
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import { useIsMobile } from "../hooks/useIsMobile";
+import { motion } from "framer-motion";
 
 // Improved container variants with better flow and buttery smooth easing
 const containerVariants = {
@@ -48,66 +46,13 @@ const cardVariants = {
 
 export function AnimatedSection({ 
   children, 
-  className = "", 
-  parallax = false, 
-  speed = 0.3,
-  delay = 0 
+  className = "" 
 }) {
-  const ref = useRef(null);
-  const isMobile = useIsMobile();
-  const [hasAnimated, setHasAnimated] = useState(false);
-  
-  // On mobile: animate once on mount, no scroll tracking
-  // On desktop: animate on scroll into view
-  const isInView = useInView(ref, { 
-    once: isMobile ? false : true, // On mobile, we'll handle once manually
-    amount: isMobile ? 1 : 0.2,
-    margin: isMobile ? "0px" : "-100px"
-  });
-
-  // Only use scroll transforms on desktop - completely disabled on mobile
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-    layoutEffect: false // Prevent layout thrashing on mobile
-  });
-
-  const y = parallax && !isMobile
-    ? useTransform(scrollYProgress, [0, 1], [0, speed * 100])
-    : undefined;
-  const opacity = parallax && !isMobile
-    ? useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.3, 1, 1, 0.3])
-    : undefined;
-  const scale = parallax && !isMobile
-    ? useTransform(scrollYProgress, [0, 0.5, 1], [0.95, 1, 0.98])
-    : undefined;
-
-  // On mobile: trigger animation once on mount (immediately, no scroll)
-  useEffect(() => {
-    if (isMobile && !hasAnimated) {
-      // Small delay to ensure component is mounted, then animate
-      const timer = setTimeout(() => {
-        setHasAnimated(true);
-      }, Math.max(100, delay * 1000));
-      return () => clearTimeout(timer);
-    }
-  }, [isMobile, hasAnimated, delay]);
-
-  // Determine if we should animate
-  // On mobile: animate once on mount (NO scroll), on desktop: animate on scroll into view
-  const shouldAnimate = isMobile ? hasAnimated : isInView;
-
   return (
     <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={shouldAnimate ? "visible" : "hidden"}
+      initial="visible"
+      animate="visible"
       variants={containerVariants}
-      style={{ 
-        y, 
-        opacity: parallax ? opacity : undefined, 
-        scale: parallax ? scale : undefined 
-      }}
       className={className}
     >
       {children}

@@ -1,14 +1,16 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { MotionConfig } from "framer-motion";
 import App from "./App.jsx";
 
 /* ============================================================
    STYLES — Consolidated Enterprise Architecture
    =========================================================== */
 
-// 1. Design Tokens (Single Source of Truth)
+// 1. Design Tokens (Single Source of Truth) - "Fresh to Saskatchewan"
 import "./styles/tokens.css";
+import "./styles/design-system.css";
 
 // 2. Tailwind CSS
 import "./styles/tailwind.css";
@@ -40,8 +42,10 @@ import "./styles/services.page.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <MotionConfig reducedMotion="always">
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </MotionConfig>
   </React.StrictMode>
 );
